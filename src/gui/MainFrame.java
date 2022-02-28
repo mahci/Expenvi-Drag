@@ -15,7 +15,6 @@ public class MainFrame extends JFrame {
     private int scrW, scrH;
     private int frW, frH;
 
-    private static DemoPanel mDemoPanel;
     private static ExperimentPanel mExperimentPanel;
 
     private Experiment mExperiment;
@@ -36,18 +35,6 @@ public class MainFrame extends JFrame {
     public static MainFrame get() {
         if (self == null) self = new MainFrame();
         return self;
-    }
-
-    public void start() {
-        showDemo();
-    }
-
-    public void showDemo() {
-        mDemoPanel = new DemoPanel(mExperiment);
-        add(mDemoPanel);
-        pack();
-
-        setVisible(true);
     }
 
     public void showExperiment() {
@@ -99,14 +86,11 @@ public class MainFrame extends JFrame {
                 ((scrW / 2) - (frW / 2)) + scrBound.x,
                 ((scrH / 2) - (frH / 2)) + scrBound.y
         );
-
-        // Set mm size in pixels
-//        Logs.info("TAG", Toolkit.getDefaultToolkit().getScreenResolution());
     }
 
+    // Action...
     public static void scroll(int vtScrollAmt, int hzScrollAmt) {
-        if (mExperimentPanel != null) mExperimentPanel.scroll(vtScrollAmt, hzScrollAmt);
-        else if (mDemoPanel != null) mDemoPanel.scroll(vtScrollAmt, hzScrollAmt);
+
     }
 
 }

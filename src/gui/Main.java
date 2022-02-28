@@ -11,10 +11,10 @@ public class Main {
 
     public static void main(String[] args) {
         MainFrame.get().start();
-        Server.get().start();
+//        Server.get().start();
     }
 
-    public static void showDialog(String mssg) {
-        JOptionPane.showMessageDialog(mFrame, mssg);
-    }
+//    public static void showDialog(String mssg) {
+//        JOptionPane.showMessageDialog(mFrame, mssg);
+//    }
 }
