@@ -105,7 +105,7 @@ public class Logger {
 
         } catch (IOException e) {
             e.printStackTrace();
-            Main.showDialog("Problem in logging the participant!");
+//            Main.showDialog("Problem in logging the participant!");
         }
 
     }
@@ -127,7 +127,7 @@ public class Logger {
             mTrialsFilePW.flush();
 
         } catch (NullPointerException | IOException e) {
-            Main.showDialog("Problem in logging trial!");
+//            Main.showDialog("Problem in logging trial!");
             e.printStackTrace();
         }
     }
@@ -149,7 +149,7 @@ public class Logger {
             mInstantFilePW.flush();
 
         } catch (NullPointerException | IOException e) {
-            Main.showDialog("Problem in logging instant!");
+//            Main.showDialog("Problem in logging instant!");
         }
     }
 
@@ -170,7 +170,7 @@ public class Logger {
             mTimesFilePW.flush();
 
         } catch (NullPointerException | IOException e) {
-            Main.showDialog("Problem in logging time!");
+//            Main.showDialog("Problem in logging time!");
         }
     }
 
@@ -188,7 +188,6 @@ public class Logger {
 
     // General info regarding every trial
     public static class GeneralInfo {
-        public TECHNIQUE tech;
         public int blockNum;
         public int trialNum;
         public Trial trial;
@@ -202,8 +201,7 @@ public class Logger {
 
         @Override
         public String toString() {
-            return tech + SP +
-                    blockNum + SP +
+            return blockNum + SP +
                     trialNum + SP +
                     trial.toLogString();
         }
