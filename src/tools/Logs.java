@@ -28,12 +28,14 @@ public class Logs {
      */
     public static void d(String tag, Object... params) {
         final int pLen = params.length;
-        if(pLen > 0 && toShowTag(tag)) {
+        if (pLen > 0 && toShowTag(tag)) {
             StringBuilder sb = new StringBuilder();
             for(int oi = 0; oi < pLen - 1; oi++) {
                 sb.append(params[oi]).append(" | ");
             }
-            System.out.println(tag + " >> " + sb.append(pLen - 1));
+            sb.append(params[pLen - 1]);
+
+            System.out.println(tag + " >> " + sb);
         }
     }
 
@@ -44,12 +46,14 @@ public class Logs {
      */
     public static void e(String tag, Object... params) {
         final int pLen = params.length;
-        if(pLen > 0 && toShowTag(tag)) {
+        if (pLen > 0 && toShowTag(tag)) {
             StringBuilder sb = new StringBuilder();
             for(int oi = 0; oi < pLen - 1; oi++) {
                 sb.append(params[oi]).append(" | ");
             }
-            System.out.println(tag + " !! " + sb.append(pLen - 1));
+            sb.append(params[pLen - 1]);
+
+            System.out.println(tag + " !! " + sb);
         }
     }
 
