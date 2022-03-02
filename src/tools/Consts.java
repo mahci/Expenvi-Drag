@@ -1,8 +1,14 @@
 package tools;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Consts {
 
@@ -47,9 +53,42 @@ public class Consts {
 
     //-- Sounds and related
     public static class SOUNDS {
-        public final static String HIT_SOUND = "hit.wav";
-        public final static String MISS_SOUND = "miss.wav";
-        public final static String TECH_END_SOUND = "end.wav";
+        private static Map<String, Clip> sSounds = new HashMap<>();
+
+        static {
+            try {
+                final File hitFile = new File("./res/hit.wav");
+                final File missFile = new File("./res/miss.wav");
+                final File techEndFile = new File("./res/end.wav");
+
+                final Clip hitClip = AudioSystem.getClip();
+                hitClip.open(AudioSystem.getAudioInputStream(hitFile));
+
+                final Clip missClip = AudioSystem.getClip();
+                missClip.open(AudioSystem.getAudioInputStream(missFile));
+
+                final Clip techClip = AudioSystem.getClip();
+                techClip.open(AudioSystem.getAudioInputStream(techEndFile));
+
+//                sSounds.put(STRINGS.HIT, hitClip);
+//                sSounds.put(STRINGS.MISS, missClip);
+//                sSounds.put(STRINGS.TASK_END, techClip);
+
+            } catch (NullPointerException | IOException | UnsupportedAudioFileException | LineUnavailableException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * Play a sound
+         * @param soundKey Name of the sound
+         */
+        public static void play(String soundKey) {
+            if (sSounds.containsKey(soundKey)) {
+                sSounds.get(soundKey).setMicrosecondPosition(0); // Reset to the start of the file
+                sSounds.get(soundKey).start();
+            }
+        }
     }
 
     //-- Strings and related
