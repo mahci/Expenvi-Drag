@@ -22,7 +22,9 @@ public class Consts {
 
     //-- Colors and related
     public static class COLORS {
-        public final static Color PANEL_BG = Color.decode("#F5F5F5");
+        public final static Color GRAY_200 = Color.decode("#EEEEEE");
+        public final static Color GRAY_400 = Color.decode("#BDBDBD");
+        public final static Color GRAY_500 = Color.decode("#9E9E9E");
     }
 
     //-- Fonts and related
@@ -45,7 +47,7 @@ public class Consts {
                 DIALOG = Font.createFont(Font.TRUETYPE_FONT, sfLightFile);
 
             } catch (FontFormatException | IOException e) {
-                Logs.d("FONTS", "Can't load the font file!");
+                Out.d("FONTS", "Can't load the font file!");
                 e.printStackTrace();
             }
         }

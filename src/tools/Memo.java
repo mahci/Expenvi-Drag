@@ -156,7 +156,7 @@ public class Memo {
                 result.value1 = parts[2];
                 result.value2 = parts[3];
             } else {
-                Logs.e(TAG, "Memo string not 4 parts!");
+                Out.e(TAG, "Memo string not 4 parts!");
             }
         }
 

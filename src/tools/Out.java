@@ -3,14 +3,14 @@ package tools;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Logs {
+public class Out {
 
     private static final List<String> toLogList = new ArrayList<>();
 
     static {
 //        toLogList.add("Server");
         toLogList.add("ExperimentPanel");
-        toLogList.add("DemoPanel");
+        toLogList.add("TestPanel");
 //        toLogList.add("Controller");
 //        toLogList.add("MyScrollBarUI");
         toLogList.add("VTScrollPane");

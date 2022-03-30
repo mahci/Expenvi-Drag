@@ -17,7 +17,7 @@ import static experiment.Experiment.*;
 public class Logger {
     private final static String NAME = "Logger/";
 
-    private static final String LOG_DIR = "Proto-Expenvi-Logs";
+    private static final String LOG_DIR = "Proto-Expenvi-Out";
 
     private static Logger self;
 

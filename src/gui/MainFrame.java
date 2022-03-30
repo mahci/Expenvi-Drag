@@ -1,12 +1,13 @@
 package gui;
 
 import experiment.Experiment;
-import tools.Logs;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements MouseListener {
     private final static String NAME = "MainFrame/";
     // -------------------------------------------------------------------------------------------
     private static MainFrame self; // Singelton instance
@@ -15,9 +16,11 @@ public class MainFrame extends JFrame {
     private int scrW, scrH;
     private int frW, frH;
 
-    private static ExperimentPanel mExperimentPanel;
+//    private static ExperimentPanel mExperimentPanel;
 
     private Experiment mExperiment;
+
+    private TestPanel mTestPanel;
 
     /**
      * Constructor
@@ -27,9 +30,7 @@ public class MainFrame extends JFrame {
 
         setBackground(Color.WHITE);
 
-        // Create and show an experiment
-        final int pid = 126;
-        mExperiment = new Experiment(pid);
+        addMouseListener(this);
     }
 
     public static MainFrame get() {
@@ -37,15 +38,19 @@ public class MainFrame extends JFrame {
         return self;
     }
 
-    public void showExperiment() {
-        getContentPane().removeAll();
+    public void start() {
+        final Dimension panelDim = getContentPane().getSize();
 
-        mExperimentPanel = new ExperimentPanel(mExperiment);
-        add(mExperimentPanel);
-        mExperimentPanel.requestFocusInWindow();
+        mTestPanel = new TestPanel(panelDim);
 
-        revalidate();
+        getContentPane().add(mTestPanel);
+        mTestPanel.requestFocusInWindow();
+        mTestPanel.start();
+        setVisible(true);
+
+//        repaint();
     }
+
 
     public void showDialog(JDialog dialog) {
         dialog.pack();
@@ -88,9 +93,39 @@ public class MainFrame extends JFrame {
         );
     }
 
-    // Action...
-    public static void scroll(int vtScrollAmt, int hzScrollAmt) {
+    public void grab() {
+        if (mTestPanel != null) mTestPanel.grab();
+    }
+
+    public void release() {
+        if (mTestPanel != null) mTestPanel.release();
+    }
+
+    public void cancel() {
+        if (mTestPanel != null) mTestPanel.cancel();
+    }
+
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
     }
 
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
 }

@@ -1,10 +1,12 @@
 package control;
 
-import tools.Logs;
+import gui.MainFrame;
+import tools.Out;
 import tools.Memo;
 
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
 import java.util.concurrent.*;
 
 public class Server {
@@ -31,12 +33,12 @@ public class Server {
         @Override
         public void run() {
             try {
-                Logs.d(TAG, "Waiting for connections...");
+                Out.d(TAG, "Waiting for connections...");
                 if (serverSocket == null) serverSocket = new ServerSocket(PORT);
                 socket = serverSocket.accept();
 
                 // When reached here, Moose is connected
-                Logs.d(TAG, "Moose connected!");
+                Out.d(TAG, "Moose connected!");
 
                 // Create streams
                 inBR = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -78,19 +80,24 @@ public class Server {
         public void run() {
             while (!Thread.currentThread().isInterrupted() && inBR != null) {
                 try {
-                    Logs.d(TAG, "Reading messages...");
+                    Out.d(TAG, "Reading messages...");
                     String message = inBR.readLine();
-                    Logs.d(TAG, "Message: " + message);
+                    Out.d(TAG, "Message: " + message);
                     if (message != null) {
                         Memo memo = Memo.valueOf(message);
 
                         // Check the action...
-                        if (memo.getAction().equals("")) {
+                        if (memo.getAction().equals("DRAG")) {
 
+                            switch (memo.getMode()) {
+                                case "GRAB" -> MainFrame.get().grab();
+                                case "REL" -> MainFrame.get().release();
+                                case "CANCEL" -> MainFrame.get().cancel();
+                            }
                         }
 
                     } else {
-                        Logs.d(TAG, "Moose disconnected.");
+                        Out.d(TAG, "Moose disconnected.");
                         start();
                         return;
                     }
