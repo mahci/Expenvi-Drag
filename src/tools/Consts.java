@@ -25,6 +25,10 @@ public class Consts {
         public final static Color GRAY_200 = Color.decode("#EEEEEE");
         public final static Color GRAY_400 = Color.decode("#BDBDBD");
         public final static Color GRAY_500 = Color.decode("#9E9E9E");
+
+        public final static Color BLUE_50 = Color.decode("#E3F2FD");
+        public final static Color BLUE_100 = Color.decode("#BBDEFB");
+        public final static Color BLUE_900 = Color.decode("#0D47A1");
     }
 
     //-- Fonts and related

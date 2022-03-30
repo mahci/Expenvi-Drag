@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import static tools.Consts.*;
+
 public class TestPanel extends JLayeredPane implements MouseMotionListener, MouseListener {
     private final String NAME = "TestPanel/";
 
@@ -28,13 +30,17 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     private JLabel mLevelLabel;
     private JLabel mTechLabel;
 
-    private int TARGET_W = 100; // px
+    private final int TARGET_W = 100; // px
+    private final int DOCK_W = 150; // px
+    private final Point TARGET_INIT_POS = new Point(500, 400);
+    private final Point DOCK_INIT_POS = new Point(2000, 500);
 
     private boolean mDragging = false;
     private boolean mGrabbed = false;
     private Rectangle mTarget = new Rectangle();
     private Rectangle mTargetGhost = new Rectangle();
-    private final Point mTargetInitPos = new Point(500, 400);
+    private Rectangle mDock = new Rectangle();
+
     private Point mGrabPos = new Point();
 
     private JLabel label;
@@ -79,8 +85,12 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
 
     public void start() {
         mTarget = new Rectangle(
-                mTargetInitPos.x, mTargetInitPos.y,
+                TARGET_INIT_POS.x, TARGET_INIT_POS.y,
                 TARGET_W, TARGET_W);
+
+        mDock = new Rectangle(
+                DOCK_INIT_POS.x, DOCK_INIT_POS.y,
+                DOCK_W, DOCK_W);
 
         showTrial();
     }
@@ -118,6 +128,7 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     public void release() {
         if (mGrabbed) {
             mGrabbed = false;
+            repaint();
         }
     }
 
@@ -156,14 +167,21 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
         final Stroke oldStroke = g2d.getStroke();
         final float newThickness = 3;
 
-        g2d.setColor(Consts.COLORS.GRAY_500);
+        // Draw dock
+        g2d.setColor(COLORS.GRAY_500);
         g2d.setStroke(new BasicStroke(newThickness));
-        g2d.fillRect(2000, 500, 150, 150);
+        g2d.fill(mDock);
         g2d.setStroke(oldStroke);
 
-        g2d.setColor(Color.BLUE);
-        g2d.fillRect(mTarget.x, mTarget.y, mTarget.width, mTarget.height);
+        // Draw ghost (if exists)
+        if (mGrabbed) {
+            g2d.setColor(COLORS.BLUE_100);
+            g2d.fill(mTargetGhost);
+        }
 
+        // Draw target
+        g2d.setColor(COLORS.BLUE_900);
+        g2d.fill(mTarget);
     }
 
     /**
