@@ -13,8 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static tools.Consts.DISP.APPLE_DISP_PPI;
-import static tools.Consts.DISP.MM_in_INCH;
+import static tools.Consts.DISP.*;
 
 public class Utils {
 
@@ -62,7 +61,7 @@ public class Utils {
     public static int mm2px(double mm) {
         String TAG = NAME + "mm2px";
 
-        return (int) ((mm / MM_in_INCH) * APPLE_DISP_PPI);
+        return (int) ((mm / MM_in_INCH) * DPI);
     }
 
     /**
@@ -73,7 +72,7 @@ public class Utils {
     public static double px2mm(double px) {
         String TAG = NAME + "px2mm";
 
-        return (px / APPLE_DISP_PPI) * MM_in_INCH;
+        return (px / DPI) * MM_in_INCH;
     }
 
     /**

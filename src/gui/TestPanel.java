@@ -12,11 +12,6 @@ import static tools.Consts.*;
 public class TestPanel extends JLayeredPane implements MouseMotionListener, MouseListener {
     private final String NAME = "TestPanel/";
 
-    // Block and related
-    private Block mBlock;
-    private int mNBlocks; // Just for show
-    private int mNSuccessTrials; // Number of successful trials so far
-
     // Keys
     private KeyStroke KS_SPACE;
     private KeyStroke KS_RA; // Right arrow
@@ -24,46 +19,22 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     // Layout & elements
     private Dimension mDim = new Dimension();
 
-    private Point mLasPanePos = new Point();
-    private Rectangle mVtFrameRect = new Rectangle();
-    private Rectangle mHzFrameRect = new Rectangle();
-    private JLabel mLevelLabel;
-    private JLabel mTechLabel;
+    private final int TARGET_W_mm = 20; // mm
+    private final int DOCK_W_mm = 30; // mm
+    private final Point TARGET_INIT_POS = new Point(400, 200);
+    private final Point DOCK_INIT_POS = new Point(1000, 300);
 
-    private final int TARGET_W = 100; // px
-    private final int DOCK_W = 150; // px
-    private final Point TARGET_INIT_POS = new Point(500, 400);
-    private final Point DOCK_INIT_POS = new Point(2000, 500);
-
-    private boolean mDragging = false;
     private boolean mGrabbed = false;
+    private final boolean mGhosting = false;
+
     private Rectangle mTarget = new Rectangle();
     private Rectangle mTargetGhost = new Rectangle();
     private Rectangle mDock = new Rectangle();
 
     private Point mGrabPos = new Point();
 
-    private JLabel label;
-
     // Actions ------------------------------------------------------------------------------------
 
-    // End a trial
-    private final Action END_TRIAL = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            final String TAG = TestPanel.this.NAME +  "END_TRIAL";
-            Out.d(TAG, "End trial");
-        }
-    };
-
-    // Jump to the next trial (without check)
-    private final Action ADVANCE_TRIAL = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            remove(0);
-            mNSuccessTrials++;
-        }
-    };
 
 
     // Methods ------------------------------------------------------------------------------------
@@ -84,13 +55,16 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     }
 
     public void start() {
+        final int targetW = Utils.mm2px(TARGET_W_mm);
+        final int dockW = Utils.mm2px(DOCK_W_mm);
+
         mTarget = new Rectangle(
                 TARGET_INIT_POS.x, TARGET_INIT_POS.y,
-                TARGET_W, TARGET_W);
+                targetW, targetW);
 
         mDock = new Rectangle(
                 DOCK_INIT_POS.x, DOCK_INIT_POS.y,
-                DOCK_W, DOCK_W);
+                dockW, dockW);
 
         showTrial();
     }
@@ -98,8 +72,6 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     @Override
     public void addNotify() {
         super.addNotify();
-        getActionMap().put(KeyEvent.VK_SPACE, END_TRIAL);
-        getActionMap().put(KeyEvent.VK_RIGHT, ADVANCE_TRIAL);
     }
 
     /**
@@ -138,23 +110,6 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
         repaint();
     }
 
-    /**
-     * Check if the cursor is inside
-     * @return
-     */
-//    private boolean isCursorInsideTarget() {
-//        Point cursorPos = getCursorPos();
-//
-//        if (cursorPos != null) { // Somehow it can be null!
-//            return (cursorPos.x >= mTargetPos.x) &&
-//                    (cursorPos.y >= mTargetPos.y) &&
-//                    (cursorPos.x <= mTargetPos.x + TARGET_W) &&
-//                    (cursorPos.y <= mTargetPos.y + TARGET_W);
-//        } else {
-//            return false;
-//        }
-//    }
-
     // -------------------------------------------------------------------------------------------
 
     @Override
@@ -174,7 +129,7 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
         g2d.setStroke(oldStroke);
 
         // Draw ghost (if exists)
-        if (mGrabbed) {
+        if (mGhosting && mGrabbed) {
             g2d.setColor(COLORS.BLUE_100);
             g2d.fill(mTargetGhost);
         }
@@ -206,12 +161,13 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
     // -------------------------------------------------------------------------------------------
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (mDragging) {
+        if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;
             mTarget.translate(dX, dY);
 
             mGrabPos = e.getPoint();
+//            mTargetGhost = (Rectangle) mTarget.clone();
 
             repaint();
         }
@@ -237,16 +193,12 @@ public class TestPanel extends JLayeredPane implements MouseMotionListener, Mous
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (mTarget.contains(getCursorPos())) {
-            mGrabbed = true;
-            mGrabPos = getCursorPos();
-        }
+        grab();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        mDragging = false;
-        mGrabPos = e.getPoint();
+        release();
     }
 
     @Override

@@ -80,7 +80,7 @@ public class MainFrame extends JFrame implements MouseListener {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] gd = ge.getScreenDevices();
 
-        scrBound = gd[1].getDefaultConfiguration().getBounds();
+        scrBound = gd[0].getDefaultConfiguration().getBounds();
         scrW = scrBound.width;
         scrH = scrBound.height;
 
