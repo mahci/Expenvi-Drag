@@ -1,11 +1,11 @@
 package gui;
 
 import experiment.Experiment;
+import tools.Consts;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 
 public class MainFrame extends JFrame implements MouseListener {
     private final static String NAME = "MainFrame/";
@@ -21,6 +21,7 @@ public class MainFrame extends JFrame implements MouseListener {
     private Experiment mExperiment;
 
     private TestPanel mTestPanel;
+    private TaskPanel mActivePanel;
 
     /**
      * Constructor
@@ -39,16 +40,31 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void start() {
+
+        // Show the Intro panel
+        final AbstractAction showTaskAl = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showTaskPanel();
+            }
+        };
+        IntroPanel stPanel = new IntroPanel("M", "Window", showTaskAl);
+        add(stPanel);
+        setVisible(true);
+    }
+
+    private void showTaskPanel() {
         final Dimension panelDim = getContentPane().getSize();
 
-        mTestPanel = new TestPanel(panelDim);
+        getContentPane().removeAll();
 
-        getContentPane().add(mTestPanel);
-        mTestPanel.requestFocusInWindow();
-        mTestPanel.start();
-        setVisible(true);
+        mActivePanel = new WindowTaskPanel(panelDim);
 
-//        repaint();
+        getContentPane().add(mActivePanel);
+        mActivePanel.requestFocusInWindow();
+        mActivePanel.start();
+
+        repaint();
     }
 
 
@@ -80,7 +96,7 @@ public class MainFrame extends JFrame implements MouseListener {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] gd = ge.getScreenDevices();
 
-        scrBound = gd[0].getDefaultConfiguration().getBounds();
+        scrBound = gd[1].getDefaultConfiguration().getBounds();
         scrW = scrBound.width;
         scrH = scrBound.height;
 
@@ -127,5 +143,65 @@ public class MainFrame extends JFrame implements MouseListener {
     @Override
     public void mouseExited(MouseEvent e) {
 
+    }
+
+    // Panels --------------------------------------------------------------------------------------------
+    private class IntroPanel extends JPanel {
+        private KeyStroke KS_SPACE;
+
+        public IntroPanel(String device, String task, AbstractAction spaceAction) {
+            KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
+
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+            add(Box.createRigidArea(new Dimension(0, 600)));
+
+            // Instruction label
+            JLabel instructLabel = new JLabel("When ready, press SPACE to start", JLabel.CENTER);
+            instructLabel.setAlignmentX(CENTER_ALIGNMENT);
+            instructLabel.setFont(new Font("Sans", Font.BOLD, 50));
+            instructLabel.setForeground(Consts.COLORS.GRAY_900);
+            add(instructLabel);
+
+            add(Box.createRigidArea(new Dimension(0, 200)));
+
+            // Device-task panel
+            JPanel deviceTaskPnl = new JPanel();
+            deviceTaskPnl.setLayout(new BoxLayout(deviceTaskPnl, BoxLayout.X_AXIS));
+            deviceTaskPnl.setAlignmentX(CENTER_ALIGNMENT);
+            deviceTaskPnl.setMaximumSize(new Dimension(500, 60));
+            deviceTaskPnl.add(Box.createHorizontalGlue());
+
+            JLabel deviceLbl = new JLabel(device, SwingConstants.CENTER);
+            deviceLbl.setFont(new Font("Sans", Font.BOLD, 30));
+            deviceLbl.setPreferredSize(new Dimension(200, 0));
+            deviceLbl.setForeground(Consts.COLORS.BLUE_900);
+            deviceTaskPnl.add(deviceLbl);
+
+            deviceTaskPnl.add(Box.createRigidArea(new Dimension(20, 0)));
+
+            JLabel dashLbl = new JLabel("-", SwingConstants.CENTER);
+            dashLbl.setFont(new Font("Sans", Font.BOLD, 50));
+            dashLbl.setForeground(Consts.COLORS.GRAY_900);
+            dashLbl.setPreferredSize(new Dimension(50, 0));
+            deviceTaskPnl.add(dashLbl);
+
+            deviceTaskPnl.add(Box.createRigidArea(new Dimension(20, 0)));
+
+            JLabel taskLbl = new JLabel(task, SwingConstants.CENTER);
+            taskLbl.setFont(new Font("Sans", Font.BOLD, 30));
+            taskLbl.setForeground(Consts.COLORS.GRAY_900);
+            taskLbl.setPreferredSize(new Dimension(200, 0));
+            deviceTaskPnl.add(taskLbl);
+
+            deviceTaskPnl.add(Box.createHorizontalGlue());
+
+            add(deviceTaskPnl);
+
+            // Set action
+            getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
+            getActionMap().put(KeyEvent.VK_SPACE, spaceAction);
+
+        }
     }
 }

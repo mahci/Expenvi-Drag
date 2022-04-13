@@ -18,7 +18,7 @@ public class Consts {
         public final static int APPLE_DISP_PPI = 109;
         public final static int BENQ_PPI = 89;
 
-        public final static int DPI = MACBOOK_PPI;
+        public final static int DPI = APPLE_DISP_PPI;
         public final static double MM_in_INCH = 25.4;
     }
 
@@ -27,10 +27,12 @@ public class Consts {
         public final static Color GRAY_200 = Color.decode("#EEEEEE");
         public final static Color GRAY_400 = Color.decode("#BDBDBD");
         public final static Color GRAY_500 = Color.decode("#9E9E9E");
+        public final static Color GRAY_900 = Color.decode("#212121");
 
         public final static Color BLUE_50 = Color.decode("#E3F2FD");
         public final static Color BLUE_100 = Color.decode("#BBDEFB");
         public final static Color BLUE_900 = Color.decode("#0D47A1");
+        public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 200);
     }
 
     //-- Fonts and related
@@ -62,6 +64,7 @@ public class Consts {
     //-- Sounds and related
     public static class SOUNDS {
         private static Map<String, Clip> sSounds = new HashMap<>();
+        private static Clip hitClip, missClip, techEndClip;
 
         static {
             try {
@@ -69,14 +72,14 @@ public class Consts {
                 final File missFile = new File("./res/miss.wav");
                 final File techEndFile = new File("./res/end.wav");
 
-                final Clip hitClip = AudioSystem.getClip();
+                hitClip = AudioSystem.getClip();
                 hitClip.open(AudioSystem.getAudioInputStream(hitFile));
 
-                final Clip missClip = AudioSystem.getClip();
+                missClip = AudioSystem.getClip();
                 missClip.open(AudioSystem.getAudioInputStream(missFile));
 
-                final Clip techClip = AudioSystem.getClip();
-                techClip.open(AudioSystem.getAudioInputStream(techEndFile));
+                techEndClip = AudioSystem.getClip();
+                techEndClip.open(AudioSystem.getAudioInputStream(techEndFile));
 
 //                sSounds.put(STRINGS.HIT, hitClip);
 //                sSounds.put(STRINGS.MISS, missClip);
@@ -96,6 +99,16 @@ public class Consts {
                 sSounds.get(soundKey).setMicrosecondPosition(0); // Reset to the start of the file
                 sSounds.get(soundKey).start();
             }
+        }
+
+        public static void playHit() {
+            hitClip.setMicrosecondPosition(0); // Reset to the start of the file
+            hitClip.start();
+        }
+
+        public static void playMiss() {
+            missClip.setMicrosecondPosition(0); // Reset to the start of the file
+            missClip.start();
         }
     }
 
@@ -132,6 +145,8 @@ public class Consts {
                 "To begin the experiment, press SPACE.";
         public final static String END_EXPERIMENT_MESSAGE =
                 "All finished! Thank you for participating in this experiment!";
+
+
 
     }
 

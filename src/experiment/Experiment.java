@@ -1,51 +1,59 @@
 package experiment;
 
+import tools.Utils;
+
 public class Experiment {
     private final static String NAME = "Experiment/";
 
     //-- Constants
 //    public static final DimensionD VT_PANE_DIM_mm = new DimensionD(130.0, 145.0);
 
-//    public enum DIRECTION {
-//        N(0), S(1), E(2), W(3), NE(4), NW(5), SE(6), SW(7);
-//        private final int n;
-//        DIRECTION(int i) { n = i; }
-//        // Get a NE/NW/SE/SW randomly
-//        public static DIRECTION randTd() {
-//            return DIRECTION.values()[Utils.randInt(4, 8)];
-//        }
-//        // Get a NE/SE randomly
-//        public static DIRECTION randOne(DIRECTION d0, DIRECTION d1) {
-//            if (Utils.randInt(0, 2) == 0) return d0;
-//            else return d1;
-//        }
-//        // Get the opposite direction (Horizontal)
-//        public static DIRECTION oppHz(DIRECTION dr) {
-//            return switch (dr) {
-//                case N -> N;
-//                case S -> S;
-//                case E -> W;
-//                case W -> E;
-//                case NE -> NW;
-//                case NW -> NE;
-//                case SE -> SW;
-//                case SW -> SE;
-//            };
-//        }
-//        // Get the opposite direction (Vertical)
-//        public static DIRECTION oppVt(DIRECTION dr) {
-//            return switch (dr) {
-//                case N -> S;
-//                case S -> N;
-//                case E -> E;
-//                case W -> W;
-//                case NE -> SE;
-//                case NW -> SW;
-//                case SE -> NE;
-//                case SW -> NW;
-//            };
-//        }
-//    }
+    public enum DIRECTION {
+        N(0), S(1), E(2), W(3), NE(4), NW(5), SE(6), SW(7);
+        private final int n;
+        DIRECTION(int i) { n = i; }
+        // Get a NE/NW/SE/SW randomly
+        public static DIRECTION randTd() {
+            return DIRECTION.values()[Utils.randInt(4, 8)];
+        }
+        // Get a random direction from two
+        public static DIRECTION randOne(DIRECTION d0, DIRECTION d1) {
+            if (Utils.randInt(0, 2) == 0) return d0;
+            else return d1;
+        }
+        // Get a random direction
+        public static DIRECTION random() {
+            return DIRECTION.values()[Utils.randInt(0, 8)];
+        }
+
+        // Get the opposite direction (Horizontal)
+        public static DIRECTION oppHz(DIRECTION dr) {
+            return switch (dr) {
+                case N -> N;
+                case S -> S;
+                case E -> W;
+                case W -> E;
+                case NE -> NW;
+                case NW -> NE;
+                case SE -> SW;
+                case SW -> SE;
+            };
+        }
+
+        // Get the opposite direction (Vertical)
+        public static DIRECTION oppVt(DIRECTION dr) {
+            return switch (dr) {
+                case N -> S;
+                case S -> N;
+                case E -> E;
+                case W -> W;
+                case NE -> SE;
+                case NW -> SW;
+                case SE -> NE;
+                case SW -> NW;
+            };
+        }
+    }
 
 //    public enum TASK {
 //        VERTICAL, TWO_DIM;
