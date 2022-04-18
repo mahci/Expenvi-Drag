@@ -27,12 +27,13 @@ public class Consts {
         public final static Color GRAY_200 = Color.decode("#EEEEEE");
         public final static Color GRAY_400 = Color.decode("#BDBDBD");
         public final static Color GRAY_500 = Color.decode("#9E9E9E");
+        public final static Color GRAY_800 = Color.decode("#424242");
         public final static Color GRAY_900 = Color.decode("#212121");
 
         public final static Color BLUE_50 = Color.decode("#E3F2FD");
         public final static Color BLUE_100 = Color.decode("#BBDEFB");
         public final static Color BLUE_900 = Color.decode("#0D47A1");
-        public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 200);
+        public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 170);
     }
 
     //-- Fonts and related

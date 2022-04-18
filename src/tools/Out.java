@@ -8,17 +8,9 @@ public class Out {
     private static final List<String> toLogList = new ArrayList<>();
 
     static {
-//        toLogList.add("Server");
-        toLogList.add("ExperimentPanel");
-        toLogList.add("TestPanel");
-//        toLogList.add("Controller");
-//        toLogList.add("MyScrollBarUI");
-        toLogList.add("VTScrollPane");
-        toLogList.add("TDScrollPane");
-        toLogList.add("Experiment");
-//        toLogList.add("Round");
-//        toLogList.add("TechConfigPanel");
-//        toLogList.add("MainFrame");
+        toLogList.add("BarTaskPanel");
+        toLogList.add("WindowTaskPanel");
+        toLogList.add("Line");
     }
 
     /**
