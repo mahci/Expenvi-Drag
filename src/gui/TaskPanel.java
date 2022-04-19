@@ -6,8 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class TaskPanel extends JLayeredPane {
-    protected double TB_MARGIN_mm = 20;
-    protected double LR_MARGIN_mm = 20;
+    protected double TB_MARGIN_mm = 10;
+    protected double LR_MARGIN_mm = 10;
 
     public void start() {
 
