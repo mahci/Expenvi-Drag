@@ -12,7 +12,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
-import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 
@@ -31,14 +33,15 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final double BAR_GRAB_TOL_mm = 1; // tolearnce from each side (to grab)
     private final double TARGET_D_mm = 5; // Perpendicular distance betw. the target lines (> bar L)
     private final double DIST_mm = 100; // Distance from center of bar to the middle of the target lines (= rect cent)
+    private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
 
     // Config
-    private final boolean changeCursor = false;
+    private final boolean mChangeCursor = false;
     private final boolean highlightBar = true;
 
     // Flags
     private boolean mGrabbed = false;
-    private boolean isNearBar = false;
+    private boolean mIsNearBar = false;
 
     // Shapes
     private Rectangle mBarRect = new Rectangle();
@@ -54,12 +57,13 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private Line mBar = new Line();
     private Line mTargetLine1 = new Line();
     private Line mTargetLine2 = new Line();
-    private Line2D.Double mLine = new Line2D.Double(100, 200, 600, 600);
 
     // Other
     private Point mGrabPos = new Point();
     private Experiment.DIRECTION mDir;
     private Dimension mDim;
+
+    final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -167,7 +171,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             case S -> deg = 180;
             case SW -> deg = 225;
             case W -> deg = 270;
-            case NW -> deg = 325;
+            case NW -> deg = 315;
         }
 
         AffineTransform transform = new AffineTransform();
@@ -255,7 +259,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     public void grab() {
-        if (isNearBar) {
+        if (mIsNearBar) {
             mGrabbed = true;
             mGrabPos = getCursorPos();
         }
@@ -270,7 +274,9 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             }
 
             mGrabbed = false;
-            showTrial();
+
+            // Wait a certain delay, then show the next trial
+            executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -323,7 +329,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
 //        g2d.drawLine(mBar.x1, mBar.y1, mBar.x2, mBar.y2);
 
-        if (isNearBar && highlightBar) g2d.setColor(Consts.COLORS.GREEN_A400);
+        if (mIsNearBar && highlightBar) g2d.setColor(Consts.COLORS.GREEN_A400);
         else g2d.setColor(Consts.COLORS.BLUE_900);
 
 //        final Path2D.Double rect = mBar.getBoundRect(Utils.mm2px(BAR_GRAB_TOL_mm));
@@ -400,11 +406,11 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         // When the cursor gets near the bar
 //        isNearBar = mBar.isNear(e.getPoint(), Utils.mm2px(BAR_GRAB_TOL_mm));
-        isNearBar = mBarPath.contains(e.getPoint());
-        if (isNearBar) {
-            if (changeCursor) setCursor(new Cursor(Cursor.SE_RESIZE_CURSOR));
+        mIsNearBar = mBarPath.contains(e.getPoint());
+        if (mIsNearBar) {
+            if (mChangeCursor) setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
-            if (changeCursor) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            if (mChangeCursor) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
 
         if (mGrabbed) {
