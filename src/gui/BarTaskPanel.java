@@ -367,12 +367,16 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mousePressed(MouseEvent e) {
-        grab();
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            grab();
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        release();
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            release();
+        }
     }
 
     @Override

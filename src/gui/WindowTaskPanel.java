@@ -605,12 +605,16 @@ public class WindowTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mousePressed(MouseEvent e) {
-        grab();
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            grab();
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        release();
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            release();
+        }
     }
 
     @Override
