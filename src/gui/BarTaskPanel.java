@@ -54,10 +54,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private Path2D.Double mTar2Path = new Path2D.Double();
     private Path2D.Double mTarInPath = new Path2D.Double();
 
-    private Line mBar = new Line();
-    private Line mTargetLine1 = new Line();
-    private Line mTargetLine2 = new Line();
-
     // Other
     private Point mGrabPos = new Point();
     private Experiment.DIRECTION mDir;
@@ -96,7 +92,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void start() {
-        mBar.setTol(Utils.mm2px(BAR_GRAB_TOL_mm));
+//        mBar.setTol(Utils.mm2px(BAR_GRAB_TOL_mm));
 
         mBarRect.height = Utils.mm2px(BAR_W_mm);
         mBarRect.width = Utils.mm2px(BAR_L_mm);
@@ -182,66 +178,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mTarInPath = new Path2D.Double(mTarInRect, transform);
     }
 
-    /**
-     * Get the randomly-positioned Object and Target
-     */
-    private void randBarTarget() {
-        String TAG = NAME + "randBarTarget";
-
-        // Dimension of the display frame (in px)
-        final int dispW = getDispDim().width;
-        final int dispH = getDispDim().height;
-
-        // Lengths
-        final int barLen = Utils.mm2px(BAR_L_mm);
-        final int tarLen = Utils.mm2px(TARGET_L_mm);
-        final int dist = Utils.mm2px(DIST_mm);
-        final int tarDist = Utils.mm2px(TARGET_D_mm);
-        Out.d(TAG, barLen, tarLen);
-
-        // Check if the longest distance fits the height of display
-        final int diagDist = (int) (sqrt(pow(tarLen, 2) + pow(dist + tarDist, 2)));
-        if (diagDist >= dispH) {
-            Out.d(TAG, "Can't fit the setup in the frame!");
-            return;
-        }
-
-        // Assume a point of origin (bottom left of the envelope rectangle)
-        Out.d(TAG, diagDist, dispW, dispH);
-        final int oX = Utils.randInt(diagDist, dispW - diagDist);
-        final int oY = Utils.randInt(diagDist, dispH - diagDist);
-
-        // Place the lines based on the origin (as if it is N)
-        mBar.setP1(oX + (tarLen - barLen) / 2, oY);
-        mBar.setP2(mBar.x1 + barLen, oY);
-
-        mTargetLine1.setP1(oX, oY - (dist - tarDist / 2));
-        mTargetLine1.setP2(oX + tarLen, mTargetLine1.y1);
-
-        mTargetLine2.setP1(oX, oY - (dist + tarDist / 2));
-        mTargetLine2.setP2(oX + tarLen, mTargetLine2.y1);
-
-        Out.d(TAG, mBar, mTargetLine1, mTargetLine2);
-
-        // Rotate the lines based on the direction
-        int deg = 0;
-        switch (mDir) {
-            case N -> deg = 0;
-            case NE -> deg = 45;
-            case E -> deg = 90;
-            case SE -> deg = 135;
-            case S -> deg = 180;
-            case SW -> deg = 225;
-            case W -> deg = 270;
-            case NW -> deg = 325;
-        }
-
-        mBar.rotate(oX, oY, deg);
-        mTargetLine1.rotate(oX, oY, deg);
-        mTargetLine2.rotate(oX, oY, deg);
-
-    }
-
     private void translateToPanel() {
         final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
         final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
@@ -258,6 +194,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mTarInPath.transform(transform);
     }
 
+    @Override
     public void grab() {
         if (mIsNearBar) {
             mGrabbed = true;
@@ -265,6 +202,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
     }
 
+    @Override
     public void release() {
         if (mGrabbed) {
             if (isSuccessful()) {
@@ -394,7 +332,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;
-//            mBar.translate(dX, dY);
+
             AffineTransform transform = new AffineTransform();
             transform.translate(dX, dY);
             mBarPath.transform(transform);
@@ -418,11 +356,14 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
 
         if (mGrabbed) {
-            mGrabPos = e.getPoint();
-
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;
-            mBar.translate(dX, dY);
+
+            AffineTransform transform = new AffineTransform();
+            transform.translate(dX, dY);
+            mBarPath.transform(transform);
+
+            mGrabPos = e.getPoint();
         }
 
         repaint();

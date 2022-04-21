@@ -8,10 +8,9 @@ public class Out {
     private static final List<String> toLogList = new ArrayList<>();
 
     static {
-        toLogList.add("WindowTaskPanel");
+        toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
         toLogList.add("TunnelTaskPanel");
-        toLogList.add("Line");
     }
 
     /**

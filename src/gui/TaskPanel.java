@@ -10,11 +10,22 @@ public class TaskPanel extends JLayeredPane {
     protected double LR_MARGIN_mm = 10;
 
     public void start() {
-
     }
 
     public boolean isSuccessful() {
         return false;
+    }
+
+    public void grab() {
+
+    }
+
+    public void release() {
+
+    }
+
+    public void cancel() {
+
     }
 
     protected Dimension getDispDim() {

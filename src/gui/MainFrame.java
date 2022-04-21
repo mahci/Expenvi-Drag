@@ -16,11 +16,8 @@ public class MainFrame extends JFrame implements MouseListener {
     private int scrW, scrH;
     private int frW, frH;
 
-//    private static ExperimentPanel mExperimentPanel;
-
     private Experiment mExperiment;
 
-    private TestPanel mTestPanel;
     private TaskPanel mActivePanel;
 
     /**
@@ -58,7 +55,7 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new WindowTaskPanel(panelDim);
+//        mActivePanel = new BoxTaskPanel(panelDim);
         mActivePanel = new BarTaskPanel(panelDim);
 //        mActivePanel = new TunnelTaskPanel(panelDim);
 
@@ -112,15 +109,15 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void grab() {
-        if (mTestPanel != null) mTestPanel.grab();
+        if (mActivePanel != null) mActivePanel.grab();
     }
 
     public void release() {
-        if (mTestPanel != null) mTestPanel.release();
+        if (mActivePanel != null) mActivePanel.release();
     }
 
     public void cancel() {
-        if (mTestPanel != null) mTestPanel.cancel();
+        if (mActivePanel != null) mActivePanel.cancel();
     }
 
 
@@ -148,7 +145,7 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     // Panels --------------------------------------------------------------------------------------------
-    private class IntroPanel extends JPanel {
+    private static class IntroPanel extends JPanel {
         private KeyStroke KS_SPACE;
 
         public IntroPanel(String device, String task, AbstractAction spaceAction) {

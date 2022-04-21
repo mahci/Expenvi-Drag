@@ -174,6 +174,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mObject.translate(lrMargin, tbMargin);
     }
 
+    @Override
     public void grab() {
         if (mObject.contains(getCursorPos())) {
             Out.d(NAME, "inside");
@@ -182,6 +183,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         }
     }
 
+    @Override
     public void release() {
         if (mGrabbed) {
             if (isSuccessful()) {
