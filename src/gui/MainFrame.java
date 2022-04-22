@@ -55,9 +55,12 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new BoxTaskPanel(panelDim);
+        mActivePanel = new BoxTaskPanel(panelDim);
 //        mActivePanel = new BarTaskPanel(panelDim);
-        mActivePanel = new TunnelTaskPanel(panelDim);
+//        mActivePanel = new TunnelTaskPanel(panelDim);
+
+        mActivePanel.setOpaque(true);
+        mActivePanel.setBackground(Color.WHITE);
 
         getContentPane().add(mActivePanel);
         mActivePanel.requestFocusInWindow();
@@ -152,6 +155,8 @@ public class MainFrame extends JFrame implements MouseListener {
             KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
 
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setOpaque(true);
+            setBackground(Color.WHITE);
 
             add(Box.createRigidArea(new Dimension(0, 600)));
 
@@ -169,6 +174,8 @@ public class MainFrame extends JFrame implements MouseListener {
             deviceTaskPnl.setLayout(new BoxLayout(deviceTaskPnl, BoxLayout.X_AXIS));
             deviceTaskPnl.setAlignmentX(CENTER_ALIGNMENT);
             deviceTaskPnl.setMaximumSize(new Dimension(500, 60));
+            deviceTaskPnl.setOpaque(true);
+            deviceTaskPnl.setBackground(Color.WHITE);
             deviceTaskPnl.add(Box.createHorizontalGlue());
 
             JLabel deviceLbl = new JLabel(device, SwingConstants.CENTER);

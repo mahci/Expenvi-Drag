@@ -63,6 +63,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         setSize(dim);
         setLayout(null);
 
+
         addMouseMotionListener(this);
         addMouseListener(this);
 
@@ -76,6 +77,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mTargetPnl.setSize(Utils.mm2px(TARGET_W_mm), Utils.mm2px(TARGET_W_mm));
         BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
         mTargetPnl.setBorder(bord);
+        mTargetPnl.setBackground(COLORS.GRAY_200);
 
         mObject.setSize(Utils.mm2px(OBJECT_W_mm), Utils.mm2px(OBJECT_W_mm));
 
