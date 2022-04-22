@@ -212,6 +212,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 miss();
             }
         }
+
+        mGrabbed = false;
     }
 
     @Override
