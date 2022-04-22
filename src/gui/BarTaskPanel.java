@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.util.concurrent.Executors;
@@ -205,7 +204,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void release() {
         if (mGrabbed) {
-            if (isSuccessful()) {
+            if (isHit()) {
                 Consts.SOUNDS.playHit();
             } else {
                 Consts.SOUNDS.playMiss();
@@ -219,17 +218,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public boolean isSuccessful() {
-//        double[] coords = new double[6];
-//        PathIterator pi = mTar2Path.getPathIterator(null);
-//        while (!pi.isDone()) {
-//            pi.currentSegment(coords);
-//            pi.next();
-//            Out.d(NAME, Arrays.toString(coords));
-//        }
-//
-//        Out.d(NAME, "-----------------");
-
+    public boolean isHit() {
         boolean result = true;
         double[] coords = new double[2];
         PathIterator pi = mBarPath.getPathIterator(null);
@@ -347,13 +336,14 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void mouseMoved(MouseEvent e) {
 
         // When the cursor gets near the bar
-//        isNearBar = mBar.isNear(e.getPoint(), Utils.mm2px(BAR_GRAB_TOL_mm));
         mIsNearBar = mBarPath.contains(e.getPoint());
         if (mIsNearBar) {
             if (mChangeCursor) setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
             if (mChangeCursor) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
+
+
 
         if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
@@ -364,8 +354,11 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             mBarPath.transform(transform);
 
             mGrabPos = e.getPoint();
+//            mouseDragged(e);
         }
 
         repaint();
+
+
     }
 }

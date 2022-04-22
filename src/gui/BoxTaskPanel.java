@@ -1,7 +1,6 @@
 package gui;
 
 import tools.Consts;
-import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
@@ -43,7 +42,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private DIRECTION mDir;
     private Dimension mDim;
 
-    final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -228,7 +227,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void release() {
         if (mGrabbed) {
-            if (isSuccessful()) {
+            if (isHit()) {
                 Consts.SOUNDS.playHit();
 
                 // Move the object within (if not already)
@@ -266,7 +265,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public boolean isSuccessful() {
+    public boolean isHit() {
         return mTargetPnl.getBounds().contains(getCursorPos());
     }
 
@@ -317,16 +316,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mouseMoved(MouseEvent e) {
-//        if (mGrabbed) {
-//            mGrabPos = e.getPoint();
-//
-//            final int dX = e.getX() - mGrabPos.x;
-//            final int dY = e.getY() - mGrabPos.y;
-//            mObject.translate(dX, dY);
-////            mObjectLbl.translate(dX, dY);
-//
-//            repaint();
-//        }
+        mouseDragged(e);
     }
 
     @Override

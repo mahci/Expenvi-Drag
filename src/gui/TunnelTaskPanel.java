@@ -9,10 +9,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
+import java.awt.geom.Area;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 
@@ -24,32 +27,52 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private KeyStroke KS_RA; // Right arrow
 
     // Constants
-    private final double OBJECT_R_mm = 3; // Radius of the object
     private final double DIST_mm = 5; // Distance from the center of the object to the side (l/R) of target lines
-    private final double TARGET_L_mm = 50; // Lneght of the target lines (> bar L)
+
+    private final double START_AREA_L_mm = 17; // Lneght of the Start Area
+    private final double TARGET_L_mm = 100; // Lneght of the Target lines (> bar L)
     private final double TARGET_W_mm = 1; // Targets width
     private final double TARGET_D_mm = 15; // Perpendicular distance betw. the target lines (> bar L)
+
+    private final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
+    private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
 
     // Flags
     private boolean mGrabbed = false;
     private boolean isInsideObj = false;
     private boolean highlightObj = false;
-    private boolean objEntered = false;
+    private boolean mEntered = false;
+    private boolean mMissed = false;
+    private boolean mDragBegan = false;
 
     // Shapes
+    private Rectangle mStartAreaRect = new Rectangle();
     private Rectangle mTar1Rect = new Rectangle();
     private Rectangle mTar2Rect = new Rectangle();
     private Rectangle mTarInRect = new Rectangle();
     private Circle mObject = new Circle();
 
+    private Path2D.Double mStartAreaPath = new Path2D.Double();
     private Path2D.Double mTar1Path = new Path2D.Double();
     private Path2D.Double mTar2Path = new Path2D.Double();
     private Path2D.Double mTarInPath = new Path2D.Double();
-    private Shape mObjShape;
+
+    // Measurements in px
+    private final int DIST = Utils.mm2px(DIST_mm);
+    private final int TGT_L = Utils.mm2px(TARGET_L_mm);
+    private final int TGT_W = Utils.mm2px(TARGET_W_mm);
+    private final int TGT_D = Utils.mm2px(TARGET_D_mm);
+    private final int SA_L = Utils.mm2px(START_AREA_L_mm);
+    private final int DRAG_THSH = Utils.mm2px(DRAG_THRSH_mm);
+    private final int SA_W = TGT_D + 2 * TGT_W;
+    private final int TRACE_R = 1;
 
     // Other
-    private Point mGrabPos = new Point();
+    private Point mLastGrabPos = new Point();
     private Experiment.DIRECTION mDir;
+    private ArrayList<Point> trace = new ArrayList<>();
+
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -81,11 +104,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     public void start() {
         super.start();
 
-        mObject.setRadius(Utils.mm2px(OBJECT_R_mm));
-
-        mTar1Rect.setSize(Utils.mm2px(TARGET_L_mm), Utils.mm2px(TARGET_W_mm));
-        mTar2Rect.setSize(Utils.mm2px(TARGET_L_mm), Utils.mm2px(TARGET_W_mm));
-        mTarInRect.setSize(Utils.mm2px(TARGET_L_mm), Utils.mm2px(TARGET_D_mm));
+        mStartAreaRect.setSize(SA_L, SA_W);
+        mTar1Rect.setSize(TGT_L, TGT_W);
+        mTar2Rect.setSize(TGT_L, TGT_W);
+        mTarInRect.setSize(TGT_L, TGT_D);
 
         showTrial();
     }
@@ -97,48 +119,45 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private void showTrial() {
         String TAG = NAME + "showTrial";
 
+        mMissed = false;
+        mDragBegan = false;
+
         mDir = Experiment.DIRECTION.random();
-        positionObjectTargets();
-//        translateToPanel();
+        positionRandomly();
+        translateToPanel();
         Out.d(TAG, mDir);
 
         repaint();
     }
 
-    private void positionObjectTargets() {
-        String TAG = NAME + "positionObjectTargets";
+    private void positionRandomly() {
+        String TAG = NAME + "randPosition";
 
         // Dimension of the display frame (in px)
         final int dispW = getDispDim().width;
         final int dispH = getDispDim().height;
 
-        // Lengths
-        final int objR = Utils.mm2px(OBJECT_R_mm);
-        final int dist = Utils.mm2px(DIST_mm);
-        final int tarL = Utils.mm2px(TARGET_L_mm);
-        final int tarW = Utils.mm2px(TARGET_W_mm);
-        final int tarDist = Utils.mm2px(TARGET_D_mm);
-
-        final int objDiam = 2 * objR;
-        final int halfTarDist = tarDist / 2;
+//        final int objDiam = 2 * objR;
+//        final int halfTarDist = tarD / 2;
 
         // Check if the longest distance fits the height of display
-        final int maxDist = (int) ((tarL + 2 * dist + 2 * objR) * sqrt(2)); // consider obj on both sides
+        final int maxDist = SA_L + TGT_L;
         Out.d(TAG, "Fitting...", maxDist, dispH);
         if (maxDist >= dispH) {
             Out.d(TAG, "Can't fit the setup in the frame!");
             return;
         }
 
-        // Assume a point of origin (bottom left of the envelope rectangle)
+        // Assume a point of origin (for rotation and ref.)
         final int oX = Utils.randInt(maxDist, dispW - maxDist);
         final int oY = Utils.randInt(maxDist, dispH - maxDist);
 
         // Place the lines based on the origin (as if it is N)
-        mObject.setCenter(oX, oY);
-        mTar1Rect.setLocation(oX + dist, oY - halfTarDist - tarW);
-        mTarInRect.setLocation(oX + dist, oY - halfTarDist);
-        mTar2Rect.setLocation(oX + dist, oY + halfTarDist);
+        mStartAreaRect.setLocation(oX, oY - SA_W / 2);
+//        mObject.setCenter(oX, oY);
+        mTar1Rect.setLocation(oX + SA_L + 10, oY - SA_W / 2);
+        mTar2Rect.setLocation(oX + SA_L + 10, oY + TGT_D / 2);
+        mTarInRect.setLocation(oX + SA_L + 10, oY - TGT_D / 2);
         Out.d(TAG, oX, oY, mObject, mTar1Rect);
         // Rotate the lines based on the direction
         int deg = 0;
@@ -155,6 +174,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         AffineTransform transform = new AffineTransform();
         transform.rotate(toRadians(deg), oX, oY);
+        mStartAreaPath = new Path2D.Double(mStartAreaRect, transform);
         mTar1Path = new Path2D.Double(mTar1Rect, transform);
         mTar2Path = new Path2D.Double(mTar2Rect, transform);
         mTarInPath = new Path2D.Double(mTarInRect, transform);
@@ -167,39 +187,36 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         AffineTransform transform = new AffineTransform();
         transform.translate(lrMargin, tbMargin);
 
+        mStartAreaPath.transform(transform);
         mTar1Path.transform(transform);
         mTar2Path.transform(transform);
         mTarInPath.transform(transform);
 
-        mObject.translate(lrMargin, tbMargin);
+//        mObject.translate(lrMargin, tbMargin);
     }
 
     @Override
     public void grab() {
-        if (mObject.contains(getCursorPos())) {
-            Out.d(NAME, "inside");
+        if (mStartAreaPath.contains(getCursorPos())) {
             mGrabbed = true;
-            mGrabPos = getCursorPos();
+            mLastGrabPos = getCursorPos();
         }
     }
 
     @Override
     public void release() {
-        if (mGrabbed) {
-            if (isSuccessful()) {
-                Consts.SOUNDS.playHit();
+        if (mDragBegan) {
+            if (isHit()) {
+                hit();
             } else {
-                Consts.SOUNDS.playMiss();
+                miss();
             }
-
-            mGrabbed = false;
-            showTrial();
         }
     }
 
     @Override
-    public boolean isSuccessful() {
-        return !mTarInPath.contains(mObject.getBounds());
+    public boolean isHit() {
+        return !mMissed && mGrabbed && mEntered && !mTarInPath.contains(getCursorPos());
     }
 
     /**
@@ -213,6 +230,42 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         return  result;
     }
 
+    private void hit() {
+        Consts.SOUNDS.playHit();
+        mGrabbed = false;
+        mEntered = false;
+        mMissed = true;
+
+        trace.clear();
+
+        // Wait a certain delay, then show the next trial
+        executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
+    }
+
+    private void miss() {
+        Consts.SOUNDS.playMiss();
+        mGrabbed = false;
+        mEntered = false;
+        mMissed = true;
+        mDragBegan = false;
+
+        trace.clear();
+
+        // Wait a certain delay, then show the next trial
+        executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean traceIntersect() {
+        Line2D seg;
+        for (int i = 1; i < trace.size(); i++) {
+            seg = new Line2D.Double(trace.get(i - 1), trace.get(i));
+            if (Utils.intersects(mTar1Path, seg) || Utils.intersects(mTar2Path, seg)) return true;
+        }
+
+        return false;
+    }
+
+    // -------------------------------------------------------------------------------------------
     private void mapKeys() {
         KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
         KS_RA = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0, true);
@@ -233,27 +286,22 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
+        // Draw trace
+        g2d.setColor(Consts.COLORS.BLUE_900);
+        for (Point tp : trace) {
+            g2d.fillOval(tp.x - TRACE_R, tp.y - TRACE_R, TRACE_R * 2, TRACE_R * 2);
+        }
+
+        // Draw Targets
         g2d.setColor(Consts.COLORS.GRAY_500);
         g2d.fill(mTar1Path);
         g2d.fill(mTar2Path);
 
-        if (isInsideObj && highlightObj) g2d.setColor(Consts.COLORS.GREEN_A400);
-        else g2d.setColor(Consts.COLORS.BLUE_900);
-
-        g2d.fillOval(mObject.getX(), mObject.getY(), mObject.getR(), mObject.getR());
-    }
-
-    private void printPath(Path2D.Double path) {
-        final String TAG = NAME + "printPath";
-        Out.d(TAG, "Printing Path...");
-        double[] coords = new double[4];
-        PathIterator pi = path.getPathIterator(null);
-        Out.d(TAG, pi.isDone());
-        while(!pi.isDone()) {
-            pi.currentSegment(coords);
-            Out.d(TAG, Arrays.toString(coords));
-            pi.next();
-        }
+        // Draw Start Area
+        g2d.setColor(Consts.COLORS.GRAY_500);
+        g2d.draw(mStartAreaPath);
+        g2d.setColor(Consts.COLORS.BLUE_900);
+        g2d.fill(mStartAreaPath);
     }
 
     // -------------------------------------------------------------------------------------------
@@ -290,26 +338,30 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     public void mouseDragged(MouseEvent e) {
         if (mGrabbed) {
 
-            final int dX = e.getX() - mGrabPos.x;
-            final int dY = e.getY() - mGrabPos.y;
+            final Point curP = e.getPoint();
 
-            mObject.translate(dX, dY);
+            final int dX = curP.x - mLastGrabPos.x;
+            final int dY = curP.y - mLastGrabPos.y;
 
-            mGrabPos = e.getPoint();
+//            mLastGrabPos = curP;
 
-            repaint();
+            final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
+            mDragBegan = dragDist > DRAG_THSH;
 
-            if (mTar1Path.intersects(mObject.getBounds()) || mTar2Path.intersects(mObject.getBounds())) {
-                Consts.SOUNDS.playMiss();
-                mGrabbed = false;
-                objEntered = false;
+            if (mDragBegan) {
+                // Add cursor point to the trace
+                trace.add(curP);
 
-                showTrial();
-            }
+                if (mTar1Path.contains(curP) || mTar2Path.contains(curP) || traceIntersect()) {
+                    miss();
+                } else {
+                    if (mEntered) {
+                        if (mStartAreaPath.contains(curP)) miss();
+                    } else {
+                        if (mTarInPath.contains(curP)) mEntered = true;
+                    }
 
-            if (!objEntered) {
-                if (mTarInPath.contains(mObject.getBounds())) {
-                    objEntered = true;
+                    repaint();
                 }
             }
 
@@ -318,6 +370,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mouseMoved(MouseEvent e) {
-
+        mouseDragged(e);
     }
 }

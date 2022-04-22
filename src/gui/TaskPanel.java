@@ -12,7 +12,7 @@ public class TaskPanel extends JLayeredPane {
     public void start() {
     }
 
-    public boolean isSuccessful() {
+    public boolean isHit() {
         return false;
     }
 

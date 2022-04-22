@@ -2,6 +2,9 @@ package tools;
 
 import experiment.Experiment;
 
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -93,73 +96,6 @@ public class Utils {
     }
 
     /**
-     * Manually wrap the text (add \n) and write to outFileName
-     * @param resTxtFileName - name of the text file (in /res)
-     * @param outFileName - name of the output file (in /res)
-     * @param wrapWidth - Width to wrap (in characters)
-     * @return ArrayList<Integer></> - number of chraacters in each line
-     */
-    public static ArrayList<Integer> wrapFile(String resTxtFileName, String outFileName, int wrapWidth)
-            throws IOException {
-        String TAG = "wrapFile";
-
-        // Read and get the paragraphs
-        String filePath = System.getProperty("user.dir") + "/res/" + resTxtFileName;
-        String content = Files.readString(Path.of(filePath));
-        String[] paragraphs = content.split("\n");
-
-        // Wrap each paragraph and write to file
-        PrintWriter outFilePW = new PrintWriter(new FileWriter(outFileName));
-        int nParagraphs = paragraphs.length;
-        for (int pi = 0; pi < nParagraphs - 1; pi++) {
-            outFilePW.println(wrapParagraph(paragraphs[pi], wrapWidth));
-        }
-        outFilePW.print(wrapParagraph(paragraphs[nParagraphs - 1], wrapWidth)); // write the last paragraph
-        outFilePW.close();
-
-        return lineCharCountList;
-    }
-
-    /**
-     * Wrap a paragraph
-     * @param paragraph - input paragraph
-     * @param wrapWidth - width of wrap
-     * @return wrapped paraagraph
-     */
-    public static String wrapParagraph(String paragraph, int wrapWidth) {
-        String TAG = "wrapText";
-
-        // Special cases
-        if (paragraph == null) return "";
-        if (paragraph.length() <= wrapWidth) {
-            lineCharCountList.add(paragraph.length()); // add the count of chars to the list
-            return paragraph;
-        }
-
-        // Normal cases
-        StringBuilder outStr = new StringBuilder();
-        ArrayList<String> words = new ArrayList<>(Arrays.asList(paragraph.split(" ")));
-
-        StringBuilder line = new StringBuilder();
-        while (words.size() > 0) {
-            if ((line + words.get(0)).length() + 1 < wrapWidth) { // +1 for the last space
-                // add if doesn't exceed the limit
-                line.append(words.remove(0)).append(" ");
-            } else {
-                outStr.append(line).append("\n");
-                // add the count of chars to the list
-                lineCharCountList.add(line.length());
-                // reset the line
-                line = new StringBuilder();
-            }
-        }
-        outStr.append(line); // append the last line (bc the words is now empty)
-        lineCharCountList.add(line.length()); // add the count of chars to the list
-
-        return outStr.toString();
-    }
-
-    /**
      * True -> 1, False -> 0
      * @param b Boolean
      * @return Int
@@ -201,4 +137,62 @@ public class Utils {
         return format.format(Calendar.getInstance().getTime());
     }
 
+    /**
+     * Print Path2D.Double coords
+     * @param path Path2D.Double
+     */
+    private void printPath(Path2D.Double path) {
+        final String TAG = NAME + "printPath";
+        Out.d(TAG, "Printing Path...");
+        double[] coords = new double[4];
+        PathIterator pi = path.getPathIterator(null);
+        Out.d(TAG, pi.isDone());
+        while(!pi.isDone()) {
+            pi.currentSegment(coords);
+            Out.d(TAG, Arrays.toString(coords));
+            pi.next();
+        }
+    }
+
+    public static boolean intersects(Path2D.Double path, Line2D line) {
+        double x1 = -1 ,y1 = -1 , x2= -1, y2 = -1;
+        for (PathIterator pi = path.getPathIterator(null); !pi.isDone(); pi.next())
+        {
+            double[] coordinates = new double[6];
+            switch (pi.currentSegment(coordinates))
+            {
+                case PathIterator.SEG_MOVETO:
+                case PathIterator.SEG_LINETO:
+                {
+                    if(x1 == -1 && y1 == -1 )
+                    {
+                        x1 = coordinates[0];
+                        y1 = coordinates[1];
+                        break;
+                    }
+                    if(x2 == -1 && y2 == -1)
+                    {
+                        x2 = coordinates[0];
+                        y2 = coordinates[1];
+                        break;
+                    }
+                    break;
+                }
+            }
+            if(x1 != -1 && y1 != -1 && x2 != -1 && y2 != -1)
+            {
+                Line2D segment = new Line2D.Double(x1, y1, x2, y2);
+                if (segment.intersectsLine(line))
+                {
+                    return true;
+                }
+                x1 = -1;
+                y1 = -1;
+                x2 = -1;
+                y2 = -1;
+            }
+        }
+
+        return false;
+    }
 }
