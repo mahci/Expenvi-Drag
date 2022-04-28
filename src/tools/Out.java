@@ -11,6 +11,7 @@ public class Out {
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
         toLogList.add("TunnelTaskPanel");
+        toLogList.add("Circle");
     }
 
     /**

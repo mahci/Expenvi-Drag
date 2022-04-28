@@ -1,17 +1,39 @@
 package gui;
 
+import tools.Out;
+
 import java.awt.*;
 import java.awt.geom.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.lang.Math.*;
 
 public class Circle implements Shape {
+    private final static String NAME = "Circle/";
+
     public Point center;
     public int radius;
-    private Ellipse2D ell;
+    private Ellipse2D ell = new Ellipse2D.Double();
 
     public Circle() {
         center = new Point();
         radius = 0;
-        ell = new Ellipse2D.Double();
+    }
+
+    public Circle(Point cntr, int r) {
+        center = cntr;
+        radius = r;
+        ell.setFrameFromCenter(center, getUL());
+    }
+
+    public Circle(int cx, int cy, int r) {
+        this(new Point(cx, cy), r);
+    }
+
+    public Circle(double cx, double cy, int r) {
+        this(new Point((int) cx, (int) cy), r);
     }
 
     public void setRadius(int r) {
@@ -41,6 +63,9 @@ public class Circle implements Shape {
         return center.y - radius;
     }
 
+    public Point getUL() {
+        return new Point(center.x - radius, center.y - radius);
+    }
 
     @Override
     public Rectangle getBounds() {
@@ -63,9 +88,43 @@ public class Circle implements Shape {
         return ell.contains(p);
     }
 
+    public List<Integer> intersection(int y) {
+        final String TAG = NAME + "intersection";
+
+        List<Integer> result = new ArrayList<>();
+        final int upperY = center.y - radius;
+        final int lowerY = center.y + radius;
+        Out.d(TAG, upperY, lowerY);
+        if (y < upperY || y > lowerY) return result;
+        else {
+            // Two intersections (+-) (will be the same if y = upper/lowerY
+            int x = (int) (sqrt(pow(radius, 2) - pow((y - center.y), 2)) + center.x);
+            result.add(x);
+            x = (int) (-sqrt(pow(radius, 2) - pow((y - center.y), 2)) + center.x);
+            result.add(x);
+        }
+
+        return result;
+    }
+
+    public List<Point> getPoints() {
+        final String TAG = NAME + "intersection";
+
+        List<Point> result = new ArrayList<>();
+        int cx = center.x;
+        int cy = center.y;
+        for (int angle = 0; angle < 360; angle++) {
+            result.add(new Point(
+                    (int) (cx + radius * cos(angle)),
+                    (int) (cy + radius * sin(angle))));
+        }
+
+        return result;
+    }
+
     @Override
     public boolean intersects(double x, double y, double w, double h) {
-        return false;
+        return ell.intersects(x, y, w, h);
     }
 
     @Override
@@ -85,12 +144,12 @@ public class Circle implements Shape {
 
     @Override
     public PathIterator getPathIterator(AffineTransform at) {
-        return null;
+        return ell.getPathIterator(at);
     }
 
     @Override
     public PathIterator getPathIterator(AffineTransform at, double flatness) {
-        return null;
+        return ell.getPathIterator(at, flatness);
     }
 
     @Override

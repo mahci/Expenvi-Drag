@@ -4,6 +4,11 @@ public class MinMax {
     public int min;
     public int max;
 
+    public MinMax(int min, int max) {
+        this.min = min;
+        this.max = max;
+    }
+
     /**
      * Check if a value is between min and max (inlcusive)
      * @param value Value to check

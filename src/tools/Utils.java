@@ -57,6 +57,14 @@ public class Utils {
     }
 
     /**
+     * NOT on 0/1 (o => 1, 1 => 0)
+     * @return Int
+     */
+    public static int intNOT(int i) {
+        return (i == 1) ? 0 : 1;
+    }
+
+    /**
      * mm to pixel
      * @param mm - millimeters
      * @return equivalant in pixels
