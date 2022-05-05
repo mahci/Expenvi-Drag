@@ -4,6 +4,11 @@ public class Pair {
     public int first;
     public int second;
 
+    public Pair(int f, int s) {
+        first = f;
+        second = s;
+    }
+
     public void set(int f, int s) {
         first = f;
         second = s;
@@ -33,5 +38,13 @@ public class Pair {
      */
     public void incS() {
         second++;
+    }
+
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "first=" + first +
+                ", second=" + second +
+                '}';
     }
 }

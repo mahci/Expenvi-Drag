@@ -35,7 +35,9 @@ public class Consts {
         public final static Color BLUE_900 = Color.decode("#0D47A1");
         public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 170);
 
+        public final static Color GREEN_700 = Color.decode("#388E3C");
         public final static Color GREEN_A400 = Color.decode("#00E676");
+
     }
 
     //-- Fonts and related

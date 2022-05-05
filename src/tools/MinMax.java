@@ -9,19 +9,24 @@ public class MinMax {
         this.max = max;
     }
 
+    public MinMax() {
+        this.min = 0;
+        this.max = 0;
+    }
+
     /**
      * Check if a value is between min and max (inlcusive)
      * @param value Value to check
      * @return True/False
      */
-    public boolean isBetweenIncl(int value) {return value <= max && value >= min;}
+    public boolean containsIncl(int value) {return value <= max && value >= min;}
 
     /**
      * isWithing exclusive of min and max
      * @param value Value to check
      * @return True/false
      */
-    public boolean isBetween(int value) {return value < max && value > min;}
+    public boolean contains(int value) {return value < max && value > min;}
 
     /**
      * Get the range

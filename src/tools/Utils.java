@@ -2,6 +2,7 @@ package tools;
 
 import experiment.Experiment;
 
+import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -14,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static tools.Consts.DISP.*;
@@ -33,8 +35,9 @@ public class Utils {
      * @return Random int
      * @throws IllegalArgumentException if bound < min
      */
-    public static int randInt(int min, int bound) throws IllegalArgumentException {
-        return ThreadLocalRandom.current().nextInt(min, bound);
+    public static int randInt(int min, int bound) {
+        if (bound <= min) return min;
+        else return ThreadLocalRandom.current().nextInt(min, bound);
     }
 
     /**
@@ -43,7 +46,7 @@ public class Utils {
      * @return Random int
      * @throws IllegalArgumentException if bound < min
      */
-    public static int randIntBetween(MinMax minMax) throws IllegalArgumentException {
+    public static int randInt(MinMax minMax) throws IllegalArgumentException {
         return ThreadLocalRandom.current().nextInt(minMax.min, minMax.max);
     }
 
@@ -54,6 +57,15 @@ public class Utils {
      */
     public static int randElement(int[] inArray) {
         return inArray[randInt(0, inArray.length)];
+    }
+
+    /**
+     * Get a random element from a List
+     * @param inList List
+     * @return Object element
+     */
+    public static Object randElement(List inList) {
+        return inList.get(randInt(0, inList.size()));
     }
 
     /**
@@ -113,27 +125,12 @@ public class Utils {
     }
 
     /**
-     * Get the current time up to the seconds
-     * @return LocalTime
-     */
-    public static LocalTime nowTimeSec() {
-        return LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-    }
-
-    /**
-     * Get the current time up to the milliseconds
-     * @return LocalTime
-     */
-    public static LocalTime nowTimeMilli() {
-        return LocalTime.now().truncatedTo(ChronoUnit.MILLIS);
-    }
-
-    /**
      * Get the time in millis
      * @return Long timestamp
      */
-    public static long nowInMillis() {
-        return Calendar.getInstance().getTimeInMillis();
+    public static long nowMillis() {
+//        return Calendar.getInstance().getTimeInMillis();
+        return System.currentTimeMillis();
     }
 
     /**

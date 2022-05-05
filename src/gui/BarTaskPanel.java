@@ -16,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
+import static experiment.Experiment.*;
 
 public class BarTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "BarTaskPanel/";
@@ -43,6 +44,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private boolean mIsNearBar = false;
 
     // Shapes
+    private Group mGroup;
     private Rectangle mBarRect = new Rectangle();
     private Rectangle mTarRect1 = new Rectangle();
     private Rectangle mTarRect2 = new Rectangle();
@@ -58,7 +60,10 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private Experiment.DIRECTION mDir;
     private Dimension mDim;
 
-    final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    private long t0;
+    private boolean firstMove;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -91,19 +96,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void start() {
-//        mBar.setTol(Utils.mm2px(BAR_GRAB_TOL_mm));
-
-        mBarRect.height = Utils.mm2px(BAR_W_mm);
-        mBarRect.width = Utils.mm2px(BAR_L_mm);
-
-        mTarRect1.height = Utils.mm2px(TARGET_W_mm);
-        mTarRect1.width = Utils.mm2px(TARGET_L_mm);
-
-        mTarRect2.height = Utils.mm2px(TARGET_W_mm);
-        mTarRect2.width = Utils.mm2px(TARGET_L_mm);
-
-        mTarInRect.height = Utils.mm2px(TARGET_D_mm);
-        mTarInRect.width = Utils.mm2px(TARGET_L_mm);
 
         showTrial();
     }
@@ -113,84 +105,25 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
      */
     private void showTrial() {
         String TAG = NAME + "showTrial";
+        firstMove = false;
 
         mDir = Experiment.DIRECTION.random();
-//        randBarTarget();
-        positionBarTargets();
-        translateToPanel();
+
+        mGroup = new Group(
+                Utils.mm2px(BAR_W_mm), Utils.mm2px(BAR_L_mm),
+                Utils.mm2px(TARGET_W_mm), Utils.mm2px(TARGET_L_mm),
+                Utils.mm2px(TARGET_D_mm), mDir, Utils.mm2px(DIST_mm));
+
         Out.d(TAG, mDir);
 
-        repaint();
-    }
+        if (mGroup.position() == 0) {
+            mGroup.translateToPanel();
 
-    private void positionBarTargets() {
-        String TAG = NAME + "positionBarTargets";
-
-        // Dimension of the display frame (in px)
-        final int dispW = getDispDim().width;
-        final int dispH = getDispDim().height;
-
-        // Lengths
-        final int barL = Utils.mm2px(BAR_L_mm);
-        final int barW = Utils.mm2px(BAR_W_mm);
-        final int tarL = Utils.mm2px(TARGET_L_mm);
-        final int tarW = Utils.mm2px(TARGET_W_mm);
-
-        final int dist = Utils.mm2px(DIST_mm);
-        final int tarDist = Utils.mm2px(TARGET_D_mm);
-
-        // Check if the longest distance fits the height of display
-        final int diagDist = (int) (sqrt(pow(tarL, 2) + pow(dist + tarDist, 2)));
-        if (diagDist >= dispH) {
-            Out.d(TAG, "Can't fit the setup in the frame!");
-            return;
+            repaint();
+        } else {
+            Out.e(NAME, "Couldn't find suitable position!");
         }
 
-        // Assume a point of origin (bottom left of the envelope rectangle)
-        final int oX = Utils.randInt(diagDist, dispW - diagDist);
-        final int oY = Utils.randInt(diagDist, dispH - diagDist);
-
-        // Place the lines based on the origin (as if it is N)
-        mBarRect.setLocation(oX + (tarL - barL) / 2, oY - barW);
-        mTarRect1.setLocation(oX, oY - barW - dist - tarDist - 2 * tarW);
-        mTarInRect.setLocation(oX, oY - barW - dist - tarW - tarDist);
-        mTarRect2.setLocation(oX, oY - barW - dist - tarW);
-
-        // Rotate the lines based on the direction
-        int deg = 0;
-        switch (mDir) {
-            case N -> deg = 0;
-            case NE -> deg = 45;
-            case E -> deg = 90;
-            case SE -> deg = 135;
-            case S -> deg = 180;
-            case SW -> deg = 225;
-            case W -> deg = 270;
-            case NW -> deg = 315;
-        }
-
-        AffineTransform transform = new AffineTransform();
-        transform.rotate(toRadians(deg), oX, oY);
-        mBarPath = new Path2D.Double(mBarRect, transform);
-        mTar1Path = new Path2D.Double(mTarRect1, transform);
-        mTar2Path = new Path2D.Double(mTarRect2, transform);
-        mTarInPath = new Path2D.Double(mTarInRect, transform);
-    }
-
-    private void translateToPanel() {
-        final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-        final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-//        mBar.translate(lrMargin, tbMargin);
-//        mTargetLine1.translate(lrMargin, tbMargin);
-//        mTargetLine2.translate(lrMargin, tbMargin);
-        AffineTransform transform = new AffineTransform();
-        transform.translate(lrMargin, tbMargin);
-
-        mBarPath.transform(transform);
-        mTar1Path.transform(transform);
-        mTar2Path.transform(transform);
-        mTarInPath.transform(transform);
     }
 
     @Override
@@ -214,6 +147,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
             // Wait a certain delay, then show the next trial
             executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
+
+            Out.d(NAME, (Utils.nowMillis() - t0) / 1000.0);
         }
     }
 
@@ -244,28 +179,18 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        final Stroke oldStroke = g2d.getStroke();
-        final float newStroke = 3;
-        g2d.setStroke(new BasicStroke(newStroke));
+//        final Stroke oldStroke = g2d.getStroke();
+//        final float newStroke = 3;
+//        g2d.setStroke(new BasicStroke(newStroke));
 
         g2d.setColor(Consts.COLORS.GRAY_500);
-        g2d.fill(mTar1Path);
-        g2d.fill(mTar2Path);
-//        g2d.drawLine(mTargetLine1.x1, mTargetLine1.y1, mTargetLine1.x2, mTargetLine1.y2);
-//        g2d.drawLine(mTargetLine2.x1, mTargetLine2.y1, mTargetLine2.x2, mTargetLine2.y2);
-
-//        g2d.drawLine(mBar.x1, mBar.y1, mBar.x2, mBar.y2);
+        g2d.fill(mGroup.tgt1Path);
+        g2d.fill(mGroup.tgt2Path);
 
         if (mIsNearBar && highlightBar) g2d.setColor(Consts.COLORS.GREEN_A400);
         else g2d.setColor(Consts.COLORS.BLUE_900);
 
-//        final Path2D.Double rect = mBar.getBoundRect(Utils.mm2px(BAR_GRAB_TOL_mm));
-//        final Rectangle rect = mBar.getBoundRect(Utils.mm2px(BAR_GRAB_TOL_mm));
-//        rect.translate(Utils.mm2px(LR_MARGIN_mm), Utils.mm2px(TB_MARGIN_mm));
-        g2d.fill(mBarPath);
-//        g2d.draw(rect);
-//        g2d.drawRect((int) rect.getMinX(), (int) rect.getMinY(), rect.width, rect.height);
-//        Out.d(TAG, rect);
+        g2d.fill(mGroup.barPath);
     }
 
     /**
@@ -286,6 +211,127 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
         getInputMap().put(KS_RA, KeyEvent.VK_RIGHT);
     }
+
+    // -------------------------------------------------------------------------------------------
+    // Group of things to show!
+    private class Group {
+        public Rectangle mBarRect = new Rectangle();
+        public Rectangle mTgt1Rect = new Rectangle();
+        public Rectangle mTgt2Rect = new Rectangle();
+
+        public Rectangle mTgtRoomRect = new Rectangle();
+
+        private Rectangle mCircumRect = new Rectangle();
+
+        public Path2D.Double barPath = new Path2D.Double();
+        public Path2D.Double tgt1Path = new Path2D.Double();
+        public Path2D.Double tgt2Path = new Path2D.Double();
+        public Path2D.Double tgtRoomPath = new Path2D.Double();
+
+        public DIRECTION mDir;
+        public int mBTDist;
+
+        /**
+         * Constructor
+         * (All units in px)
+         * @param barW Bar Width
+         * @param barL Bar Length
+         * @param tgtW Target Width
+         * @param tgtL Target Length
+         * @param tgtD Target Dist
+         * @param dir DIRECTION
+         * @param barTgtD Distance bet. center of the bar and the middle of targets
+         */
+        public Group(int barW, int barL, int tgtW, int tgtL, int tgtD, DIRECTION dir, int barTgtD) {
+            mBarRect.setSize(barL, barW);
+            mTgt1Rect.setSize(tgtL, tgtW);
+            mTgt2Rect.setSize(tgtL, tgtW);
+
+            mTgtRoomRect.setSize(tgtL, tgtD);
+
+            mCircumRect.setSize(tgtL, barW + barTgtD + (2 * tgtW) + tgtD);
+
+            mDir = dir;
+            mBTDist = barTgtD;
+        }
+
+        public int position() {
+
+            // Dimension of the display frame (in px)
+            final int dispW = getDispDim().width;
+            final int dispH = getDispDim().height;
+
+            // Check if the longest distance fits the height of display
+            final int diagDist = (int) sqrt(pow(mCircumRect.width, 2) + pow(mCircumRect.height, 2));
+            if (diagDist >= getDispDim().height) {
+                return 1;
+            }
+
+            // Assume a point of origin (lower left corner of the envelope rectangle), then position accord.
+            final int oX = Utils.randInt(diagDist, dispW - diagDist);
+            final int oY = Utils.randInt(diagDist, dispH - diagDist);
+
+            mCircumRect.setLocation(oX, oY - mCircumRect.height);
+
+            positionElements(oX, oY);
+
+            // Rotate based on the Direction
+            int deg = 0;
+            switch (mDir) {
+                case N -> deg = 0;
+                case NE -> deg = 45;
+                case E -> deg = 90;
+                case SE -> deg = 135;
+                case S -> deg = 180;
+                case SW -> deg = 225;
+                case W -> deg = 270;
+                case NW -> deg = 315;
+            }
+
+            AffineTransform transform = new AffineTransform();
+            transform.rotate(toRadians(deg), oX, oY);
+
+            barPath = new Path2D.Double(mBarRect, transform);
+            tgt1Path = new Path2D.Double(mTgt1Rect, transform);
+            tgt2Path = new Path2D.Double(mTgt2Rect, transform);
+            tgtRoomPath = new Path2D.Double(mTgtRoomRect, transform);
+
+            return 0;
+        }
+
+        /**
+         * Position elements based on the origing point (LL of circumRect)
+         * @param oX Origin point X
+         * @param oY Origing point Y
+         */
+        private void positionElements(int oX, int oY) {
+
+            int diffDist = (mTgt1Rect.width - mBarRect.width) / 2;
+
+            mBarRect.setLocation(oX + diffDist, oY - mBarRect.height);
+            mTgt1Rect.setLocation(oX, oY - mCircumRect.height);
+            mTgtRoomRect.setLocation(oX, mTgt1Rect.y + mTgt1Rect.height);
+            mTgt2Rect.setLocation(oX, mTgtRoomRect.y + mTgtRoomRect.height);
+        }
+
+        public void translateToPanel() {
+            final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
+            final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
+
+            AffineTransform transform = new AffineTransform();
+            transform.translate(lrMargin, tbMargin);
+
+            barPath.transform(transform);
+            tgt1Path.transform(transform);
+            tgt2Path.transform(transform);
+            tgtRoomPath.transform(transform);
+
+
+        }
+
+    }
+
+
 
     // -------------------------------------------------------------------------------------------
     @Override
@@ -324,7 +370,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
             AffineTransform transform = new AffineTransform();
             transform.translate(dX, dY);
-            mBarPath.transform(transform);
+
+            mGroup.barPath.transform(transform);
 
             mGrabPos = e.getPoint();
 
@@ -335,15 +382,15 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void mouseMoved(MouseEvent e) {
 
+        if (!firstMove) t0 = Utils.nowMillis();
+
         // When the cursor gets near the bar
-        mIsNearBar = mBarPath.contains(e.getPoint());
+        mIsNearBar = mGroup.barPath.contains(e.getPoint());
         if (mIsNearBar) {
             if (mChangeCursor) setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
             if (mChangeCursor) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
-
-
 
         if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
@@ -351,7 +398,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
             AffineTransform transform = new AffineTransform();
             transform.translate(dX, dY);
-            mBarPath.transform(transform);
+
+            mGroup.barPath.transform(transform);
 
             mGrabPos = e.getPoint();
 //            mouseDragged(e);
@@ -359,6 +407,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         repaint();
 
-
     }
+
+
 }

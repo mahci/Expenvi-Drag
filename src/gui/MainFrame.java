@@ -55,9 +55,9 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-        mActivePanel = new BoxTaskPanel(panelDim);
+//        mActivePanel = new BoxTaskPanel(panelDim);
 //        mActivePanel = new BarTaskPanel(panelDim);
-//        mActivePanel = new TunnelTaskPanel(panelDim);
+        mActivePanel = new TunnelTaskPanel(panelDim);
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

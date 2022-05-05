@@ -51,6 +51,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
+    private long t0, t1;
+    private boolean firstMove;
+
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
@@ -101,7 +104,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             mGroup.translateToPanel();
 
             removeAll();
-            add(mGroup.mTarget, DEFAULT_LAYER);
+            add(mGroup.target, DEFAULT_LAYER);
 
             repaint();
         } else {
@@ -116,7 +119,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
      */
     private void showTrial() {
         String TAG = NAME + "showTrial";
-
+        firstMove = false;
         mDir = DIRECTION.random();
 //        mDir = DIRECTION.W;
 //
@@ -127,23 +130,12 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             mGroup.translateToPanel();
 
             removeAll();
-            add(mGroup.mTarget, DEFAULT_LAYER);
+            add(mGroup.target, DEFAULT_LAYER);
 
             repaint();
         } else {
             Out.e(TAG, "Couldn't find a suitable position!");
         }
-//        Rectangle otRect = randPos();
-//
-//        if (otRect.x != -1) { // valid location
-//
-//            translateToPanel();
-//
-//            removeAll();
-//            add(mTargetPnl, DEFAULT_LAYER);
-//
-//            repaint();
-//        }
 
     }
 
@@ -251,182 +243,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
     }
 
-    private Rectangle randPos() {
-        String TAG = NAME + "randPos";
-
-        // Dimension of the display frame (in px)
-        final int dispW = getDispDim().width;
-        final int dispH = getDispDim().height;
-
-        // In px
-        final int dist = Utils.mm2px(DIST_mm);
-        final int sideDist = (int) (dist / sqrt(2));
-
-        final int tgtW = mTargetPnl.getWidth();
-        final int objW = mObject.width;
-        int combW = tgtW + dist + objW; // Combined rectangle side
-
-        // Next trial dist circle
-        final int nextTrialD = Utils.mm2px(NEXT_TRIAL_DIST_mm);
-        final Circle nextTrialRange = new Circle(mObject.getCenterX(), mObject.getCenterY(), nextTrialD);
-
-        final MinMax objCntPossX = getObjCntPossX(objW, tgtW, dist, mDir, getDispDim());
-        final MinMax objCntPossY = getObjCntPossY(objW, tgtW, dist, mDir, getDispDim());
-
-        // Range of Y (based on the next_trial_dist)
-        final MinMax nextTrialY = new MinMax(
-                (int) (mObject.getCenterY() - nextTrialD),
-                (int) (mObject.getCenterY() + nextTrialD));
-
-        Point objCnt = new Point(-1, -1);
-        Rectangle otRect = new Rectangle(-1, -1, 0, 0);
-        while (objCnt.x == -1) { // Still haven't found a proper position
-            objCnt.y = Utils.randIntBetween(nextTrialY);
-
-            List<Integer> possibleXs = nextTrialRange.intersection(objCnt.y);
-            if (possibleXs.isEmpty()) {
-                Out.d(TAG, "Couldn't position the trial");
-            } else {
-                final int ind = Utils.randInt(0, 2); // Flip a coin!
-                objCnt.x = possibleXs.get(ind);
-                otRect = getOTRect(objW, tgtW, dist, objCnt, mDir);
-
-                if (!checkRectFit(otRect)) {
-                    objCnt.x = possibleXs.get(Utils.intNOT(ind));
-                    otRect = getOTRect(objW, tgtW, dist, objCnt, mDir);
-
-                    if (!checkRectFit(otRect)) {
-                        continue;
-                    }
-                }
-            }
-
-            // Location found!
-            return otRect;
-        }
-
-        return otRect;
-
-        // NEWS
-//        switch (mDir) {
-//            case N -> {
-//                // Range of Y (based on the next_trial_dist)
-//                final MinMax nextTrialY = new MinMax(
-//                        (int) (mObject.getCenterY() - nextTrialD),
-//                        (int) (mObject.getCenterY() + nextTrialD));
-//
-//                Out.d(TAG, "Y - Possible | Range", objCntPossY, nextTrialY);
-//
-//                // Set Y
-//                if (nextTrialY.min > objCntPossY.max) {
-//                    Out.d(TAG, "Couldn't position the trial");
-//                    return;
-//                } else {
-//                    Out.d(TAG, "Compare range", max(nextTrialY.min, objCntPossY.min),
-//                            min(nextTrialY.max, objCntPossY.max));
-//                    mObject.y = Utils.randInt(
-//                            max(nextTrialY.min, objCntPossY.min),
-//                            min(nextTrialY.max, objCntPossY.max));
-//                }
-//
-//                // X is based on the next trial dist
-//                int objCX = 0, objCY = 0;
-//                List<Integer> possibleXs = nextTrialRange.intersection(mObject.y);
-//                if (possibleXs.isEmpty()) {
-//                    Out.d(TAG, "Couldn't position the trial");
-//                    return;
-//                } else {
-//                    final int ind = Utils.randInt(0, 2); // Flip a coin!
-////                    if (objCntPossX.isBetween(possibleXs.get(ind))) objCX
-//                }
-//
-//                mObject.x = objCX - objW / 2;
-//                objCY = (int) mObject.getCenterY();
-//
-//                mTargetPnl.setLocation(
-//                        objCX - tgtW / 2,
-//                        objCY - objW / 2 - dist - tgtW);
-//
-//                Out.d(TAG, mObject, mTargetPnl);
-//
-//            }
-//
-//            case S -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(0, dispW - tgtW),
-//                        Utils.randInt(objW + dist, dispH - tgtW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() + ((tgtW - objW) / 2),
-//                        mTargetPnl.getY() - (objW + dist));
-//            }
-//
-//            case E -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(objW + dist, dispW - tgtW),
-//                        Utils.randInt(0, dispH - tgtW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() - (objW + dist),
-//                        mTargetPnl.getY() + ((tgtW - objW) / 2));
-//            }
-//
-//            case W -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(0, dispW - combW),
-//                        Utils.randInt(0, dispH - tgtW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() + (tgtW + dist),
-//                        mTargetPnl.getY() + ((tgtW - objW) / 2));
-//            }
-//        }
-//
-//        // Diagonal
-//        combW = tgtW + sideDist + objW; // Combined rectangle side
-//
-//        switch (mDir) {
-//            case NE -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(objW + sideDist, dispW - tgtW),
-//                        Utils.randInt(0, dispH - combW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() - (objW + sideDist),
-//                        mTargetPnl.getY() + (tgtW + sideDist));
-//            }
-//
-//            case NW -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(0, dispW - combW),
-//                        Utils.randInt(0, dispH - combW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() + (tgtW + sideDist),
-//                        mTargetPnl.getY() + (tgtW + sideDist));
-//            }
-//
-//            case SE -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(objW + sideDist, dispW - tgtW),
-//                        Utils.randInt(objW + sideDist, dispH - tgtW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() - (objW + sideDist),
-//                        mTargetPnl.getY() - (objW + sideDist));
-//            }
-//
-//            case SW -> {
-//                mTargetPnl.setLocation(
-//                        Utils.randInt(0, combW),
-//                        Utils.randInt(objW + sideDist, dispH - tgtW));
-//
-//                mObject.setLocation(
-//                        mTargetPnl.getX() + (tgtW + sideDist),
-//                        mTargetPnl.getY() - (objW + sideDist));
-//            }
-//        }
-    }
 
     private void translateToPanel() {
         final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
@@ -498,25 +314,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         return otRect;
     }
 
-    private void posObjTar(Rectangle otRect, DIRECTION dir) {
-
-//        switch (dir) {
-//            case N -> {
-//                mObject.setLocation(otRect.x , );
-//            }
-//            case S -> otRect.setLocation(objCnt.x - tgtHW, objCnt.y - objHW);
-//
-//            case E -> otRect.setLocation(objCnt.x - objHW, objCnt.y - tgtHW);
-//            case W -> otRect.setLocation(objCnt.x - longD, objCnt.y - tgtHW);
-//
-//            case NE -> otRect.setLocation(objCnt.x - objHW, objCnt.y - sideD);
-//            case NW -> otRect.setLocation(objCnt.x - sideD, objCnt.y - sideD);
-//
-//            case SE -> otRect.setLocation(objCnt.x - objHW, objCnt.y - objHW);
-//            case SW -> otRect.setLocation(objCnt.x - sideD, objCnt.y - objHW);
-//        };
-    }
-
     /**
      * Check if a rectangel can be fitted in disp area
      * @param rect Rectangle
@@ -559,6 +356,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             // Wait a certain delay, then show the next trial
             executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
 
+            Out.d(NAME, "Util", (Utils.nowMillis() - t0) / 1000.0);
+            Out.d(NAME, "System", (System.currentTimeMillis() - t1) / 1000.0);
+
         }
     }
 
@@ -596,11 +396,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
         g2d.setColor(COLORS.BLUE_900_ALPHA);
-        g2d.fill(mGroup.mObject);
+        g2d.fill(mGroup.object);
 
         // TEMP
-        g2d.setColor(COLORS.BLUE_900);
-        g2d.draw(mGroup.mCircumRect);
+//        g2d.setColor(COLORS.BLUE_900);
+//        g2d.draw(mGroup.mCircumRect);
     }
 
     /**
@@ -622,14 +422,248 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         getInputMap().put(KS_RA, KeyEvent.VK_RIGHT);
     }
 
+
+    // -------------------------------------------------------------------------------------------
+    // Group of things to show!
+    private class Group {
+        public Rectangle object = new Rectangle();
+        public MoPanel target = new MoPanel();
+        private Rectangle circumRect = new Rectangle();
+
+        public DIRECTION dir;
+        public int dist;
+
+        // Helper vars
+        private int mObjHalfW, mTarHalfW, mSideDist, mLongL, mSideL, mDiffHalf;
+
+        public Group(int objW, int tgtW, DIRECTION dir, int dist) {
+            object.setSize(objW, objW);
+
+            target.setSize(tgtW, tgtW);
+            BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
+            target.setBorder(bord);
+            target.setBackground(COLORS.GRAY_200);
+
+            this.dist = dist;
+            this.dir = dir;
+
+            // Set helper vars
+            mObjHalfW = object.width / 2;
+            mTarHalfW = target.getWidth() / 2;
+            mSideDist = (int) (dist * 1.0 / sqrt(2));
+            mLongL = mObjHalfW + this.dist + target.getWidth();
+            mSideL = (int) (mObjHalfW + (this.dist * 1.0 / sqrt(2)) + target.getWidth());
+            mDiffHalf = mTarHalfW - mObjHalfW;
+
+            // Create the cicrum rectangle
+            circumRect.setLocation(-1, -1);
+            setCircumRectSize(dir);
+
+        }
+
+        private void setCircumRectSize(DIRECTION dir) {
+
+            final int tgtW = target.getWidth();
+            final int objW = object.width;
+
+            switch (dir) {
+                case N, S -> circumRect.setSize(tgtW, tgtW + objW + dist);
+                case E, W -> circumRect.setSize(tgtW + objW + dist, tgtW);
+                case NE, NW, SE, SW -> {
+                    final int s = (int) (tgtW + objW + mSideDist);
+                    circumRect.setSize(s, s); // Square
+                }
+            };
+        }
+
+        /**
+         * Position things w/o any constraints (only fitting the display area)
+         * @return Success: 0, fail: 1
+         */
+        public int position() {
+
+            // If it fits the display area, position obj. and target accordingly and return 0
+            while(!getDispArea().contains(circumRect)) {
+                positionCircumRect();
+            }
+
+            positionElements();
+            return 0;
+        }
+
+        public int position(Point curPoint, DIRECTION dir, int ntD) {
+            final String TAG = NAME + "position";
+
+            this.dir = dir;
+            setCircumRectSize(dir);
+
+            // Find the possible Xs
+            final Circle nextTrialRange = new Circle(curPoint, ntD);
+
+            // Get all the candidate points
+            List<Point> candidPoints = new ArrayList<>();
+            final int cx = curPoint.x;
+            final int cy = curPoint.y;
+            final double d2 = pow(ntD, 2);
+            final int minY = max(0, cy - ntD);
+            final int maxY = min(getDispDim().height, cy + ntD);
+            for (int y = minY; y < maxY; y++) {
+//                Out.d(TAG, y, cy, d2, pow(y - cy, 2), sqrt(d2 - pow(y - cy, 2)), cx);
+                Point p1 = new Point((int) (sqrt(d2 - pow(y - cy, 2)) + cx), y);
+                Point p2 = new Point((int) (-sqrt(d2 - pow(y - cy, 2)) + cx), y);
+                candidPoints.add(p1);
+                candidPoints.add(p2);
+            }
+
+            // Try to find a position
+            for (Point p : candidPoints) {
+//                Out.d(TAG, p);
+                positionCircumRect(p.x, p.y);
+
+                if (getDispArea().contains(circumRect)) {
+                    positionElements();
+                    return 0;
+                }
+            }
+
+            return 1;
+        }
+
+        private void positionCircumRect() {
+            int dispW = getDispDim().width;
+            int dispH = getDispDim().height;
+
+            circumRect.setLocation(
+                    Utils.randInt(0, dispW - circumRect.width),
+                    Utils.randInt(0, dispH - circumRect.height));
+        }
+
+        /**
+         * Position circum rectangle based on object's center point
+         * @param objCX Object center X
+         * @param objCY Object center Y
+         */
+        private void positionCircumRect(int objCX, int objCY) {
+
+            switch (dir) {
+                case N -> circumRect.setLocation(objCX - mTarHalfW, objCY - mLongL);
+                case S -> circumRect.setLocation(objCX - mTarHalfW, objCY - mObjHalfW);
+
+                case E -> circumRect.setLocation(objCX - mObjHalfW, objCY - mTarHalfW);
+                case W -> circumRect.setLocation(objCX - mLongL, objCY - mTarHalfW);
+
+                case NE -> circumRect.setLocation(objCX - mObjHalfW, objCY - mSideL);
+                case NW -> circumRect.setLocation(objCX - mSideL, objCY - mSideL);
+
+                case SE -> circumRect.setLocation(objCX - mObjHalfW, objCY - mObjHalfW);
+                case SW -> circumRect.setLocation(objCX - mSideL, objCY - mObjHalfW);
+            };
+        }
+
+        private void positionElements() {
+
+            switch (dir) {
+                case N -> {
+                    object.setLocation(
+                            circumRect.x + mDiffHalf,
+                            circumRect.y + circumRect.height - object.width);
+                    target.setLocation(circumRect.getLocation()); // UL point the same
+                }
+
+                case S -> {
+                    object.setLocation(circumRect.x + mDiffHalf, circumRect.y);
+                    target.setLocation(circumRect.x, circumRect.y + circumRect.height - target.getWidth());
+                }
+
+                case E -> {
+                    object.setLocation(circumRect.x, circumRect.y + mDiffHalf);
+                    target.setLocation(circumRect.x + circumRect.width - target.getWidth(), circumRect.y);
+                }
+
+                case W -> {
+                    object.setLocation(
+                            circumRect.x + circumRect.width - object.width,
+                            circumRect.y + mDiffHalf);
+                    target.setLocation(circumRect.getLocation()); // UL point the same
+                }
+
+                case NE -> {
+                    object.setLocation(circumRect.x, circumRect.y + circumRect.height - object.width);
+                    target.setLocation(circumRect.x + circumRect.width - target.getWidth(), circumRect.y);
+                }
+
+                case NW -> {
+                    object.setLocation(
+                            circumRect.x + circumRect.width - object.width,
+                            circumRect.y + circumRect.height - object.width);
+                    target.setLocation(circumRect.getLocation());
+                }
+
+                case SE -> {
+                    object.setLocation(circumRect.getLocation());
+                    target.setLocation(
+                            circumRect.x + circumRect.width - target.getWidth(),
+                            circumRect.y + circumRect.height - target.getWidth());
+                }
+
+                case SW -> {
+                    object.setLocation(circumRect.x + circumRect.width - object.width, circumRect.y);
+                    target.setLocation(circumRect.x, circumRect.y + circumRect.height - target.getWidth());
+                }
+            };
+        }
+
+        public void translateToPanel() {
+            final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
+            final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
+
+            circumRect.translate(lrMargin, tbMargin);
+            positionElements();
+        }
+
+        public void translateObject(int dX, int dY) {
+            object.translate(dX, dY);
+        }
+
+        /**
+         * Move obj. inside only if not already in
+         */
+        public void moveObjInsideTarget() {
+
+            if (target.getBounds().contains(object)) return;
+
+            final Rectangle tgtBounds = target.getBounds();
+            final Rectangle objBounds = object.getBounds();
+            final Rectangle intersection = tgtBounds.intersection(objBounds);
+
+            final int dMinX = (int) (intersection.getMinX() - objBounds.getMinX());
+            final int dMaxX = (int) (intersection.getMaxX() - objBounds.getMaxX());
+
+            final int dMinY =  (int) (intersection.getMinY() - objBounds.getMinY());
+            final int dMaxY =  (int) (intersection.getMaxY() - objBounds.getMaxY());
+
+            object.translate(dMinX + dMaxX, dMinY + dMaxY);
+        }
+
+        public boolean objectContains(Point p) {
+            return object.contains(p);
+        }
+
+        public boolean targetContains(Point p) {
+            return target.getBounds().contains(p);
+        }
+
+    }
+
     // -------------------------------------------------------------------------------------------
     @Override
     public void mouseDragged(MouseEvent e) {
+
         if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;
 //            mObject.translate(dX, dY);
-            mGroup.mObject.translate(dX, dY);
+            mGroup.object.translate(dX, dY);
 
             mGrabPos = e.getPoint();
 
@@ -639,6 +673,12 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        if (!firstMove) {
+            t0 = Utils.nowMillis();
+            t1 = System.currentTimeMillis();
+            firstMove = true;
+        }
+
         mouseDragged(e);
     }
 
@@ -668,238 +708,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mouseExited(MouseEvent e) {
-
-    }
-
-    // -------------------------------------------------------------------------------------------
-    // Group of things to show!
-    private class Group {
-        public Rectangle mObject = new Rectangle();
-        public MoPanel mTarget = new MoPanel();
-        private Rectangle mCircumRect = new Rectangle();
-
-        public DIRECTION mDir;
-        public int mOTDist;
-
-        // Helper vars
-        private int mObjHalfW, mTarHalfW, mSideDist, mLongL, mSideL, mDiffHalf;
-
-        public Group(int objW, int tgtW, DIRECTION dir, int dist) {
-            mObject.setSize(objW, objW);
-
-            mTarget.setSize(tgtW, tgtW);
-            BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
-            mTarget.setBorder(bord);
-            mTarget.setBackground(COLORS.GRAY_200);
-
-            mOTDist = dist;
-            mDir = dir;
-
-            // Set helper vars
-            mObjHalfW = mObject.width / 2;
-            mTarHalfW = mTarget.getWidth() / 2;
-            mSideDist = (int) (dist * 1.0 / sqrt(2));
-            mLongL = mObjHalfW + mOTDist + mTarget.getWidth();
-            mSideL = (int) (mObjHalfW + (mOTDist * 1.0 / sqrt(2)) + mTarget.getWidth());
-            mDiffHalf = mTarHalfW - mObjHalfW;
-
-            // Create the cicrum rectangle
-            mCircumRect.setLocation(-1, -1);
-            setCircumRectSize(dir);
-
-        }
-
-        private void setCircumRectSize(DIRECTION dir) {
-
-            final int tgtW = mTarget.getWidth();
-            final int objW = mObject.width;
-
-            switch (dir) {
-                case N, S -> mCircumRect.setSize(tgtW, tgtW + objW + mOTDist);
-                case E, W -> mCircumRect.setSize(tgtW + objW + mOTDist, tgtW);
-                case NE, NW, SE, SW -> {
-                    final int s = (int) (tgtW + objW + mSideDist);
-                    mCircumRect.setSize(s, s); // Square
-                }
-            };
-        }
-
-        /**
-         * Position things w/o any constraints (only fitting the display area)
-         * @return Success: 0, fail: 1
-         */
-        public int position() {
-
-            // If it fits the display area, position obj. and target accordingly and return 0
-            while(!getDispArea().contains(mCircumRect)) {
-                positionCircumRect();
-            }
-
-            positionElements();
-            return 0;
-        }
-
-        public int position(Point curPoint, DIRECTION dir, int ntD) {
-            final String TAG = NAME + "position";
-
-            mDir = dir;
-            setCircumRectSize(dir);
-
-            // Find the possible Xs
-            final Circle nextTrialRange = new Circle(curPoint, ntD);
-
-            // Get all the candidate points
-            List<Point> candidPoints = new ArrayList<>();
-            final int cx = curPoint.x;
-            final int cy = curPoint.y;
-            final double d2 = pow(ntD, 2);
-            final int minY = max(0, cy - ntD);
-            final int maxY = min(getDispDim().height, cy + ntD);
-            for (int y = minY; y < maxY; y++) {
-//                Out.d(TAG, y, cy, d2, pow(y - cy, 2), sqrt(d2 - pow(y - cy, 2)), cx);
-                Point p1 = new Point((int) (sqrt(d2 - pow(y - cy, 2)) + cx), y);
-                Point p2 = new Point((int) (-sqrt(d2 - pow(y - cy, 2)) + cx), y);
-                candidPoints.add(p1);
-                candidPoints.add(p2);
-            }
-
-            // Try to find a position
-            for (Point p : candidPoints) {
-                Out.d(TAG, p);
-                positionCircumRect(p.x, p.y);
-
-                if (getDispArea().contains(mCircumRect)) {
-                    positionElements();
-                    return 0;
-                }
-            }
-
-            return 1;
-        }
-
-        private void positionCircumRect() {
-            int dispW = getDispDim().width;
-            int dispH = getDispDim().height;
-
-            mCircumRect.setLocation(
-                    Utils.randInt(0, dispW - mCircumRect.width),
-                    Utils.randInt(0, dispH - mCircumRect.height));
-        }
-
-        /**
-         * Position circum rectangle based on object's center point
-         * @param objCX Object center X
-         * @param objCY Object center Y
-         */
-        private void positionCircumRect(int objCX, int objCY) {
-
-            switch (mDir) {
-                case N -> mCircumRect.setLocation(objCX - mTarHalfW, objCY - mLongL);
-                case S -> mCircumRect.setLocation(objCX - mTarHalfW, objCY - mObjHalfW);
-
-                case E -> mCircumRect.setLocation(objCX - mObjHalfW, objCY - mTarHalfW);
-                case W -> mCircumRect.setLocation(objCX - mLongL, objCY - mTarHalfW);
-
-                case NE -> mCircumRect.setLocation(objCX - mObjHalfW, objCY - mSideL);
-                case NW -> mCircumRect.setLocation(objCX - mSideL, objCY - mSideL);
-
-                case SE -> mCircumRect.setLocation(objCX - mObjHalfW, objCY - mObjHalfW);
-                case SW -> mCircumRect.setLocation(objCX - mSideL, objCY - mObjHalfW);
-            };
-        }
-
-        private void positionElements() {
-
-            switch (mDir) {
-                case N -> {
-                    mObject.setLocation(
-                            mCircumRect.x + mDiffHalf,
-                            mCircumRect.y + mCircumRect.height - mObject.width);
-                    mTarget.setLocation(mCircumRect.getLocation()); // UL point the same
-                }
-
-                case S -> {
-                    mObject.setLocation(mCircumRect.x + mDiffHalf, mCircumRect.y);
-                    mTarget.setLocation(mCircumRect.x, mCircumRect.y + mCircumRect.height - mTarget.getWidth());
-                }
-
-                case E -> {
-                    mObject.setLocation(mCircumRect.x, mCircumRect.y + mDiffHalf);
-                    mTarget.setLocation(mCircumRect.x + mCircumRect.width - mTarget.getWidth(), mCircumRect.y);
-                }
-
-                case W -> {
-                    mObject.setLocation(
-                            mCircumRect.x + mCircumRect.width - mObject.width,
-                            mCircumRect.y + mDiffHalf);
-                    mTarget.setLocation(mCircumRect.getLocation()); // UL point the same
-                }
-
-                case NE -> {
-                    mObject.setLocation(mCircumRect.x, mCircumRect.y + mCircumRect.height - mObject.width);
-                    mTarget.setLocation(mCircumRect.x + mCircumRect.width - mTarget.getWidth(), mCircumRect.y);
-                }
-
-                case NW -> {
-                    mObject.setLocation(
-                            mCircumRect.x + mCircumRect.width - mObject.width,
-                            mCircumRect.y + mCircumRect.height - mObject.width);
-                    mTarget.setLocation(mCircumRect.getLocation());
-                }
-
-                case SE -> {
-                    mObject.setLocation(mCircumRect.getLocation());
-                    mTarget.setLocation(
-                            mCircumRect.x + mCircumRect.width - mTarget.getWidth(),
-                            mCircumRect.y + mCircumRect.height - mTarget.getWidth());
-                }
-
-                case SW -> {
-                    mObject.setLocation(mCircumRect.x + mCircumRect.width - mObject.width, mCircumRect.y);
-                    mTarget.setLocation(mCircumRect.x, mCircumRect.y + mCircumRect.height - mTarget.getWidth());
-                }
-            };
-        }
-
-        public void translateToPanel() {
-            final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-            final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-            mCircumRect.translate(lrMargin, tbMargin);
-            positionElements();
-        }
-
-        public void translateObject(int dX, int dY) {
-            mObject.translate(dX, dY);
-        }
-
-        /**
-         * Move obj. inside only if not already in
-         */
-        public void moveObjInsideTarget() {
-
-            if (mTarget.getBounds().contains(mObject)) return;
-
-            final Rectangle tgtBounds = mTarget.getBounds();
-            final Rectangle objBounds = mObject.getBounds();
-            final Rectangle intersection = tgtBounds.intersection(objBounds);
-
-            final int dMinX = (int) (intersection.getMinX() - objBounds.getMinX());
-            final int dMaxX = (int) (intersection.getMaxX() - objBounds.getMaxX());
-
-            final int dMinY =  (int) (intersection.getMinY() - objBounds.getMinY());
-            final int dMaxY =  (int) (intersection.getMaxY() - objBounds.getMaxY());
-
-            mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
-        }
-
-        public boolean objectContains(Point p) {
-            return mObject.contains(p);
-        }
-
-        public boolean targetContains(Point p) {
-            return mTarget.getBounds().contains(p);
-        }
 
     }
 

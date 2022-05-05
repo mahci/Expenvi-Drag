@@ -37,6 +37,14 @@ public class TaskPanel extends JLayeredPane {
         return result;
     }
 
+    protected int getDispW() {
+        return getWidth() - (2 * Utils.mm2px(LR_MARGIN_mm));
+    }
+
+    protected int getDispH() {
+        return getHeight() - (2 * Utils.mm2px(TB_MARGIN_mm));
+    }
+
     protected Area getDispArea() {
         final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
         final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
@@ -49,4 +57,5 @@ public class TaskPanel extends JLayeredPane {
         Dimension dispDim = getDispDim();
         return x > 0 && x < dispDim.width;
     }
+
 }

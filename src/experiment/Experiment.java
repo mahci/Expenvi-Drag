@@ -13,8 +13,11 @@ public class Experiment {
         private final int n;
         DIRECTION(int i) { n = i; }
         // Get a NE/NW/SE/SW randomly
-        public static DIRECTION randTd() {
+        public static DIRECTION randDiag() {
             return DIRECTION.values()[Utils.randInt(4, 8)];
+        }
+        public static DIRECTION randStraight() {
+            return DIRECTION.values()[Utils.randInt(0, 4)];
         }
         // Get a random direction from two
         public static DIRECTION randOne(DIRECTION d0, DIRECTION d1) {
