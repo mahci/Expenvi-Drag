@@ -14,7 +14,6 @@ public class Main {
 
     public static void main(String[] args) {
         MainFrame.get().start();
-        Server.get().start();
     }
 
 //    public static void showDialog(String mssg) {

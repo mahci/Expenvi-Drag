@@ -6,7 +6,6 @@ import tools.Memo;
 
 import java.io.*;
 import java.net.*;
-import java.util.HashMap;
 import java.util.concurrent.*;
 
 public class Server {
@@ -22,19 +21,19 @@ public class Server {
     private PrintWriter outPW;
     private BufferedReader inBR;
 
-    private final ExecutorService executor;
+    private ExecutorService executor;
 
     //----------------------------------------------------------------------------------------
 
     //-- Runnable for waiting for incoming connections
-    private class ConnWaitRunnable implements Runnable {
-        String TAG = NAME + "ConnWaitRunnable";
+    private class ConnectionRunnable implements Runnable {
+        String TAG = NAME + "ConnectionRunnable";
 
         @Override
         public void run() {
             try {
                 Out.d(TAG, "Waiting for connections...");
-                if (serverSocket == null) serverSocket = new ServerSocket(PORT);
+                serverSocket = new ServerSocket(PORT);
                 socket = serverSocket.accept();
 
                 // When reached here, Moose is connected
@@ -78,7 +77,7 @@ public class Server {
 
         @Override
         public void run() {
-            while (!Thread.currentThread().isInterrupted() && inBR != null) {
+            while (!Thread.interrupted() && inBR != null) {
                 try {
                     Out.d(TAG, "Reading messages...");
                     String message = inBR.readLine();
@@ -127,7 +126,7 @@ public class Server {
         String TAG = NAME;
 
         // Init executerService for running threads
-        executor = Executors.newCachedThreadPool();
+//        executor = Executors.newCachedThreadPool();
     }
 
     /**
@@ -136,7 +135,8 @@ public class Server {
     public void start() {
         String TAG = NAME + "start";
 
-        executor.execute(new ConnWaitRunnable());
+        executor = Executors.newCachedThreadPool();
+        executor.execute(new ConnectionRunnable());
     }
 
     /**
@@ -148,4 +148,18 @@ public class Server {
         executor.execute(new OutRunnable(mssg));
     }
 
+    public void close() {
+        try {
+            if (serverSocket != null) {
+                Out.d(NAME, "Closing the socket...");
+                serverSocket.close();
+                socket.close();
+            }
+            Out.d(NAME, "Shutting down the executer...");
+            if (executor != null) executor.shutdownNow();
+        } catch (IOException e) {
+            Out.e(NAME, "Couldn't close the socket!");
+            e.printStackTrace();
+        }
+    }
 }

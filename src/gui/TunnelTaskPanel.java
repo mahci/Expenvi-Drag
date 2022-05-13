@@ -1,14 +1,14 @@
 package gui;
 
+import experiment.Block;
 import experiment.Experiment;
+import experiment.TunnelTrial;
 import tools.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,73 +17,62 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
-import static experiment.Experiment.*;
+import static tools.Consts.*;
 
 public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "TunnelTaskPanel/";
+    private final String LOG = "Enter/";
+
+    private int MAX_CEHCK_POS = 100;
+
+    // Things to show
+    private Experiment.TunnelTask mTask;
+    private Block mBlock;
+    private TunnelTrial mTrial;
+
+    private Trace mVisualTrace;
+    private Trace mTrace;
+
+    private Circle showCirc = new Circle();
+
+//    private List<Point> trialPositions = new ArrayList<>();
 
     // Keys
     private KeyStroke KS_SPACE;
     private KeyStroke KS_RA; // Right arrow
 
-    // Constants
-//    private final double START_AREA_L_mm = 17; // Lneght of the Start Area
-    private final double DIST_mm = 150; // Lneght of the Target lines (> bar L)
-
-    private final double LINES_W_mm = 1; // Targets width
-    private final double TUNNEL_W_mm = 5; // Perpendicular distance betw. the target lines (> bar L)
-
-    private final double TEXT_RECT_W_mm = 8; // Width of the start text rectangle
-    private final double TEXT_RECT_H_mm = 8; // Height of the start text rectangle
-
-    private final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
-    private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
-
     // Flags
+    private boolean mTrialActive = false;
     private boolean mGrabbed = false;
     private boolean isInsideObj = false;
     private boolean highlightObj = false;
     private boolean mEntered = false;
+    private boolean mExited = false;
     private boolean mMissed = false;
-    private boolean mDragBegan = false;
-
-    // Shapes
-    private Rectangle mStartAreaRect = new Rectangle();
-    private Rectangle mTar1Rect = new Rectangle();
-    private Rectangle mTar2Rect = new Rectangle();
-    private Rectangle mTarInRect = new Rectangle();
-    private Circle mObject = new Circle();
-
-    private Path2D.Double mStartAreaPath = new Path2D.Double();
-    private Path2D.Double mTar1Path = new Path2D.Double();
-    private Path2D.Double mTar2Path = new Path2D.Double();
-    private Path2D.Double mTarInPath = new Path2D.Double();
-
-    private Group mGroup;
-
-    // Measurements in px
-    private final int DIST = Utils.mm2px(DIST_mm);
-    private final int TGT_L = Utils.mm2px(DIST_mm);
-    private final int TGT_W = Utils.mm2px(LINES_W_mm);
-    private final int TGT_D = Utils.mm2px(TUNNEL_W_mm);
-    private final int DRAG_THSH = Utils.mm2px(DRAG_THRSH_mm);
-    private final int SA_W = TGT_D + 2 * TGT_W;
-    private final int TRACE_R = 1;
+    private boolean mDragging = false;
+    private boolean mTrialStarted = false;
 
     // Other
     private Point mLastGrabPos = new Point();
     private Experiment.DIRECTION mDir;
-    private ArrayList<Point> mTrace = new ArrayList<>();
+
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     private long t0;
     private boolean firstMove;
 
+    private int mTrialNum = 0;
+
+    private int mPosCount = 0;
+
+    private Graphix mGraphix;
+
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            mTrialNum++;
             showTrial();
         }
     };
@@ -104,13 +93,32 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         // Key maps
         mapKeys();
         getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
+
+        // Init
+        mVisualTrace = new Trace();
+        mTrace = new Trace();
+    }
+
+    public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
+        mTask = tunnelTask;
+        mBlock = mTask.getBlock(0);
+
+        return this;
     }
 
     @Override
     public void start() {
         super.start();
 
-        showTrial();
+        int positioningSuccess = findTrialListPosition(0);
+        if (positioningSuccess == 0) {
+//            setTrialPositions();
+            mBlock.setTrialElements();
+
+            mTrialNum = 0;
+            showTrial();
+        }
+
     }
 
     /**
@@ -118,119 +126,71 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
      */
     private void showTrial() {
         String TAG = NAME + "showTrial";
-
+        Out.d(TAG, mTrialNum, "===============================================");
+        mGrabbed = false;
+        mDragging = false;
+        mEntered = false;
+        mExited = false;
         mMissed = false;
-        mDragBegan = false;
+        mTrialStarted = false;
 
-        mDir = DIRECTION.randStraight();
-        Out.d(TAG, mDir);
+        mVisualTrace.reset();
+        mTrace.reset();
 
-        mGroup = new Group(
-                Utils.mm2px(LINES_W_mm), Utils.mm2px(TUNNEL_W_mm),
-                Utils.mm2px(DIST_mm),
-                Utils.mm2px(TEXT_RECT_W_mm), Utils.mm2px(TEXT_RECT_H_mm), mDir);
+        mPosCount = 0;
 
-        if (mGroup.position(getCursorPos(), 500, 1000) == 0) {
-            mGroup.translateToPanel();
-            repaint();
-        } else {
-            Out.d(TAG, "No suitable position found!");
-        }
+        mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
+//        Out.d(TAG, mTrial);
 
+        repaint();
 
-
-
+        mTrialActive = true;
     }
 
-    private void positionRandomly() {
-        String TAG = NAME + "randPosition";
-
-        // Dimension of the display frame (in px)
-        final int dispW = getDispDim().width;
-        final int dispH = getDispDim().height;
-
-//        final int objDiam = 2 * objR;
-//        final int halfTarDist = tarD / 2;
-
-        // Check if the longest distance fits the height of display
-//        final int maxDist = SA_L + TGT_L;
-//        Out.d(TAG, "Fitting...", maxDist, dispH);
-//        if (maxDist >= dispH) {
-//            Out.d(TAG, "Can't fit the setup in the frame!");
-//            return;
-//        }
-
-        // Assume a point of origin (for rotation and ref.)
-//        final int oX = Utils.randInt(maxDist, dispW - maxDist);
-//        final int oY = Utils.randInt(maxDist, dispH - maxDist);
-//
-//        // Place the lines based on the origin (as if it is N)
-//        mStartAreaRect.setLocation(oX, oY - SA_W / 2);
-////        mObject.setCenter(oX, oY);
-//        mTar1Rect.setLocation(oX + SA_L + 10, oY - SA_W / 2);
-//        mTar2Rect.setLocation(oX + SA_L + 10, oY + TGT_D / 2);
-//        mTarInRect.setLocation(oX + SA_L + 10, oY - TGT_D / 2);
-//        Out.d(TAG, oX, oY, mObject, mTar1Rect);
-        // Rotate the lines based on the direction
-//        int deg = 0;
-//        switch (mDir) {
-//            case E -> deg = 0;
-//            case NE -> deg = 45;
-//            case N -> deg = 90;
-//            case NW -> deg = 135;
-//            case W -> deg = 180;
-//            case SW -> deg = 225;
-//            case S -> deg = 270;
-//            case SE -> deg = 315;
-//        }
-//
-//        AffineTransform transform = new AffineTransform();
-//        transform.rotate(toRadians(deg), oX, oY);
-//        mStartAreaPath = new Path2D.Double(mStartAreaRect, transform);
-//        mTar1Path = new Path2D.Double(mTar1Rect, transform);
-//        mTar2Path = new Path2D.Double(mTar2Rect, transform);
-//        mTarInPath = new Path2D.Double(mTarInRect, transform);
-    }
-
-    private void translateToPanel() {
-        final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-        final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-        AffineTransform transform = new AffineTransform();
-        transform.translate(lrMargin, tbMargin);
-
-        mStartAreaPath.transform(transform);
-        mTar1Path.transform(transform);
-        mTar2Path.transform(transform);
-        mTarInPath.transform(transform);
-
-//        mObject.translate(lrMargin, tbMargin);
-    }
 
     @Override
     public void grab() {
-        mGrabbed = true;
-        mLastGrabPos = getCursorPos();
+        Point p = getCursorPos();
+        if (isValidGrab(p)) {
+            mGrabbed = true;
+            mLastGrabPos = p;
+        } else {
+            startError();
+        }
+    }
+
+    @Override
+    public void drag() {
+        mDragging = true;
+
+        if (mTrialStarted) {
+            if (!isValidDrag()) miss();
+        } else {
+            if (!isValidDrag()) startError();
+        }
     }
 
     @Override
     public void release() {
-        if (mDragBegan) {
-            if (isHit()) {
-                hit();
-            } else {
+
+        if (mGrabbed && !mMissed) {
+            if (mExited) hit();
+            else if (mTrialStarted) {
                 miss();
+            } else {
+                startError();
             }
         }
 
         mGrabbed = false;
+        mDragging = false;
 
-        Out.d(NAME, (Utils.nowMillis() - t0) / 1000.0);
     }
 
     @Override
     public boolean isHit() {
-        return !mMissed && mGrabbed && mEntered && !mTarInPath.contains(getCursorPos());
+        Out.d(NAME, mMissed, mDragging, mEntered);
+        return !mMissed && mDragging && mEntered;
     }
 
     /**
@@ -245,41 +205,107 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     }
 
     private void hit() {
-        Consts.SOUNDS.playHit();
-        mGrabbed = false;
-        mEntered = false;
-        mMissed = true;
+        SOUNDS.playHit();
 
-        mTrace.clear();
-
+        mTrialActive = false;
         // Wait a certain delay, then show the next trial
-        executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
+        mTrialNum++;
+        executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * What to do when the trial is missed?
+     */
     private void miss() {
-        Consts.SOUNDS.playMiss();
-        mGrabbed = false;
-        mEntered = false;
+        final String TAG = NAME + "miss";
+
+        SOUNDS.playMiss();
         mMissed = true;
-        mDragBegan = false;
-
-        mTrace.clear();
-
-        // Wait a certain delay, then show the next trial
-        executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
-    }
-
-    private boolean traceIntersect() {
-        Line2D seg;
-        for (int i = 1; i < mTrace.size(); i++) {
-            seg = new Line2D.Double(mTrace.get(i - 1), mTrace.get(i));
-            if (Utils.intersects(mTar1Path, seg) || Utils.intersects(mTar2Path, seg)) return true;
+        Out.d(TAG, "Missed on trial", mTrialNum);
+        // Shuffle back and reposition the next ones
+        final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
+        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNTrials());
+        if (findTrialListPosition(trNewInd) == 1) {
+            Out.e(TAG, "Couldn't find position for the trials");
+            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
+        } else {
+            // Next trial
+            mTrialNum++;
+            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
-        return false;
+        mTrialActive = false;
+
+
     }
 
-    // -------------------------------------------------------------------------------------------
+    private void startError() {
+        final String TAG = NAME + "startError";
+        Out.e(TAG, "Trial Num", mTrialNum);
+        SOUNDS.playStartError();
+
+        mTrialActive = false;
+        // Respawn the trial (everything will be reset)
+        showTrial();
+    }
+
+
+    private boolean isValidGrab(Point grbP) {
+        final String TAG = NAME + "isValidGrab";
+
+        return !mTrial.isPointInside(grbP);
+    }
+
+    private boolean isValidDrag() {
+        final String TAG = LOG + "isValidDrag";
+
+//        final int traceSize = mTrace.size();
+
+        // Did the trace interesect the lines?
+        if (mTrace.intersects(mTrial.line1Rect) || mTrace.intersects(mTrial.line2Rect)) return false;
+
+        // Not touching lines
+        final Point lastP = mTrace.getLastPoint();
+
+        if (!mTrialStarted) { // Not yet entered the tunnel
+
+            // There is a point inside (and NOT on the start line) => Truly entered!
+            if (lastP != null && mTrial.inRect.contains(lastP) && mTrial.startLine.ptLineDist(lastP) > 0) {
+
+                // Has it entered through the start?
+                if (mTrace.intersects(mTrial.startLine)) {
+                    // TODO: Set the start of trial
+                    mTrialStarted = true;
+                    mTrace.reset(); // Start again from inside
+                    Out.d(TAG, lastP, mTrial.inRect.printCorners());
+
+                    return true;
+                } else {
+                    Out.e(TAG, "Not from start!");
+                    return false;
+                }
+
+            }
+
+        } else { // Trial started
+
+            // Touched start again!
+            Out.d(TAG, mTrace);
+            if (mTrace.intersects(mTrial.startLine)) {
+                Out.e(TAG, "Touched start again!");
+                return false;
+            }
+
+            // Exited successfully!
+            if (!mTrial.inRect.contains(lastP)) {
+                mExited = true;
+            }
+        }
+
+
+        return true;
+    }
+
     private void mapKeys() {
         KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
         KS_RA = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0, true);
@@ -300,312 +326,174 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
+        mGraphix = new Graphix(g2d);
+
         // Draw trace
-        g2d.setColor(Consts.COLORS.BLUE_900);
-        for (Point tp : mTrace) {
-            g2d.fillOval(tp.x - TRACE_R, tp.y - TRACE_R, TRACE_R * 2, TRACE_R * 2);
+//        g2d.setColor(Consts.COLORS.BLUE_900);
+        final int rad = Trace.TRACE_R;
+        for (Point tp : mVisualTrace.getPoints()) {
+//            g2d.fillOval(tp.x - rad, tp.y - rad, rad * 2, rad * 2);
+            final Circle circ = new Circle(tp, rad);
+            mGraphix.fillCircle(COLORS.BLUE_900, circ);
         }
 
         // Draw Targets
-        g2d.setColor(Consts.COLORS.GRAY_500);
-        g2d.fill(mGroup.line1Rect);
-        g2d.fill(mGroup.line2Rect);
+//        g2d.setColor(COLORS.GRAY_500);
+//        g2d.fill(mTrial.line1Rect);
+//        g2d.fill(mTrial.line2Rect);
+        if (mTrial != null) {
+            mGraphix.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
 
-        // Draw text
-        g2d.setColor(Consts.COLORS.GREEN_700);
-        g2d.drawString("Start", mGroup.startTextRect.x,
-                mGroup.startTextRect.y + mGroup.startTextRect.height /2);
-//        g2d.drawRect(mGroup.startTextRect.x, mGroup.startTextRect.y,
-//                mGroup.startTextRect.width, mGroup.startTextRect.height);
+            // Draw text
+            g2d.setColor(COLORS.GREEN_700);
+            g2d.drawString("Start", mTrial.startTextRect.x,
+                    mTrial.startTextRect.y + mTrial.startTextRect.height / 2);
 
-        // Draw Start Area
-//        g2d.setColor(Consts.COLORS.GRAY_500);
-//        g2d.draw(mStartAreaPath);
-//        g2d.setColor(Consts.COLORS.BLUE_900);
-//        g2d.fill(mStartAreaPath);
+            // Draw bounding box
+            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
+
+            // Draw start line
+            mGraphix.drawLine(COLORS.GREEN_700, mTrial.startLine);
+
+            // Temp: show range circle
+            mGraphix.drawCircle(COLORS.GREEN_700, showCirc);
+//        g2d.drawRect(mTunnelTrial.startTextRect.x, mTunnelTrial.startTextRect.y,
+//                mTunnelTrial.startTextRect.width, mTunnelTrial.startTextRect.height);
+
+        }
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Group of things to show!
-    private class Group {
-        private Rectangle line1Rect = new Rectangle();
-        private Rectangle line2Rect = new Rectangle();
-        private Rectangle inRect = new Rectangle();
-        private Rectangle startTextRect = new Rectangle();
 
-        private static Rectangle circumRectWE = new Rectangle();
-        private static Rectangle circumRectNS = new Rectangle();
 
-        private Rectangle circumRect = new Rectangle();
 
-        private Path2D.Double line1Path = new Path2D.Double();
-        private Path2D.Double line2Path = new Path2D.Double();
-        private Path2D.Double inPath = new Path2D.Double();
 
-        private int dist;
-        private DIRECTION dir;
+    /**
+     * Recursively find suitable positions for a list of trials, from (incl.) trInd
+     * @param trInd Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
+     * @return Success (0) Fail (1)
+     */
+    public int findTrialListPosition(int trInd) {
+        final String TAG = NAME + "position";
+        Out.d(TAG, "-----------------------------------------------");
+        Out.d(TAG, "trInd | nTrials", trInd, mBlock.getNTrials());
+        final int minNtDist = Utils.mm2px(mTask.NT_DIST_mm);
+        int maxNtDist = minNtDist;
 
-        private int cbNRows, cbNCols; // Num of rows and cols in the chekerboard
-        private int cbSide;
+        Point foundPosition = null;
+        Point refP = null;
 
-        private static List<Point> circumRectListWE = new ArrayList<>();
-        private static List<Point> circumRectListNS = new ArrayList<>();
-
-        private List<Point> circumRectList = new ArrayList<>();
-
-        private static boolean arranged = false;
-
-        /**
-         * Create the Group (default is W/E)
-         * @param linesW Width of the lines
-         * @param tunnelW Width of the tunnel
-         * @param dist Distance (= length of the tunnel)
-         * @param textW Width of the start text rectangle
-         * @param textH Height of the start text rectangle
-         */
-        public Group(int linesW, int tunnelW, int dist, int textW, int textH, DIRECTION dir) {
-
-            if (!arranged) {
-                circumRectWE.setSize(dist, 2 * linesW + tunnelW + textH);
-                circumRectNS.setSize(2 * linesW + tunnelW + textH,  dist);
-                arrange();
-            }
-
-            switch (dir) {
-                case W, E -> {
-                    line1Rect.setSize(dist, linesW);
-                    inRect.setSize(dist, tunnelW);
-                    circumRect = circumRectWE;
-                    circumRectList = new ArrayList<>(circumRectListWE);
-                }
-
-                case N, S -> {
-                    line1Rect.setSize(linesW, dist);
-                    inRect.setSize(tunnelW, dist);
-                    circumRect = circumRectNS;
-                    circumRectList = new ArrayList<>(circumRectListNS);
-                }
-            }
-
-            startTextRect.setSize(textW, textH);
-            line2Rect.setSize(line1Rect.getSize());
-
-            this.dist = dist;
-            this.dir = dir;
-
-            // Create the checkerboard
-//            cbSide = circumRect.width;
-//            cbNRows = getDispDim().height / cbSide;
-//            cbNCols = getDispDim().width / cbSide;
-        }
-
-        private void arrange() {
-            // Arrange WE rectangle
-            for (int x = 0; x < getDispW() - circumRectWE.width; x += 5) {
-                for (int y = 0; y < getDispH() - circumRectWE.height; y += 5) {
-                    circumRectListWE.add(new Point(x, y));
-                }
-            }
-
-            // Arrange NS rectangle
-            for (int x = 0; x < getDispW() - circumRectNS.width; x += 5) {
-                for (int y = 0; y < getDispH() - circumRectNS.height; y += 5) {
-                    circumRectListNS.add(new Point(x, y));
-                }
-            }
-
-            arranged = true;
-        }
-
-        private Pair getRandCBCell(Point refP) {
-            final String TAG = NAME + "checkerboard";
-
-            // Which cell refP resides in
-            int col = refP.x / cbSide;
-            int row = refP.y / cbSide;
-            Out.d(TAG, row, col);
-
-            List<Pair> candidCells = new ArrayList<>();
-            if (col + 1 <= cbNCols) candidCells.add(new Pair(row, col + 1));
-            if (col - 1 >= 0) candidCells.add(new Pair(row, col - 1));
-            if (row + 1 <= cbNRows) candidCells.add(new Pair(row + 1, col));
-            if (row - 1 >= 0) candidCells.add(new Pair(row - 1, col));
-
-            return candidCells.get(Utils.randInt(0, candidCells.size()));
-        }
+//        if (trInd == mBlock.getNTrials() - 1 && trInd > 0) { // Last trial
+//            refP = mBlock.getTrial(trInd - 1).getEndPoint();
+//            // Loops the points aroung the refP to find suitable position
+//            foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, ntDist);
 //
-//        private Point getRandPointInCell(Pair cellRC) {
-//            Point cellUL = new Point(cellRC.second * cbSide, cellRC.first * cbSide);
+//            if (foundPosition != null) { // Found!
+//                Out.d(TAG, "foundPosition", foundPosition);
+//                mBlock.setTrialLocation(trInd, foundPosition);
+//                return 0;
+//            } else { // No position found
+//                Out.d(TAG, "foundPosition", foundPosition);
+//                // TODO: Chnage distance?
+//                return 1;
+//            }
+//        } else { // Recursive
 //
-//            int x, y;
-////            x = cellUL.x + Utils.randInt(0, cbSide - circumRect.width);
-////            y = cellUL.y + Utils.randInt(0, cbSide - circumRect.height);
+//            if (trInd - 1 > 0) refP = mBlock.getTrial(trInd - 1).getEndPoint();
 //
-////            switch (dir) {
-////                case W, E -> {
-////
-////                }
-////
-////                case N, S -> {
-////                    x = cellUL.x;
-////                    y = cellUL.y + Utils.randInt(0, circumRect.height);
-////                }
-////            }
+//            foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, ntDist);
 //
-//            return new Point(x, y);
+//            if (foundPosition != null) { // Found!
+//                Out.d(TAG, "foundPosition - rec", foundPosition);
+//                mBlock.setTrialLocation(trInd, foundPosition);
+//                return findTrialListPosition(trInd + 1);
+//            } else { // No position found
+//                // TODO: Chnage distance?
+//                Out.d(TAG, "foundPosition - rec", foundPosition);
+//                return 1;
+//            }
 //        }
 
-        /**
-         * Position the group based on a ref. point (can be last trial's cursor, home, etc.), distance and direction
-         * @param refP Reference point (if no ref => null)
-         * @return Success (0) or fail (1)
-         */
-        public int position(Point refP, int minD, int maxD) {
-            final String TAG = NAME + "position";
+        // Find position for the trInd trial
+        if (trInd > 0) {
+            refP = mBlock.getTrial(trInd - 1).getEndPoint();
+            maxNtDist = minNtDist + Utils.mm2px(100);
+        }
 
-            Point position = new Point();
-            for (int d = minD; d < maxD; d += 50) {
-                Out.d(TAG, "Distance= " + d);
-//                List<Point> tempList = new ArrayList<>(circumRectList);
-                Collections.shuffle(circumRectList);
-                for (int i = 0; i < circumRectList.size(); i++) {
-                    position = circumRectList.get(i);
-                    final double pDist = position.distance(refP);
-                    circumRect.setLocation(position);
-                    Out.d(TAG, position, pDist);
-                    if (pDist <= d && pDist >= minD && !circumRect.contains(refP)) {
-                        positionElements();
-                        return 0;
-                    }
-                }
-            }
-
-//            Pair cbRC = getRandCBCell(refP);
-//            Out.d(TAG, cbRC);
-//
-//            circumRect.setLocation(getRandPointInCell(cbRC));
-//            positionElements();
-
-            // Dimension of the display frame (in px)
-//            final int dispW = getDispDim().width;
-//            final int dispH = getDispDim().height;
-//
-//            // Assume a point of origin, find MinMax based on refP, rot. based on DIR
-//            MinMax xMinMax, yMinMax;
-//            Point oP = new Point(-1, -1);
-//            switch (dir) {
-//                case W, E -> {
-//                    xMinMax = new MinMax(0, dispW - circumRect.width);
-//                    yMinMax = new MinMax(0, dispH - circumRect.height);
-//
-//                    if (refP != null) {
-//                        final Circle refCircle = new Circle(refP, refD);
-//                        final List<Point> rangePoints = refCircle.getPoints();
-//                        Out.d(TAG, rangePoints);
-//                        while (oP.x == -1 && !rangePoints.isEmpty()) {
-//                            Point candP = rangePoints.remove(Utils.randInt(0, rangePoints.size()));
-//
-//                            if (xMinMax.containsIncl(candP.x) && yMinMax.containsIncl(candP.y)) { // Fits the display?
-//                                circumRect.setLocation(candP); // Set the origin point
-//
-//                                // Set elemnents
-//                                positionElements(0);
-//                                return 0;
-//                            }
-//                        }
-//                    } else {
-//                        circumRect.setLocation(Utils.randInt(xMinMax), Utils.randInt(yMinMax));
-//                        // Set elemnents
-//                        positionElements(0);
-//                        return 0;
-//                    }
-//
-//                    return 1;
-//                }
-//
-//            }
-
+        foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, minNtDist, maxNtDist);
+        if (foundPosition != null) mBlock.setTrialLocation(trInd, foundPosition);
+        else {
+            // TODO: find a solution...
             return 1;
         }
 
-        /**
-         * Position elements based on the circumference rectangle and the degree to rotate
-         */
-        private void positionElements() {
+        // Next trials
+        for (int ti = trInd + 1; ti < mBlock.getNTrials(); ti++) {
+            Out.d(TAG, "Finding position for trial", ti);
+            foundPosition = findTrialPosition(
+                    mBlock.getTrial(ti).getBoundRect(),
+                    mBlock.getTrial(ti - 1).getEndPoint(),
+                    minNtDist, maxNtDist);
 
-            switch (dir) {
-                case W -> {
-                    line1Rect.setLocation(circumRect.x, circumRect.y);
-                    inRect.setLocation(circumRect.x, circumRect.y + line1Rect.height);
-                    line2Rect.setLocation(circumRect.x, inRect.y + inRect.height);
-                    startTextRect.setLocation(circumRect.x, line2Rect.y + line2Rect.height);
+            // Search to the max cound
+            if (foundPosition == null) {
+                Out.d(TAG, "Position not found for trial");
+                if (mPosCount < MAX_CEHCK_POS) {
+                    mPosCount++;
+                    return findTrialListPosition(trInd);
+                } else {
+                    return 1;
+                }
+            } else {
+                Out.d(TAG, "Position found for trial");
+                mBlock.setTrialLocation(ti, foundPosition);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Find a position for a trial
+     * @param trBoundRect Boudning box of the trial
+     * @param ptP Previous trial position (null if not reference)
+     * @return The found point or null (if nothing found)
+     */
+    public Point findTrialPosition(Rectangle trBoundRect, Point ptP, int minNtDist, int maxNtDist) {
+        final String TAG = NAME + "findTrialPosition";
+        Out.d(TAG, "BoundRect", trBoundRect.toString());
+        Out.d(TAG, "W | H", getWidthMinMax(), getHeightMinMax());
+        Circle rangeCircle = new Circle();
+        int ntDist = minNtDist;
+        Out.d(TAG, "ptP | ntDist", ptP, ntDist);
+        if (ptP != null) { // Contrained by the previous trial
+
+            while (ntDist <= maxNtDist) {
+
+                rangeCircle = new Circle(ptP, ntDist);
+                final List<Point> rangePoints = rangeCircle.getPoints();
+                Collections.shuffle(rangePoints); // Shuffle for random iteration
+
+                Rectangle rect = trBoundRect;
+                for (Point candP : rangePoints) {
+                    rect.setLocation(candP);
+                    if (getPanelBounds().contains(rect)) { // Fits the window?
+                        return candP;
+                    }
                 }
 
-                case E -> {
-                    line1Rect.setLocation(circumRect.x, circumRect.y);
-                    inRect.setLocation(circumRect.x, circumRect.y + line1Rect.height);
-                    line2Rect.setLocation(circumRect.x, inRect.y + inRect.height);
-                    startTextRect.setLocation(
-                            circumRect.x + circumRect.width - startTextRect.width,
-                            line2Rect.y + line2Rect.height);
-                }
-
-                case N -> {
-                    startTextRect.setLocation(
-                            circumRect.x,
-                            circumRect.y + circumRect.height - startTextRect.height);
-                    line2Rect.setLocation(
-                            startTextRect.x + startTextRect.width,
-                            circumRect.y);
-                    inRect.setLocation(line2Rect.x + line2Rect.width, circumRect.y);
-                    line1Rect.setLocation(inRect.x + inRect.width, circumRect.y);
-                }
-
-                case S -> {
-                    startTextRect.setLocation(circumRect.x, circumRect.y);
-                    line2Rect.setLocation(
-                            startTextRect.x + startTextRect.width,
-                            circumRect.y);
-                    inRect.setLocation(line2Rect.x + line2Rect.width, circumRect.y);
-                    line1Rect.setLocation(inRect.x + inRect.width, circumRect.y);
-
-                }
+                Out.d(TAG, "Distance checked", ntDist);
+                ntDist += 5; // Increase by 10 px
             }
 
-//            line1Rect.setLocation(circumRect.x, circumRect.y);
-//            inRect.setLocation(circumRect.x, circumRect.y + line1Rect.height);
-//            line2Rect.setLocation(circumRect.x, inRect.y + inRect.height);
-//            startTextRect.setLocation(circumRect.x, line2Rect.y + line2Rect.height);
-//
-//            final AffineTransform transform = new AffineTransform();
-//            transform.rotate(toRadians(rotDeg),
-//                    circumRect.getCenterX(), circumRect.getCenterY());
-//
-//            line1Path = new Path2D.Double(line1Rect, transform);
-//            line2Path = new Path2D.Double(line2Rect, transform);
-//            inPath = new Path2D.Double(inRect, transform);
+        } else {
+            return getPanelBounds().fitRect(trBoundRect);
         }
 
-        /**
-         * Translate the group to the panel
-         */
-        public void translateToPanel() {
-            final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-            final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-            circumRect.translate(lrMargin, tbMargin);
-            positionElements();
-        }
-
-        public boolean linesTouchPoint(Point p) {
-            return line1Rect.contains(p) || line2Rect.contains(p);
-        }
-
-        public boolean enteredTunnel(Point p) {
-            return inRect.contains(p);
-        }
-
+        showCirc = rangeCircle;
+        repaint();
+        return null;
     }
+
 
     // -------------------------------------------------------------------------------------------
     @Override
@@ -615,14 +503,14 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) { // Do nothing on the other button press
             grab();
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             release();
         }
     }
@@ -639,36 +527,24 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (mGrabbed) {
+        final String TAG = LOG + "mouseDragged";
+
+        if (mTrialActive && mGrabbed) {
 
             final Point curP = e.getPoint();
 
             final int dX = curP.x - mLastGrabPos.x;
             final int dY = curP.y - mLastGrabPos.y;
 
-//            mLastGrabPos = curP;
+            // Add cursor point to the traces
+            mVisualTrace.addPoint(curP);
+            mTrace.addNewPoint(curP);
 
             final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
-            mDragBegan = dragDist > Utils.mm2px(DRAG_THRSH_mm);
 
-            if (mDragBegan) {
-                // Add cursor point to the trace
-                mTrace.add(curP);
+            if (dragDist > Utils.mm2px(mTask.DRAG_THRSH_mm)) drag();
 
-                mEntered = mGroup.enteredTunnel(curP);
-
-                if (mGroup.linesTouchPoint(curP) || traceIntersect()) {
-                    miss();
-                } else {
-//                    if (mEntered) {
-//                        if (mStartAreaPath.contains(curP)) miss();
-//                    } else {
-//                        if (mTarInPath.contains(curP)) mEntered = true;
-//                    }
-
-                    repaint();
-                }
-            }
+            repaint();
 
         }
     }
@@ -679,4 +555,90 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mouseDragged(e);
     }
+
+    // -------------------------------------------------------------------------------------------
+    private class Trace {
+        private ArrayList<Point> points = new ArrayList<>();
+        private ArrayList<Line2D.Double> segments = new ArrayList<>();
+
+        public static final int TRACE_R = 1;
+
+        public void addPoint(Point p) {
+            // Add point
+            points.add(p);
+
+            // Add segment
+            final int nPoints = points.size();
+            if (nPoints > 1) segments.add(new Line2D.Double(points.get(nPoints - 1), points.get(nPoints - 2)));
+        }
+
+        /**
+         * Add the point to the list only if it is different than the prev. one
+         * @param p Point
+         */
+        public void addNewPoint(Point p) {
+            if (points.size() == 0) addPoint(p);
+            else if (!Utils.last(points).equals(p)) addPoint(p);
+        }
+
+        public Line2D.Double getLastSeg() {
+            if (segments.size() > 1) return Utils.last(segments);
+            else return null;
+        }
+
+        public int intersectNum(Line2D line) {
+            int count = 0;
+            for (Line2D.Double seg : segments) {
+                if (seg.intersectsLine(line)) {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        public boolean intersects(Line2D line) {
+            if (segments.size() < 1) return false;
+
+            boolean result = false;
+            for (Line2D.Double seg : segments) {
+//                Out.d(NAME, Utils.str(seg));
+                result = result || seg.intersectsLine(line);
+            }
+
+            return result;
+        }
+
+        public boolean intersects(Rectangle rect) {
+            if (segments.size() < 1) return false;
+
+            boolean result = false;
+            for (Line2D.Double seg : segments) {
+                result = result || seg.intersects(rect);
+            }
+
+            return result;
+        }
+
+        public ArrayList<Point> getPoints() {
+            return points;
+        }
+
+        public Point getLastPoint() {
+            return Utils.last(points);
+        }
+
+        public void reset() {
+            points.clear();
+            segments.clear();
+        }
+
+        @Override
+        public String toString() {
+            return "Trace{" +
+                    "points=" + points +
+                    '}';
+        }
+    }
+
 }

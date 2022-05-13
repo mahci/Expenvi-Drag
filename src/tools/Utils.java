@@ -3,6 +3,7 @@ package tools;
 import experiment.Experiment;
 
 import java.awt.*;
+import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -140,6 +141,49 @@ public class Utils {
     public static String nowDateTime() {
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy_hh-mm");
         return format.format(Calendar.getInstance().getTime());
+    }
+
+    public static String str(Line2D.Double line) {
+        return line.x1 + "," + line.y1 + "--" + line.x2 + "," + line.y2;
+    }
+
+//    public static String str(Rectangle rect) {
+//        return "Rect" +
+//                "[x=" + rect.x +
+//                ",y=" + rect.y +
+//                ",y=" + rect.y +
+//                ",y=" + rect.y +
+//                "]";
+//    }
+
+    public static String str(Area area) {
+        return "Area" + area.getBounds().toString();
+    }
+
+
+
+    public static <T> T last(List<T> list) {
+        return list != null && !list.isEmpty() ? list.get(list.size() - 1) : null;
+    }
+
+    public static MinMax xMinMax(List<Point> pList) {
+        MinMax result = new MinMax(Integer.MAX_VALUE, Integer.MIN_VALUE);
+        for (Point p : pList) {
+            if (p.x < result.min) result.min = p.x;
+            if (p.x > result.max) result.max = p.x;
+        }
+
+        return result;
+    }
+
+    public static MinMax yMinMax(List<Point> pList) {
+        MinMax result = new MinMax(Integer.MAX_VALUE, Integer.MIN_VALUE);
+        for (Point p : pList) {
+            if (p.y < result.min) result.min = p.y;
+            if (p.y > result.max) result.max = p.y;
+        }
+
+        return result;
     }
 
     /**

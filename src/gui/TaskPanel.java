@@ -1,5 +1,6 @@
 package gui;
 
+import tools.MinMax;
 import tools.Utils;
 
 import javax.swing.*;
@@ -18,6 +19,10 @@ public class TaskPanel extends JLayeredPane {
     }
 
     public void grab() {
+
+    }
+
+    public void drag() {
 
     }
 
@@ -53,9 +58,31 @@ public class TaskPanel extends JLayeredPane {
                 getWidth() - 2 * lrMargin, getHeight() - 2 * tbMargin));
     }
 
+    protected MinMax getWidthMinMax() {
+        final int hzMargin = Utils.mm2px(LR_MARGIN_mm);
+        return new MinMax(hzMargin, getWidth() - hzMargin);
+    }
+
+    protected MinMax getHeightMinMax() {
+        final int vtMargin = Utils.mm2px(TB_MARGIN_mm);
+        return new MinMax(vtMargin, getHeight() - vtMargin);
+    }
+
+    protected MoRectangle getPanelBounds() {
+        final int wMargin = Utils.mm2px(LR_MARGIN_mm);
+        final int hMargin = Utils.mm2px(TB_MARGIN_mm);
+        return new MoRectangle(
+                wMargin, hMargin,
+                getWidth() - wMargin, getHeight() - hMargin);
+    }
+
     protected boolean isXInRange(int x) {
         Dimension dispDim = getDispDim();
         return x > 0 && x < dispDim.width;
     }
+
+//    protected Point toPanel(Point inP) {
+//        return new Point(inP.x + Utils.mm2px(LR_MARGIN_mm), inP.y + Utils.mm2px(TB_MARGIN_mm));
+//    }
 
 }

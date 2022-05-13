@@ -1,5 +1,6 @@
 package gui;
 
+import control.Server;
 import experiment.Experiment;
 import tools.Consts;
 
@@ -25,10 +26,20 @@ public class MainFrame extends JFrame implements MouseListener {
      */
     public MainFrame() {
         setDisplayConfig();
-
         setBackground(Color.WHITE);
 
         addMouseListener(this);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                Server.get().close();
+            }
+        });
     }
 
     public static MainFrame get() {
@@ -37,15 +48,16 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void start() {
+//        Server.get().start();
 
         // Show the Intro panel
-        final AbstractAction showTaskAl = new AbstractAction() {
+        final AbstractAction showTaskAA = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 showTaskPanel();
             }
         };
-        IntroPanel stPanel = new IntroPanel("M", "Window", showTaskAl);
+        IntroPanel stPanel = new IntroPanel("M", "Window", showTaskAA);
         add(stPanel);
         setVisible(true);
     }
@@ -57,7 +69,7 @@ public class MainFrame extends JFrame implements MouseListener {
 
 //        mActivePanel = new BoxTaskPanel(panelDim);
 //        mActivePanel = new BarTaskPanel(panelDim);
-        mActivePanel = new TunnelTaskPanel(panelDim);
+        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(1));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

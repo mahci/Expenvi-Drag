@@ -68,14 +68,17 @@ public class Consts {
 
     //-- Sounds and related
     public static class SOUNDS {
-        private static Map<String, Clip> sSounds = new HashMap<>();
-        private static Clip hitClip, missClip, techEndClip;
+        private static Clip startErrClip, hitClip, missClip, techEndClip;
 
         static {
             try {
+                final File startErrFile = new File("./res/start_err.wav");
                 final File hitFile = new File("./res/hit.wav");
                 final File missFile = new File("./res/miss.wav");
                 final File techEndFile = new File("./res/end.wav");
+
+                startErrClip = AudioSystem.getClip();
+                startErrClip.open(AudioSystem.getAudioInputStream(startErrFile));
 
                 hitClip = AudioSystem.getClip();
                 hitClip.open(AudioSystem.getAudioInputStream(hitFile));
@@ -86,24 +89,14 @@ public class Consts {
                 techEndClip = AudioSystem.getClip();
                 techEndClip.open(AudioSystem.getAudioInputStream(techEndFile));
 
-//                sSounds.put(STRINGS.HIT, hitClip);
-//                sSounds.put(STRINGS.MISS, missClip);
-//                sSounds.put(STRINGS.TASK_END, techClip);
-
             } catch (NullPointerException | IOException | UnsupportedAudioFileException | LineUnavailableException e) {
                 e.printStackTrace();
             }
         }
 
-        /**
-         * Play a sound
-         * @param soundKey Name of the sound
-         */
-        public static void play(String soundKey) {
-            if (sSounds.containsKey(soundKey)) {
-                sSounds.get(soundKey).setMicrosecondPosition(0); // Reset to the start of the file
-                sSounds.get(soundKey).start();
-            }
+        public static void playStartError() {
+            startErrClip.setMicrosecondPosition(0); // Reset to the start of the file
+            startErrClip.start();
         }
 
         public static void playHit() {

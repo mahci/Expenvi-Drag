@@ -51,4 +51,12 @@ public class MinMax {
     public void moveMax(int amt) {
         max += amt;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "min=" + min +
+                ", max=" + max +
+                '}';
+    }
 }

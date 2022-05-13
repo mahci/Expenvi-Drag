@@ -10,8 +10,11 @@ public class Out {
     static {
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
-        toLogList.add("TunnelTaskPanel");
+//        toLogList.add("TunnelTaskPanel");
+        toLogList.add("Enter");
         toLogList.add("Circle");
+        toLogList.add("Server");
+        toLogList.add("Block");
     }
 
     /**
@@ -23,7 +26,7 @@ public class Out {
         final int pLen = params.length;
         if (pLen > 0 && toShowTag(tag)) {
             StringBuilder sb = new StringBuilder();
-            for(int oi = 0; oi < pLen - 1; oi++) {
+            for (int oi = 0; oi < pLen - 1; oi++) {
                 sb.append(params[oi]).append(" | ");
             }
             sb.append(params[pLen - 1]);
@@ -41,7 +44,7 @@ public class Out {
         final int pLen = params.length;
         if (pLen > 0 && toShowTag(tag)) {
             StringBuilder sb = new StringBuilder();
-            for(int oi = 0; oi < pLen - 1; oi++) {
+            for (int oi = 0; oi < pLen - 1; oi++) {
                 sb.append(params[oi]).append(" | ");
             }
             sb.append(params[pLen - 1]);
