@@ -44,7 +44,8 @@ public class Consts {
     public static class FONTS {
         // Fonts
         public static Font SERIF = Font.getFont(Font.SERIF);
-        public static Font DIALOG = new Font(Font.DIALOG,  Font.PLAIN, 5);
+        public static Font DIALOG = new Font(Font.DIALOG,  Font.PLAIN, 12);
+        public static Font STATUS = new Font(Font.DIALOG,  Font.PLAIN, 18);
 
         // Sizes and spacings
         public static final float TEXT_FONT_SIZE = 20.5f;
@@ -57,7 +58,7 @@ public class Consts {
                 File sfLightFile = new File("./res/SF-Light.ttf");
 
                 SERIF = Font.createFont(Font.TRUETYPE_FONT, sfRegFile);
-                DIALOG = Font.createFont(Font.TRUETYPE_FONT, sfLightFile);
+//                DIALOG = Font.createFont(Font.TRUETYPE_FONT, sfLightFile);
 
             } catch (FontFormatException | IOException e) {
                 Out.d("FONTS", "Can't load the font file!");

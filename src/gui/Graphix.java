@@ -42,4 +42,10 @@ public class Graphix {
             g2d.fill(rect);
         }
     }
+
+    public void drawString(Color color, Font font, String txt, int x, int y) {
+        g2d.setColor(color);
+        g2d.setFont(font);
+        g2d.drawString(txt, x, y);
+    }
 }

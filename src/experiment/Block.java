@@ -69,7 +69,7 @@ public class Block {
      * Get the number of trials
      * @return Number of trials
      */
-    public int getNTrials() {
+    public int getNumTrials() {
         return mTrials.size();
     }
 

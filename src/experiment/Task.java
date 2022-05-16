@@ -10,4 +10,8 @@ public class Task {
 
     }
 
+    public int getNumBlocks() {
+        return mBlocks.size();
+    }
+
 }
