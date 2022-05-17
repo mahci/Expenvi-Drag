@@ -11,7 +11,7 @@ import java.util.List;
 import static experiment.Experiment.*;
 
 public class TunnelTrial extends Trial {
-    private final String NAME = "TunnelTrial";
+    private final String NAME = "TunnelTrial/";
 
     public MoRectangle line1Rect = new MoRectangle();
     public MoRectangle line2Rect = new MoRectangle();
@@ -20,23 +20,25 @@ public class TunnelTrial extends Trial {
 
     public Line2D.Double startLine = new Line2D.Double();
 
+    // Variables
     private Experiment.DIRECTION dir;
-    private int tunnelD;
-    private int tunnelW;
+    private int tunnelD; // px
+    private int tunnelW; // px
 
+    // Constants and randoms
     private int linesW, textW; // px
 
     public TunnelTrial(List<Integer> conf, int... params) {
-        super(conf);
+        super(conf, params);
 
-        if (config == null || config.size() < 3) {
+        if (conf == null || conf.size() < 3) {
             Out.d(NAME, "Config not properly set!");
             return;
         }
 
         // Set the dist and width
-        tunnelD = Utils.mm2px(config.get(1));
-        tunnelW = Utils.mm2px(config.get(2));
+        tunnelD = Utils.mm2px(conf.get(1));
+        tunnelW = Utils.mm2px(conf.get(2));
 
         // Set the direction (random based on the axis) and circumRect's size
 //        if (config.get(0) == Experiment.AXIS.VERTICAL.ordinal()) {
@@ -48,7 +50,7 @@ public class TunnelTrial extends Trial {
 //        }
 
         // Set the direction (random based on the axis) and circumRect's size
-        dir = DIRECTION.get(config.get(0));
+        dir = DIRECTION.get(conf.get(0));
         if (dir.getAxis().equals(AXIS.VERTICAL)) {
             boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
         } else { // Horizontal

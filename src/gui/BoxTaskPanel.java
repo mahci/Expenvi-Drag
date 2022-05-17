@@ -1,5 +1,9 @@
 package gui;
 
+import experiment.Block;
+import experiment.BoxTrial;
+import experiment.Experiment;
+import experiment.TunnelTrial;
 import tools.Consts;
 import tools.MinMax;
 import tools.Out;
@@ -28,18 +32,27 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private KeyStroke KS_RA; // Right arrow
 
     // Constants
-    private final double OBJECT_W_mm = 20; // Object width (always square)
-    private final double TARGET_W_mm = 60; // Window width (always squeate)
-    private final double DIST_mm = 100; // Distance from edge/corner of Object to edge/corner of Target
+//    private final double OBJECT_W_mm = 20; // Object width (always square)
+//    private final double TARGET_W_mm = 60; // Window width (always squeate)
+//    private final double DIST_mm = 100; // Distance from edge/corner of Object to edge/corner of Target
     private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
-    private final double NEXT_TRIAL_DIST_mm = 50; // Measured from center of Obj. to the next center
+//    private final double NEXT_TRIAL_DIST_mm = 50; // Measured from center of Obj. to the next center
+    private int MAX_CEHCK_POS = 100;
+
+    // Experiment
+    private BoxTask mTask;
+    private Block mBlock;
+    private BoxTrial mTrial;
+
+    private int mBlockNum;
+    private int mTrialNum;
 
     // Flags
+    private boolean mTrialActive = false;
     private boolean mGrabbed = false;
 
     // Shapes
     private Rectangle mObject = new Rectangle();
-    private Rectangle mTarget = new Rectangle();
     private final MoPanel mTargetPnl = new MoPanel();
     private Group mGroup;
 //    private Circle nextTrialD = new Circle();
@@ -53,6 +66,10 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     private long t0, t1;
     private boolean firstMove;
+
+    private int mPosCount = 0;
+
+    private Graphix mGraphix;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -82,6 +99,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
     }
 
+    public BoxTaskPanel setTask(Experiment.BoxTask boxTask) {
+        mTask = boxTask;
+        return this;
+    }
+
     @Override
     public void start() {
         final String TAG = NAME + "start";
@@ -92,26 +114,47 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 //
 //        mObject.setSize(Utils.mm2px(OBJECT_W_mm), Utils.mm2px(OBJECT_W_mm));
 
-        mDir = DIRECTION.random();
+//        mDir = DIRECTION.random();
 //        mDir = DIRECTION.E;
 //        firstRandPos();
 //        translateToPanel();
-        mGroup = new Group(
-                Utils.mm2px(OBJECT_W_mm), Utils.mm2px(TARGET_W_mm),
-                mDir, Utils.mm2px(DIST_mm));
+//        mGroup = new Group(
+//                Utils.mm2px(OBJECT_W_mm), Utils.mm2px(TARGET_W_mm),
+//                mDir, Utils.mm2px(DIST_mm));
 
-        if (mGroup.position() == 0) {
-            mGroup.translateToPanel();
-
-            removeAll();
-            add(mGroup.target, DEFAULT_LAYER);
-
-            repaint();
-        } else {
-            Out.e(NAME, "Couldn't find suitable position!");
-        }
+//        if (mGroup.position() == 0) {
+//            mGroup.translateToPanel();
+//
+//            removeAll();
+//            add(mGroup.target, DEFAULT_LAYER);
+//
+//            repaint();
+//        } else {
+//            Out.e(NAME, "Couldn't find suitable position!");
+//        }
 
 //        showTrial();
+
+        mBlockNum = 0;
+        showBlock();
+
+    }
+
+    private void showBlock() {
+        final String TAG = NAME + "showBlock";
+
+        mBlock = mTask.getBlock(mBlockNum);
+        Out.d(TAG, mTask.getNumBlocks(), mBlock);
+        int positioningSuccess = findTrialListPosition(0);
+        if (positioningSuccess == 0) {
+//            setTrialPositions();
+            mBlock.setTrialElements();
+
+            mTrialNum = 0;
+            showTrial();
+        } else {
+            Out.e(TAG, "Couldn't find positions for the trials in the block!");
+        }
     }
 
     /**
@@ -120,272 +163,170 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private void showTrial() {
         String TAG = NAME + "showTrial";
         firstMove = false;
-        mDir = DIRECTION.random();
-//        mDir = DIRECTION.W;
-//
-        int nextTrialD = Utils.mm2px(NEXT_TRIAL_DIST_mm);
-        Out.d(TAG, mDir, nextTrialD);
-        if (mGroup.position(getCursorPos(), mDir, nextTrialD) == 0) {
-            Out.d(TAG, "Successfully positioned");
-            mGroup.translateToPanel();
 
-            removeAll();
-            add(mGroup.target, DEFAULT_LAYER);
+        mTrial = (BoxTrial) mBlock.getTrial(mTrialNum);
+        Out.e(TAG, mTrial);
 
-            repaint();
-        } else {
-            Out.e(TAG, "Couldn't find a suitable position!");
-        }
+        removeAll();
 
-    }
+        // Add the target panel (+ effect) to the panel
+        BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
+        mTrial.targetPanel.setBorder(bord);
+        mTrial.targetPanel.setBackground(COLORS.GRAY_200);
 
-    private void firstRandPos() {
-        String TAG = NAME + "randPos";
+        add(mTrial.targetPanel);
 
-        // Dimension of the display frame (in px)
-        final int dispW = getDispDim().width;
-        final int dispH = getDispDim().height;
+        repaint();
 
-        // In px
-        final int dist = Utils.mm2px(DIST_mm);
-        final int sideDist = (int) (dist / sqrt(2));
-
-        final int tgtW = mTargetPnl.getWidth();
-        final int objW = mObject.width;
-        int combW = tgtW + dist + objW; // Combined rectangle side
-
-        // NEWS
-        switch (mDir) {
-            case N -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(0, dispW - tgtW),
-                        Utils.randInt(0, dispH - combW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() + ((tgtW - objW) / 2),
-                        mTargetPnl.getY() + (tgtW + dist));
-            }
-
-            case S -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(0, dispW - tgtW),
-                        Utils.randInt(objW + dist, dispH - tgtW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() + ((tgtW - objW) / 2),
-                        mTargetPnl.getY() - (objW + dist));
-            }
-
-            case E -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(objW + dist, dispW - tgtW),
-                        Utils.randInt(0, dispH - tgtW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() - (objW + dist),
-                        mTargetPnl.getY() + ((tgtW - objW) / 2));
-            }
-
-            case W -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(0, dispW - combW),
-                        Utils.randInt(0, dispH - tgtW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() + (tgtW + dist),
-                        mTargetPnl.getY() + ((tgtW - objW) / 2));
-            }
-        }
-
-        // Diagonal
-        combW = tgtW + sideDist + objW; // Combined rectangle side
-
-        switch (mDir) {
-            case NE -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(objW + sideDist, dispW - tgtW),
-                        Utils.randInt(0, dispH - combW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() - (objW + sideDist),
-                        mTargetPnl.getY() + (tgtW + sideDist));
-            }
-
-            case NW -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(0, dispW - combW),
-                        Utils.randInt(0, dispH - combW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() + (tgtW + sideDist),
-                        mTargetPnl.getY() + (tgtW + sideDist));
-            }
-
-            case SE -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(objW + sideDist, dispW - tgtW),
-                        Utils.randInt(objW + sideDist, dispH - tgtW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() - (objW + sideDist),
-                        mTargetPnl.getY() - (objW + sideDist));
-            }
-
-            case SW -> {
-                mTargetPnl.setLocation(
-                        Utils.randInt(0, combW),
-                        Utils.randInt(objW + sideDist, dispH - tgtW));
-
-                mObject.setLocation(
-                        mTargetPnl.getX() + (tgtW + sideDist),
-                        mTargetPnl.getY() - (objW + sideDist));
-            }
-        }
-    }
-
-
-    private void translateToPanel() {
-        final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-        final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-//        AffineTransform transform = new AffineTransform();
-//        transform.translate(lrMargin, tbMargin);
-
-        mTargetPnl.translate(lrMargin, tbMargin);
-        mObject.translate(lrMargin, tbMargin);
-    }
-
-    private MinMax getObjCntPossX(int objW, int tgtW, int d, DIRECTION dir, Dimension dispDim) {
-        final int halfTW = tgtW / 2;
-        final int halfOW = objW / 2;
-        final int sideD = (int) (d / sqrt(2));
-
-        return switch (dir) {
-            case N, S -> new MinMax(halfTW, dispDim.width - halfTW);
-            case NE, SE -> new MinMax(halfOW, dispDim.width - tgtW - sideD - halfOW);
-            case NW, SW -> new MinMax(tgtW + sideD + halfOW, dispDim.width - halfOW);
-            case E -> new MinMax(halfOW, dispDim.width - tgtW - d - halfOW);
-            case W -> new MinMax(tgtW + d + halfOW, dispDim.width - halfOW);
-        };
-    }
-
-    private MinMax getObjCntPossY(int objW, int tgtW, int d, DIRECTION dir, Dimension dispDim) {
-        final int halfTW = tgtW / 2;
-        final int halfOW = objW / 2;
-        final int sideD = (int) (d / sqrt(2));
-
-        return switch (dir) {
-            case E, W -> new MinMax(halfTW, dispDim.height - halfTW);
-            case N -> new MinMax(tgtW + d + halfOW, dispDim.height - halfOW);
-            case S -> new MinMax(halfOW, dispDim.height - tgtW - d - halfOW);
-            case NE, NW -> new MinMax(tgtW + sideD + halfOW, dispDim.height - halfOW);
-            case SE, SW -> new MinMax(halfOW, dispDim.height - tgtW - sideD - halfOW);
-        };
-    }
-
-    /**
-     * Try to create the Obj-Tar-Rectangle around the center of the obj
-     * @param objCnt Object center
-     * @return Set rectangle, or (-1, -1, W, H) if not possible
-     */
-    private Rectangle getOTRect(int objW, int tgtW, int dist, Point objCnt, DIRECTION dir) {
-        Rectangle otRect = new Rectangle(-1, -1, tgtW, tgtW + objW + dist);
-
-        // Temp location (wo/ constrants)
-        final int objHW = objW / 2;
-        final int tgtHW = tgtW / 2;
-        final int longD = objHW + dist + tgtW;
-        final int sideD = (int) (objHW + (dist * 1.0 / sqrt(2)) + tgtW);
-
-        switch (dir) {
-            case N -> otRect.setLocation(objCnt.x - tgtHW, objCnt.y - longD);
-            case S -> otRect.setLocation(objCnt.x - tgtHW, objCnt.y - objHW);
-
-            case E -> otRect.setLocation(objCnt.x - objHW, objCnt.y - tgtHW);
-            case W -> otRect.setLocation(objCnt.x - longD, objCnt.y - tgtHW);
-
-            case NE -> otRect.setLocation(objCnt.x - objHW, objCnt.y - sideD);
-            case NW -> otRect.setLocation(objCnt.x - sideD, objCnt.y - sideD);
-
-            case SE -> otRect.setLocation(objCnt.x - objHW, objCnt.y - objHW);
-            case SW -> otRect.setLocation(objCnt.x - sideD, objCnt.y - objHW);
-        };
-
-        return otRect;
-    }
-
-    /**
-     * Check if a rectangel can be fitted in disp area
-     * @param rect Rectangle
-     * @return True if rectangle fitted
-     */
-    private boolean checkRectFit(Rectangle rect) {
-        return getDispArea().contains(rect);
-    }
-
-    @Override
-    public void grab() {
-        if (mGroup.objectContains(getCursorPos())) {
-            mGrabbed = true;
-            mGrabPos = getCursorPos();
-        }
+        mTrialActive = true;
     }
 
     @Override
     public void release() {
+        final String TAG = NAME + "release";
+        Out.d(TAG, mGrabbed);
         if (mGrabbed) {
+            Out.d(TAG, isHit());
             if (isHit()) {
                 Consts.SOUNDS.playHit();
-
-                mGroup.moveObjInsideTarget();
+                Out.d(TAG, "Hit");
+//                mGroup.moveObjInsideTarget();
+                moveObjInside();
 
                 repaint();
 
-//                // Move the object within (if not already)
-//                if (!mGroup.targetContains(mObject)) {
-//                    moveObjInside();
-//                    repaint();
-//                }
+                hit();
 
             } else {
                 Consts.SOUNDS.playMiss();
+
+                miss();
             }
+        }
 
-            mGrabbed = false;
+        mGrabbed = false;
 
-            // Wait a certain delay, then show the next trial
-            executorService.schedule(this::showTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
+    }
 
-            Out.d(NAME, "Util", (Utils.nowMillis() - t0) / 1000.0);
-            Out.d(NAME, "System", (System.currentTimeMillis() - t1) / 1000.0);
+    private void hit() {
+        Consts.SOUNDS.playHit();
+
+        mTrialActive = false;
+
+        // Wait a certain delay, then show the next trial (or next block)
+        if (mTrialNum < mBlock.getNumTrials() - 1) {
+            mTrialNum++;
+            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        } else if (mBlockNum < mTask.getNumBlocks() - 1) {
+            mBlockNum++;
+            mBlock = mTask.getBlock(mBlockNum);
+
+            mTrialNum = 0;
+            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        } else {
+            // Task is finished
 
         }
     }
 
+    private void miss() {
+        final String TAG = NAME + "miss";
+
+        Consts.SOUNDS.playMiss();
+        Out.d(TAG, "Missed on trial", mTrialNum);
+        // Shuffle back and reposition the next ones
+        final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
+        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
+        if (findTrialListPosition(trNewInd) == 1) {
+            Out.e(TAG, "Couldn't find position for the trials");
+            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
+        } else {
+            // Next trial
+            mTrialNum++;
+            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        }
+
+        mTrialActive = false;
+
+    }
+
     public void moveObjInside() {
+        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
+//        final Rectangle objBounds = mObject.getBounds();
+        final Rectangle intersection = tgtBounds.intersection(mTrial.objectRect);
 
-        final Rectangle tgtBounds = mTargetPnl.getBounds();
-        final Rectangle objBounds = mObject.getBounds();
-        final Rectangle intersection = tgtBounds.intersection(objBounds);
+        final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
+        final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
 
-        final int dMinX = (int) (intersection.getMinX() - objBounds.getMinX());
-        final int dMaxX = (int) (intersection.getMaxX() - objBounds.getMaxX());
+        final int dMinY =  (int) (intersection.getMinY() - mTrial.objectRect.getMinY());
+        final int dMaxY =  (int) (intersection.getMaxY() - mTrial.objectRect.getMaxY());
 
-        final int dMinY =  (int) (intersection.getMinY() - objBounds.getMinY());
-        final int dMaxY =  (int) (intersection.getMaxY() - objBounds.getMaxY());
-
-        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
+//        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
+        mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);
 //        mObjectLbl.translate(dMinX + dMaxX, dMinY + dMaxY);
+    }
+
+    /**
+     * Recursively find suitable positions for a list of trials, from (incl.) trInd
+     * @param trInd Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
+     * @return Success (0) Fail (1)
+     */
+    public int findTrialListPosition(int trInd) {
+        final String TAG = NAME + "findTrialListPosition";
+
+        final int minNtDist = Utils.mm2px(BoxTask.NT_DIST_mm);
+        int maxNtDist = minNtDist;
+
+        Point foundPosition = null;
+        Point refP = null;
+
+        // Find position for the trInd trial
+        if (trInd > 0) {
+            refP = mBlock.getTrial(trInd - 1).getEndPoint();
+            maxNtDist = minNtDist + Utils.mm2px(100);
+        }
+
+        foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, minNtDist, maxNtDist);
+        if (foundPosition != null) mBlock.setTrialLocation(trInd, foundPosition);
+        else {
+            // TODO: find a solution...
+            return 1;
+        }
+
+        // Next trials
+        for (int ti = trInd + 1; ti < mBlock.getNumTrials(); ti++) {
+            Out.d(TAG, "Finding position for trial", ti);
+            foundPosition = findTrialPosition(
+                    mBlock.getTrial(ti).getBoundRect(),
+                    mBlock.getTrial(ti - 1).getEndPoint(),
+                    minNtDist, maxNtDist);
+
+            // Search to the max cound
+            if (foundPosition == null) {
+                Out.d(TAG, "Position not found for trial");
+                if (mPosCount < MAX_CEHCK_POS) {
+                    mPosCount++;
+                    return findTrialListPosition(trInd);
+                } else {
+                    return 1;
+                }
+            } else {
+                Out.d(TAG, "Position found for trial");
+                mBlock.setTrialLocation(ti, foundPosition);
+            }
+        }
+
+        return 0;
     }
 
     @Override
     public boolean isHit() {
-        return mGroup.targetContains(getCursorPos());
+        return mTrial.targetPanel.getBounds().contains(getCursorPos());
     }
 
     // -------------------------------------------------------------------------------------------
 
-    @Override
+//    @Override
     public void paint(Graphics g) {
         super.paint(g);
 
@@ -395,12 +336,17 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2d.setColor(COLORS.BLUE_900_ALPHA);
-        g2d.fill(mGroup.object);
+        mGraphix = new Graphix(g2d);
 
-        // TEMP
-//        g2d.setColor(COLORS.BLUE_900);
-//        g2d.draw(mGroup.mCircumRect);
+        // Draw the object
+        mGraphix.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
+
+        // Draw block-trial num
+        String stateText =
+                Consts.STRINGS.BLOCK + " " + (mBlockNum + 1) + "/" + mTask.getNumBlocks() + " --- " +
+                        Consts.STRINGS.TRIAL + " " + (mTrialNum + 1) + "/" + mBlock.getNumTrials();
+        mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+                getWidth() - Utils.mm2px(70), Utils.mm2px(10));
     }
 
     /**
@@ -659,11 +605,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void mouseDragged(MouseEvent e) {
 
-        if (mGrabbed) {
+        if (mTrialActive && mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;
-//            mObject.translate(dX, dY);
-            mGroup.object.translate(dX, dY);
+
+            mTrial.objectRect.translate(dX, dY);
 
             mGrabPos = e.getPoint();
 
@@ -689,14 +635,15 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             grab();
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        Out.d(NAME, "mouseReleased", e.getButton());
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             release();
         }
     }

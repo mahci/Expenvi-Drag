@@ -15,6 +15,7 @@ public class Out {
         toLogList.add("Circle");
         toLogList.add("Server");
         toLogList.add("Block");
+        toLogList.add("BoxTrial");
     }
 
     /**

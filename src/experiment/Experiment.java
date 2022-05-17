@@ -3,6 +3,7 @@ package experiment;
 import tools.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Experiment {
@@ -41,7 +42,7 @@ public class Experiment {
         public AXIS getAxis() {
             if (this.equals(N) || this.equals(S)) return AXIS.VERTICAL;
             if (this.equals(W) || this.equals(E)) return AXIS.HORIZONTAL;
-            else return AXIS.DIAGONAL;
+            else return AXIS.FOR_DIAG;
         }
 
         // Get the opposite direction (Horizontal)
@@ -74,11 +75,28 @@ public class Experiment {
     }
 
     public enum AXIS {
-        VERTICAL(0), HORIZONTAL(1), DIAGONAL(2);
+        VERTICAL(0), HORIZONTAL(1), FOR_DIAG(2) /* / */, BACK_DIAG(3) /* \ */;
         private final int n;
 
         AXIS(int n) {
             this.n = n;
+        }
+        
+        public static AXIS get(int n) {
+            return AXIS.values()[n];
+        }
+        
+        public DIRECTION randDir() {
+            DIRECTION result;
+            switch (this) {
+                case VERTICAL -> result = DIRECTION.randOne(DIRECTION.N, DIRECTION.S);
+                case HORIZONTAL -> result = DIRECTION.randOne(DIRECTION.W, DIRECTION.E);
+                case FOR_DIAG -> result = DIRECTION.randOne(DIRECTION.NE, DIRECTION.SW);
+                case BACK_DIAG -> result = DIRECTION.randOne(DIRECTION.NW, DIRECTION.SE);
+                default -> result = DIRECTION.N;
+            }
+            
+            return result;
         }
 
 //        public static int[] list() {
@@ -103,18 +121,50 @@ public class Experiment {
     private int mPId;
 
     // Tasks -------------------------------------------------------------------------------------------------
-    private class BoxTask extends Task {
-        private static final int[] AXISES = new int[] {0, 1, 2}; // Axises ordinals
-        private static final int[] OBJ_WIDTHS = new int[] {0, 0}; // Object widths (TODO)
-        private static final int[] TARGET_WIDTHS = new int[] {0, 0}; // Tunnel widths (mm)
+    public static class BoxTask extends Task {
+        private static final int[] OBJ_WIDTHS = new int[] {13, 42}; // Object widths
+        private static final int[] TARGET_WIDTHS = new int[] {80, 160}; // Tunnel widths (mm)
+        private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
+
+        public static final int DIST_mm = 50; // mm
+
+        public static final double NT_DIST_mm = 100;
 
         public BoxTask(int nBlocks) {
             super(nBlocks);
 
             for (int i = 0; i < nBlocks; i++) {
-                mBlocks.add(new Block(AXISES, OBJ_WIDTHS, TARGET_WIDTHS));
+                mBlocks.add(genBlock());
             }
         }
+
+        private Block genBlock() {
+            Block result = new Block();
+
+            List<Integer> config = new ArrayList<>();
+            final int dist = Utils.mm2px(DIST_mm);
+
+            for (int vi : OBJ_WIDTHS) {
+                for (int vj : TARGET_WIDTHS) {
+                    for (int vk : AXISES) {
+                        config.add(Utils.mm2px(vi));
+                        config.add(Utils.mm2px(vj));
+                        config.add(vk);
+
+                        // Create trials based on the combination
+                        result.mTrials.add(new BoxTrial(config, dist));
+
+                        config.clear();
+                    }
+                }
+            }
+
+            // Shuffle trials
+            Collections.shuffle(result.mTrials);
+
+            return result;
+        }
+
     }
 
     private class BarTask extends Task {
@@ -122,12 +172,38 @@ public class Experiment {
         private static final int[] OBJ_WIDTHS = new int[] {4, 8}; // Object (Bar) widths (mm)
         private static final int[] TARGET_WIDTHS = new int[] {16, 32}; // Target widths (mm)
 
+        public static final int DIST_mm = 50; // mm
+
         public BarTask(int nBlocks) {
             super(nBlocks);
 
             for (int i = 0; i < nBlocks; i++) {
-                mBlocks.add(new Block(AXISES, OBJ_WIDTHS, TARGET_WIDTHS));
+                mBlocks.add(genBlock());
             }
+        }
+
+        private Block genBlock() {
+            Block result = new Block();
+
+//            List<Integer> config = new ArrayList<>();
+//            final int linesW = Utils.mm2px(LINES_W_mm);
+//            final int textW = Utils.mm2px(TEXT_W_mm);
+//            for (int vi : AXISES) {
+//                for (int vj : OBJ_WIDTHS) {
+//                    for (int vk : TARGET_WIDTHS) {
+//                        config.add(vi);
+//                        config.add(vj);
+//                        config.add(vk);
+//
+//                        // Create trials based on the combination
+//                        result.mTrials.add(new TunnelTrial(config, linesW, textW));
+//
+//                        config.clear();
+//                    }
+//                }
+//            }
+
+            return result;
         }
     }
 
@@ -143,7 +219,6 @@ public class Experiment {
         public final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
 
         public final double NT_DIST_mm = 100;
-        public final long NT_DELAY_ms = 700; // Delay before showing the next trial
 
         public TunnelTask(int nBlocks) {
             super(nBlocks);
@@ -174,12 +249,12 @@ public class Experiment {
                 }
             }
 
+            // Shuffle trials
+            Collections.shuffle(result.mTrials);
+
             return result;
         }
 
-        public Block getBlock(int ind) {
-            return mBlocks.get(ind);
-        }
     }
 
 

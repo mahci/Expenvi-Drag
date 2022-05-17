@@ -1,13 +1,18 @@
 package gui;
 
 import tools.MinMax;
+import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Area;
+import java.util.Collections;
+import java.util.List;
 
 public class TaskPanel extends JLayeredPane {
+    private final String NAME = "TaskPanel/";
+
     protected double TB_MARGIN_mm = 20;
     protected double LR_MARGIN_mm = 10;
 
@@ -76,9 +81,46 @@ public class TaskPanel extends JLayeredPane {
                 getWidth() - wMargin, getHeight() - hMargin);
     }
 
-    protected boolean isXInRange(int x) {
-        Dimension dispDim = getDispDim();
-        return x > 0 && x < dispDim.width;
+
+    /**
+     * Find a position for a trial
+     * @param trBoundRect Boudning box of the trial
+     * @param ptP Previous trial position (null if not reference)
+     * @return The found point or null (if nothing found)
+     */
+    public Point findTrialPosition(Rectangle trBoundRect, Point ptP, int minNtDist, int maxNtDist) {
+        final String TAG = NAME + "findTrialPosition";
+        Out.d(TAG, "BoundRect", trBoundRect.toString());
+        Out.d(TAG, "W | H", getWidthMinMax(), getHeightMinMax());
+        Circle rangeCircle = new Circle();
+        int ntDist = minNtDist;
+        Out.d(TAG, "ptP | ntDist", ptP, ntDist);
+        if (ptP != null) { // Contrained by the previous trial
+
+            while (ntDist <= maxNtDist) {
+
+                rangeCircle = new Circle(ptP, ntDist);
+                final List<Point> rangePoints = rangeCircle.getPoints();
+                Collections.shuffle(rangePoints); // Shuffle for random iteration
+
+                Rectangle rect = trBoundRect;
+                for (Point candP : rangePoints) {
+                    rect.setLocation(candP);
+                    if (getPanelBounds().contains(rect)) { // Fits the window?
+                        return candP;
+                    }
+                }
+
+                Out.d(TAG, "Distance checked", ntDist);
+                ntDist += 5; // Increase by 10 px
+            }
+
+        } else {
+            return getPanelBounds().fitRect(trBoundRect);
+        }
+
+        repaint();
+        return null;
     }
 
 //    protected Point toPanel(Point inP) {

@@ -378,7 +378,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
      * @return Success (0) Fail (1)
      */
     public int findTrialListPosition(int trInd) {
-        final String TAG = NAME + "position";
+        final String TAG = NAME + "findTrialListPosition";
         Out.d(TAG, "-----------------------------------------------");
         Out.d(TAG, "trInd | nTrials", trInd, mBlock.getNumTrials());
         final int minNtDist = Utils.mm2px(mTask.NT_DIST_mm);

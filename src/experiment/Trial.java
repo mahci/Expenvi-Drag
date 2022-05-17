@@ -1,5 +1,7 @@
 package experiment;
 
+import gui.MoRectangle;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.List;
 public class Trial {
 
     protected List<Integer> config = new ArrayList<>();
-    protected Rectangle boundRect = new Rectangle();
+    protected MoRectangle boundRect = new MoRectangle();
 
     public Trial(List<Integer> conf, int... params) {
         config.addAll(conf);
