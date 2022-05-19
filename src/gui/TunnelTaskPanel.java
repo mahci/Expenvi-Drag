@@ -102,7 +102,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
         mTask = tunnelTask;
-        mBlock = mTask.getBlock(mBlockNum);
+
 
         return this;
     }
@@ -111,12 +111,14 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     public void start() {
         super.start();
 
-        int positioningSuccess = findTrialListPosition(0);
+        mBlockNum++;
+        mBlock = mTask.getBlock(mBlockNum);
+        int positioningSuccess = findTrialListPosition(1);
         if (positioningSuccess == 0) {
 //            setTrialPositions();
             mBlock.setTrialElements();
 
-            mTrialNum = 0;
+//            mTrialNum = 0;
             showTrial();
         }
 
@@ -140,6 +142,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mPosCount = 0;
 
+        mTrialNum++;
         mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
 //        Out.d(TAG, mTrial);
 
@@ -194,25 +197,15 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         return !mMissed && mDragging && mEntered;
     }
 
-    /**
-     * Get the cursor position relative to the panel
-     * @return Point
-     */
-    private Point getCursorPos() {
-        Point result = MouseInfo.getPointerInfo().getLocation();
-        SwingUtilities.convertPointFromScreen(result, this);
-
-        return  result;
-    }
-
-    private void hit() {
+    @Override
+    protected void hit() {
         SOUNDS.playHit();
 
         mTrialActive = false;
 
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials() - 1) {
-            mTrialNum++;
+//            mTrialNum++;
             executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks() - 1) {
             mBlockNum++;
@@ -226,10 +219,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         }
     }
 
-    /**
-     * What to do when the trial is missed?
-     */
-    private void miss() {
+    @Override
+    protected void miss() {
         final String TAG = NAME + "miss";
 
         SOUNDS.playMiss();
@@ -243,7 +234,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
             // Next trial
-            mTrialNum++;
+//            mTrialNum++;
             executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
@@ -358,8 +349,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
             // Draw block-trial num
             String stateText =
-                    STRINGS.BLOCK + " " + (mBlockNum + 1) + "/" + mTask.getNumBlocks() + " --- " +
-                    STRINGS.TRIAL + " " + (mTrialNum + 1) + "/" + mBlock.getNumTrials();
+                    STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
+                    STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
             mGraphix.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
@@ -374,13 +365,13 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     /**
      * Recursively find suitable positions for a list of trials, from (incl.) trInd
-     * @param trInd Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
+     * @param trNum Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
      * @return Success (0) Fail (1)
      */
-    public int findTrialListPosition(int trInd) {
+    public int findTrialListPosition(int trNum) {
         final String TAG = NAME + "findTrialListPosition";
         Out.d(TAG, "-----------------------------------------------");
-        Out.d(TAG, "trInd | nTrials", trInd, mBlock.getNumTrials());
+        Out.d(TAG, "trInd | nTrials", trNum, mBlock.getNumTrials());
         final int minNtDist = Utils.mm2px(mTask.NT_DIST_mm);
         int maxNtDist = minNtDist;
 
@@ -419,20 +410,20 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 //        }
 
         // Find position for the trInd trial
-        if (trInd > 0) {
-            refP = mBlock.getTrial(trInd - 1).getEndPoint();
+        if (trNum > 1) {
+            refP = mBlock.getTrial(trNum - 1).getEndPoint();
             maxNtDist = minNtDist + Utils.mm2px(100);
         }
 
-        foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, minNtDist, maxNtDist);
-        if (foundPosition != null) mBlock.setTrialLocation(trInd, foundPosition);
+        foundPosition = findTrialPosition(mBlock.getTrial(trNum).getBoundRect(), refP, minNtDist, maxNtDist);
+        if (foundPosition != null) mBlock.setTrialLocation(trNum, foundPosition);
         else {
             // TODO: find a solution...
             return 1;
         }
 
         // Next trials
-        for (int ti = trInd + 1; ti < mBlock.getNumTrials(); ti++) {
+        for (int ti = trNum + 1; ti <= mBlock.getNumTrials(); ti++) {
             Out.d(TAG, "Finding position for trial", ti);
             foundPosition = findTrialPosition(
                     mBlock.getTrial(ti).getBoundRect(),
@@ -444,7 +435,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 Out.d(TAG, "Position not found for trial");
                 if (mPosCount < MAX_CEHCK_POS) {
                     mPosCount++;
-                    return findTrialListPosition(trInd);
+                    return findTrialListPosition(trNum);
                 } else {
                     return 1;
                 }

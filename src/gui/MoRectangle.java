@@ -33,6 +33,10 @@ public class MoRectangle extends Rectangle {
         return new Point(x + width, y + height);
     }
 
+    public Point getCenter() {
+        return new Point((int) getCenterX(), (int) getCenterY());
+    }
+
     /**
      * Fit a rectangle inside this
      * @param rect Rectangle
@@ -48,12 +52,19 @@ public class MoRectangle extends Rectangle {
     }
 
     public String printCorners() {
-        StringBuilder resSB = new StringBuilder();
-        resSB.append("[").append(getUpLeft().x).append(",").append(getUpLeft().y).append("]")
-                .append("[").append(getUpRight().x).append(",").append(getUpRight().y).append("]")
-                .append("[").append(getLoRight().x).append(",").append(getLoRight().y).append("]")
-                .append("[").append(getLoLeft().x).append(",").append(getLoLeft().y).append("]");
+        String resSB = "[" + getUpLeft().x + "," + getUpLeft().y + "]" +
+                "[" + getUpRight().x + "," + getUpRight().y + "]" +
+                "[" + getLoRight().x + "," + getLoRight().y + "]" +
+                "[" + getLoLeft().x + "," + getLoLeft().y + "]";
+        return resSB;
+    }
 
-        return resSB.toString();
+    @Override
+    public String toString() {
+        return "MoRect[" +
+                "x=" + x + "," +
+                "y=" + y + "," +
+                "width=" + width + "," +
+                "height=" + height + "]";
     }
 }

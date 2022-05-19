@@ -10,8 +10,6 @@ public class Experiment {
     private final static String NAME = "Experiment/";
 
     //-- Constants
-//    public static final DimensionD VT_PANE_DIM_mm = new DimensionD(130.0, 145.0);
-
     public enum DIRECTION {
         N(0), S(1), E(2), W(3), NE(4), NW(5), SE(6), SW(7);
         private final int n;
@@ -81,11 +79,11 @@ public class Experiment {
         AXIS(int n) {
             this.n = n;
         }
-        
+
         public static AXIS get(int n) {
             return AXIS.values()[n];
         }
-        
+
         public DIRECTION randDir() {
             DIRECTION result;
             switch (this) {
@@ -95,34 +93,17 @@ public class Experiment {
                 case BACK_DIAG -> result = DIRECTION.randOne(DIRECTION.NW, DIRECTION.SE);
                 default -> result = DIRECTION.N;
             }
-            
+
             return result;
         }
-
-//        public static int[] list() {
-//            return new int[]{VERTICAL.ordinal(), HORIZONTAL.ordinal()};
-//        }
     }
-
-//    public enum TASK {
-//        VERTICAL, TWO_DIM;
-//        private static final TASK[] values = values();
-//        public static TASK get(int ord) {
-//            if (ord < values.length) return values[ord];
-//            else return values[0];
-//        }
-//    }
-
-    //-- Variables
-//    private int[] VT_DISTANCES = new int[]{50, 200, 600}; // in lines/cells
-//    private Map<TASK, Integer> N_BLOCKS = Map.of(VERTICAL, 8, TWO_DIM, 4);
 
     //--- Participant's things!
     private int mPId;
 
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {
-        private static final int[] OBJ_WIDTHS = new int[] {13, 42}; // Object widths
+        private static final int[] OBJECT_WIDTHS = new int[] {13, 42}; // Object widths
         private static final int[] TARGET_WIDTHS = new int[] {80, 160}; // Tunnel widths (mm)
         private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
 
@@ -144,7 +125,7 @@ public class Experiment {
             List<Integer> config = new ArrayList<>();
             final int dist = Utils.mm2px(DIST_mm);
 
-            for (int vi : OBJ_WIDTHS) {
+            for (int vi : OBJECT_WIDTHS) {
                 for (int vj : TARGET_WIDTHS) {
                     for (int vk : AXISES) {
                         config.add(Utils.mm2px(vi));
@@ -167,12 +148,16 @@ public class Experiment {
 
     }
 
-    private class BarTask extends Task {
+    // -------------------------------------------------------------------------------------
+    public static class BarTask extends Task {
+        private static final int[] OBJECT_WIDTHS = new int[] {2, 5}; // Object widths (mm)
+        private static final int[] TARGET_WIDTHS = new int[] {8, 10}; // Tunnel widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
-        private static final int[] OBJ_WIDTHS = new int[] {4, 8}; // Object (Bar) widths (mm)
-        private static final int[] TARGET_WIDTHS = new int[] {16, 32}; // Target widths (mm)
 
         public static final int DIST_mm = 50; // mm
+        public static final int OBJECT_LEN_mm = 30; // mm
+        public static final int TARGET_LEN_mm = 100; // mm
+        public static final int TARGET_LINES_THICKNESS_mm = 1; // mm
 
         public BarTask(int nBlocks) {
             super(nBlocks);
@@ -185,33 +170,40 @@ public class Experiment {
         private Block genBlock() {
             Block result = new Block();
 
-//            List<Integer> config = new ArrayList<>();
-//            final int linesW = Utils.mm2px(LINES_W_mm);
-//            final int textW = Utils.mm2px(TEXT_W_mm);
-//            for (int vi : AXISES) {
-//                for (int vj : OBJ_WIDTHS) {
-//                    for (int vk : TARGET_WIDTHS) {
-//                        config.add(vi);
-//                        config.add(vj);
-//                        config.add(vk);
-//
-//                        // Create trials based on the combination
-//                        result.mTrials.add(new TunnelTrial(config, linesW, textW));
-//
-//                        config.clear();
-//                    }
-//                }
-//            }
+            List<Integer> config = new ArrayList<>();
+            final int dist = Utils.mm2px(DIST_mm);
+            final int objLen = Utils.mm2px(OBJECT_LEN_mm);
+            final int tgtLen = Utils.mm2px(TARGET_LEN_mm);
+            final int tgtLinesThickness = Utils.mm2px(TARGET_LINES_THICKNESS_mm);
+
+            for (int vi : OBJECT_WIDTHS) {
+                for (int vj : TARGET_WIDTHS) {
+                    for (int vk : AXISES) {
+                        config.add(Utils.mm2px(vi));
+                        config.add(Utils.mm2px(vj));
+                        config.add(vk);
+
+                        // Create trials based on the combination
+                        result.mTrials.add(new BarTrial(config, objLen, tgtLen, tgtLinesThickness, dist));
+
+                        config.clear();
+                    }
+                }
+            }
+
+            // Shuffle trials
+            Collections.shuffle(result.mTrials);
 
             return result;
         }
     }
 
+    // -------------------------------------------------------------------------------------
     public static class TunnelTask extends Task {
-//        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
-        private final int[] DIRS = new int[] {0, 1, 2, 3};
-        private final int[] DISTS = new int[] {150}; // Tunnel length (in mm)
-        private final int[] WIDTHS = new int[] {5, 10}; // Tunnel widths (in mm)
+        //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
+        private final int[] DIRS = new int[]{0, 1, 2, 3};
+        private final int[] DISTS = new int[]{150}; // Tunnel length (in mm)
+        private final int[] WIDTHS = new int[]{5, 10}; // Tunnel widths (in mm)
 
         public final double LINES_W_mm = 1; // Targets width
         public final double TEXT_W_mm = 8; // Width of the start text rectangle
@@ -279,4 +271,6 @@ public class Experiment {
         return mPId;
     }
 
-}
+    }
+
+

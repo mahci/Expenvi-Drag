@@ -37,18 +37,17 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 //    private final double DIST_mm = 100; // Distance from edge/corner of Object to edge/corner of Target
     private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
 //    private final double NEXT_TRIAL_DIST_mm = 50; // Measured from center of Obj. to the next center
-    private int MAX_CEHCK_POS = 100;
+//    private int MAX_CEHCK_POS = 100;
 
     // Experiment
     private BoxTask mTask;
-    private Block mBlock;
     private BoxTrial mTrial;
 
     private int mBlockNum;
     private int mTrialNum;
 
     // Flags
-    private boolean mTrialActive = false;
+//    private boolean mTrialActive = false;
     private boolean mGrabbed = false;
 
     // Shapes
@@ -67,9 +66,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private long t0, t1;
     private boolean firstMove;
 
-    private int mPosCount = 0;
-
-    private Graphix mGraphix;
+//    private Graphix mGraphix;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -135,7 +132,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
 //        showTrial();
 
-        mBlockNum = 0;
+//        mBlockNum = 1;
         showBlock();
 
     }
@@ -143,14 +140,15 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private void showBlock() {
         final String TAG = NAME + "showBlock";
 
+        mBlockNum++;
         mBlock = mTask.getBlock(mBlockNum);
         Out.d(TAG, mTask.getNumBlocks(), mBlock);
-        int positioningSuccess = findTrialListPosition(0);
+        int positioningSuccess = findTrialListPosition(1);
         if (positioningSuccess == 0) {
 //            setTrialPositions();
             mBlock.setTrialElements();
 
-            mTrialNum = 0;
+//            mTrialNum = 1;
             showTrial();
         } else {
             Out.e(TAG, "Couldn't find positions for the trials in the block!");
@@ -164,7 +162,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         String TAG = NAME + "showTrial";
         firstMove = false;
 
+        mTrialNum++;
         mTrial = (BoxTrial) mBlock.getTrial(mTrialNum);
+        Out.d(TAG, mTrialNum);
         Out.e(TAG, mTrial);
 
         removeAll();
@@ -176,9 +176,20 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         add(mTrial.targetPanel);
 
+        mTrialActive = true;
+
         repaint();
 
-        mTrialActive = true;
+
+    }
+
+    @Override
+    public void grab() {
+        Point curP = getCursorPos();
+        if (mTrial.objectRect.contains(curP)) {
+            mGrabbed = true;
+            mGrabPos = curP;
+        }
     }
 
     @Override
@@ -208,20 +219,24 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     }
 
-    private void hit() {
+    @Override
+    protected void hit() {
+        final String TAG = NAME + "hit";
         Consts.SOUNDS.playHit();
 
         mTrialActive = false;
 
         // Wait a certain delay, then show the next trial (or next block)
-        if (mTrialNum < mBlock.getNumTrials() - 1) {
-            mTrialNum++;
+        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
+        if (mTrialNum < mBlock.getNumTrials()) {
+            Out.d(TAG, "NEXT!");
+//            mTrialNum++;
             executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks() - 1) {
+        } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
             mBlock = mTask.getBlock(mBlockNum);
 
-            mTrialNum = 0;
+//            mTrialNum = 0;
             executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else {
             // Task is finished
@@ -229,7 +244,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
     }
 
-    private void miss() {
+    @Override
+    protected void miss() {
         final String TAG = NAME + "miss";
 
         Consts.SOUNDS.playMiss();
@@ -242,7 +258,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
             // Next trial
-            mTrialNum++;
+//            mTrialNum++;
             executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
@@ -267,11 +283,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     /**
-     * Recursively find suitable positions for a list of trials, from (incl.) trInd
-     * @param trInd Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
+     * Recursively find suitable positions for a list of trials, from (incl.) trNum
+     * @param trNum Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
      * @return Success (0) Fail (1)
      */
-    public int findTrialListPosition(int trInd) {
+    public int findTrialListPosition(int trNum) {
         final String TAG = NAME + "findTrialListPosition";
 
         final int minNtDist = Utils.mm2px(BoxTask.NT_DIST_mm);
@@ -280,21 +296,21 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         Point foundPosition = null;
         Point refP = null;
 
-        // Find position for the trInd trial
-        if (trInd > 0) {
-            refP = mBlock.getTrial(trInd - 1).getEndPoint();
+        // Find position for the trNum trial
+        if (trNum > 1) {
+            refP = mBlock.getTrial(trNum - 1).getEndPoint();
             maxNtDist = minNtDist + Utils.mm2px(100);
         }
 
-        foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, minNtDist, maxNtDist);
-        if (foundPosition != null) mBlock.setTrialLocation(trInd, foundPosition);
+        foundPosition = findTrialPosition(mBlock.getTrial(trNum).getBoundRect(), refP, minNtDist, maxNtDist);
+        if (foundPosition != null) mBlock.setTrialLocation(trNum, foundPosition);
         else {
             // TODO: find a solution...
             return 1;
         }
 
         // Next trials
-        for (int ti = trInd + 1; ti < mBlock.getNumTrials(); ti++) {
+        for (int ti = trNum + 1; ti <= mBlock.getNumTrials(); ti++) {
             Out.d(TAG, "Finding position for trial", ti);
             foundPosition = findTrialPosition(
                     mBlock.getTrial(ti).getBoundRect(),
@@ -306,7 +322,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 Out.d(TAG, "Position not found for trial");
                 if (mPosCount < MAX_CEHCK_POS) {
                     mPosCount++;
-                    return findTrialListPosition(trInd);
+                    return findTrialListPosition(trNum);
                 } else {
                     return 1;
                 }
@@ -342,22 +358,15 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mGraphix.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
 
         // Draw block-trial num
+        if (mTrialActive) {
+
+        }
+
         String stateText =
-                Consts.STRINGS.BLOCK + " " + (mBlockNum + 1) + "/" + mTask.getNumBlocks() + " --- " +
-                        Consts.STRINGS.TRIAL + " " + (mTrialNum + 1) + "/" + mBlock.getNumTrials();
+                Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
+                        Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
         mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                 getWidth() - Utils.mm2px(70), Utils.mm2px(10));
-    }
-
-    /**
-     * Get the cursor position relative to the panel
-     * @return Point
-     */
-    private Point getCursorPos() {
-        Point result = MouseInfo.getPointerInfo().getLocation();
-        SwingUtilities.convertPointFromScreen(result, this);
-
-        return result;
     }
 
     private void mapKeys() {

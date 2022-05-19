@@ -17,8 +17,8 @@ public class Task {
         return mBlocks.size();
     }
 
-    public Block getBlock(int blInd) {
-        if (blInd < mBlocks.size()) return mBlocks.get(blInd);
+    public Block getBlock(int blNum) {
+        if (blNum <= mBlocks.size()) return mBlocks.get(blNum - 1);
         else return null;
     }
 

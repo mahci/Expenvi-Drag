@@ -58,11 +58,11 @@ public class Block {
 
     /**
      * Get a trial
-     * @param trInd Trial index
+     * @param trNum Trial number (starting from 1)
      * @return Trial
      */
-    public Trial getTrial(int trInd) {
-        return mTrials.get(trInd);
+    public Trial getTrial(int trNum) {
+        return mTrials.get(trNum - 1);
     }
 
     /**
@@ -87,8 +87,8 @@ public class Block {
         mTrials.set(index, tr);
     }
 
-    public void setTrialLocation(int trInd, Point loc) {
-        mTrials.get(trInd).setBoundRectLocation(loc);
+    public void setTrialLocation(int trNum, Point loc) {
+        mTrials.get(trNum - 1).setBoundRectLocation(loc);
     }
 
     public void setTrialElements() {
