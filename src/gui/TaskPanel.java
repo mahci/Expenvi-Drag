@@ -115,8 +115,8 @@ public class TaskPanel extends JLayeredPane {
         final int hMargin = Utils.mm2px(TB_MARGIN_mm);
         return new MoRectangle(
                 wMargin, hMargin,
-                getWidth() - wMargin,
-                getHeight() - hMargin);
+                getWidth() - 2 * wMargin,
+                getHeight() - 2 * hMargin);
     }
 
     protected boolean contains(MoRectangle moRect) {
@@ -160,10 +160,10 @@ public class TaskPanel extends JLayeredPane {
 
         Point foundPosition = null;
         Point prevEndPoint = null;
-        MoRectangle prevBoundRect = null;
+//        MoRectangle prevBoundRect = null;
         if (startTrNum > 1) {
             prevEndPoint = mBlock.getTrial(startTrNum - 1).getEndPoint();
-            prevBoundRect = mBlock.getTrial(startTrNum - 1).getBoundRect();
+//            prevBoundRect = mBlock.getTrial(startTrNum - 1).getBoundRect();
         }
 
         // Search position for the start trial

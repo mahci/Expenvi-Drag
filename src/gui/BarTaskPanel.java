@@ -117,16 +117,15 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void release() {
         if (mGrabbed) {
-            if (isHit()) hit();
-            else miss();
 
-            mGrabbed = false;
-
-            // Wait a certain delay, then show the next trial
-            executorService.schedule(this::nextTrial, DROP_DELAY_ms, TimeUnit.MILLISECONDS);
-
-            Out.d(NAME, (Utils.nowMillis() - t0) / 1000.0);
+            if (isHit()) {
+                hit();
+            } else {
+                miss();
+            }
         }
+
+        mGrabbed = false;
     }
 
     @Override
@@ -142,13 +141,12 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials()) {
-            mTrialNum++;
             executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
             mBlock = mTask.getBlock(mBlockNum);
 
-            mTrialNum = 1;
+            mTrialNum = 0;
             executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else {
             // Task is finished
@@ -158,6 +156,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     protected void miss() {
         final String TAG = NAME + "miss";
+
+        mTrialActive = false;
 
         Consts.SOUNDS.playMiss();
         Out.d(TAG, "Missed on trial", mTrialNum);
@@ -169,11 +169,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
             // Next trial
-            mTrialNum++;
             executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
-
-        mTrialActive = false;
 
     }
 
