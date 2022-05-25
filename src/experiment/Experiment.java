@@ -107,9 +107,9 @@ public class Experiment {
         private static final int[] TARGET_WIDTHS = new int[] {80, 160}; // Tunnel widths (mm)
         private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
 
-        public static final int DIST_mm = 50; // mm
+        public static final int DIST_mm = 30; // mm
 
-        public static final double NT_DIST_mm = 100;
+        public static final double NT_DIST_mm = 30;
 
         public BoxTask(int nBlocks) {
             super(nBlocks);
@@ -208,9 +208,9 @@ public class Experiment {
         public final double LINES_W_mm = 1; // Targets width
         public final double TEXT_W_mm = 8; // Width of the start text rectangle
 
-        public final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
+        public static final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
 
-        public final double NT_DIST_mm = 100;
+        public static final double NT_DIST_mm = 100;
 
         public TunnelTask(int nBlocks) {
             super(nBlocks);

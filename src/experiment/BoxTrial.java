@@ -72,11 +72,13 @@ public class BoxTrial extends Trial {
     }
 
     @Override
-    public void setElementsLocations() {
-        super.setElementsLocations();
+    protected void positionElements() {
+        final String TAG = NAME + "setElementsLocations";
+//        super.positionElements();
 
         switch (dir) {
             case N -> {
+                Out.d(TAG, "dir: N");
                 objectRect.setLocation(
                         (int) (boundRect.getCenterX() - objectRect.width / 2),
                         boundRect.getLoLeft().y - objectRect.width);
@@ -84,6 +86,7 @@ public class BoxTrial extends Trial {
             }
 
             case S -> {
+                Out.d(TAG, "dir: S");
                 objectRect.setLocation(
                         (int) (boundRect.getCenterX() - objectRect.width / 2),
                         boundRect.y);
@@ -93,6 +96,7 @@ public class BoxTrial extends Trial {
             }
 
             case E -> {
+                Out.d(TAG, "dir: E");
                 objectRect.setLocation(
                         boundRect.x,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
@@ -102,6 +106,7 @@ public class BoxTrial extends Trial {
             }
 
             case W -> {
+                Out.d(TAG, "dir: W");
                 objectRect.setLocation(
                         boundRect.getUpRight().x - objectRect.width,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
@@ -109,6 +114,7 @@ public class BoxTrial extends Trial {
             }
 
             case NE -> {
+                Out.d(TAG, "dir: NE");
                 objectRect.setLocation(
                         boundRect.x,
                         boundRect.getLoLeft().y - objectRect.width);
@@ -118,6 +124,7 @@ public class BoxTrial extends Trial {
             }
 
             case NW -> {
+                Out.d(TAG, "dir: NW");
                 objectRect.setLocation(
                         boundRect.getLoRight().x - objectRect.width,
                         boundRect.getLoRight().y - objectRect.width);
@@ -125,6 +132,7 @@ public class BoxTrial extends Trial {
             }
 
             case SE -> {
+                Out.d(TAG, "dir: SE");
                 objectRect.setLocation(boundRect.getLocation());
                 targetPanel.setLocation(
                         boundRect.getLoRight().x - targetPanel.getWidth(),
@@ -132,6 +140,7 @@ public class BoxTrial extends Trial {
             }
 
             case SW -> {
+                Out.d(TAG, "dir: SW");
                 objectRect.setLocation(
                         boundRect.getUpRight().x - objectRect.width,
                         boundRect.y);

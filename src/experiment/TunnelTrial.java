@@ -10,7 +10,7 @@ import java.util.List;
 
 import static experiment.Experiment.*;
 
-public class TunnelTrial extends Trial {
+public class TunnelTrial extends Trial implements Cloneable {
     private final String NAME = "TunnelTrial/";
 
     public MoRectangle line1Rect = new MoRectangle();
@@ -39,15 +39,6 @@ public class TunnelTrial extends Trial {
         // Set the dist and width
         tunnelD = Utils.mm2px(conf.get(1));
         tunnelW = Utils.mm2px(conf.get(2));
-
-        // Set the direction (random based on the axis) and circumRect's size
-//        if (config.get(0) == Experiment.AXIS.VERTICAL.ordinal()) {
-//            dir = Experiment.DIRECTION.randVertical();
-//            boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
-//        } else { // Horizontal
-//            dir = Experiment.DIRECTION.randHorizontal();
-//            boundRect.setSize(tunnelW + 2 * linesW + textW, tunnelD);
-//        }
 
         // Set the direction (random based on the axis) and circumRect's size
         dir = DIRECTION.get(conf.get(0));
@@ -137,8 +128,9 @@ public class TunnelTrial extends Trial {
     }
 
     @Override
-    public void setElementsLocations() {
-        super.setElementsLocations();
+    protected void positionElements() {
+        super.positionElements();
+        final String TAG = NAME + "setElementsLocations";
 
         switch (dir) {
             case W -> {
@@ -185,14 +177,12 @@ public class TunnelTrial extends Trial {
                 startLine.setLine(inRect.getUpLeft(), inRect.getUpRight());
             }
         }
-
     }
 
     @Override
     public String toString() {
         return "TunnelTrial{" +
-                "NAME='" + NAME + '\'' +
-                ", circumRect=" + boundRect +
+                "boundRect=" + boundRect +
                 ", line1Rect=" + line1Rect +
                 ", line2Rect=" + line2Rect +
                 ", inRect=" + inRect +
@@ -203,5 +193,10 @@ public class TunnelTrial extends Trial {
                 ", linesW=" + linesW +
                 ", textW=" + textW +
                 '}';
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

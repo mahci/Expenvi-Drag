@@ -1,5 +1,6 @@
 package experiment;
 
+import com.google.gson.Gson;
 import tools.Out;
 import tools.Utils;
 
@@ -62,7 +63,9 @@ public class Block {
      * @return Trial
      */
     public Trial getTrial(int trNum) {
-        return mTrials.get(trNum - 1);
+        Out.d(NAME, trNum, mTrials.size());
+        if (trNum > mTrials.size()) return null;
+        else return mTrials.get(trNum - 1);
     }
 
     /**
@@ -88,32 +91,50 @@ public class Block {
     }
 
     public void setTrialLocation(int trNum, Point loc) {
+        Out.d(NAME, "setTrialLocation trial ", trNum);
         mTrials.get(trNum - 1).setBoundRectLocation(loc);
+        mTrials.get(trNum - 1).positionElements();
+        Out.d(NAME, this.toString());
     }
 
-    public void setTrialElements() {
+    public void positionAllTrialsElements() {
+        Out.d(NAME, "positionAllTrialsElements");
         for (Trial tr : mTrials) {
-            tr.setElementsLocations();
+            Out.d(NAME, tr.getClass());
+            tr.positionElements();
         }
     }
 
     /**
      * Shuffle a duplicate of a Trial to the rest
-     * @param trialInd Trial index
+     * @param trNum Trial number (from 1)
+     * @return New number for the trial
      */
-    public int dupeShuffleTrial(int trialInd) {
+    public int dupeShuffleTrial(int trNum) {
         final String TAG = NAME + "dupeShuffleTrial";
 
-        final Trial trial = mTrials.get(trialInd);
-        final int lastInd = mTrials.size() - 1;
-        final int insertInd;
-        Out.d(TAG, "trInd | lastInd", trialInd, lastInd);
-        if (trialInd == lastInd) insertInd = lastInd;
-        else insertInd = Utils.randInt(trialInd + 1, lastInd);
+        final int trInd = trNum - 1;
+        Gson gson = new Gson();
+        final String trialJSON = gson.toJson(mTrials.get(trInd));
+        final Class<? extends Trial> trialType = mTrials.get(trInd).getClass();
 
-        mTrials.add(insertInd, trial);
+//        final int lastInd = mTrials.size() - 1;
+        final int insertInd = Utils.randInt(trInd + 1, mTrials.size());
+        mTrials.add(insertInd, gson.fromJson(trialJSON, trialType));
 
-        return insertInd;
+        return insertInd + 1; // Return the number
     }
 
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("Block{\n");
+        for (int ti = 1; ti <= mTrials.size(); ti++) {
+            result.append("trial_").append(ti).append("{")
+                    .append(mTrials.get(ti - 1))
+                    .append("{").append("\n");
+        }
+        result.append("}");
+
+        return result.toString();
+    }
 }

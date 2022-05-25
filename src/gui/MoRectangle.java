@@ -17,6 +17,20 @@ public class MoRectangle extends Rectangle {
         this.height = height;
     }
 
+    public MoRectangle(int cx, int cy, int margin) {
+        this.x = cx - margin;
+        this.y = cy - margin;
+        this.width = 2 * margin;
+        this.height = 2 * margin;
+    }
+
+    public MoRectangle(Point center, int margin) {
+        this.x = center.x - margin;
+        this.y = center.y - margin;
+        this.width = 2 * margin;
+        this.height = 2 * margin;
+    }
+
     public Point getUpLeft() {
         return new Point(x, y);
     }
@@ -46,9 +60,29 @@ public class MoRectangle extends Rectangle {
         if (rect.height > height || rect.width > width) return null;
         else {
             return new Point(
-                    Utils.randInt(0, width - rect.width),
-                    Utils.randInt(0, height - rect.height));
+                    Utils.randInt(x, width - rect.width),
+                    Utils.randInt(y, height - rect.height));
         }
+    }
+
+    public int minX() {
+        return x;
+    }
+
+    public int minY() {
+        return y;
+    }
+
+    public int maxX() {
+        return x + width;
+    }
+
+    public int maxY() {
+        return y + height;
+    }
+
+    public MoRectangle getMarginedRectangel(int margin) {
+        return new MoRectangle(x - margin, y - margin, width + 2 * margin, height + 2 * margin);
     }
 
     public String printCorners() {

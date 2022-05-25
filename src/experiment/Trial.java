@@ -1,6 +1,7 @@
 package experiment;
 
 import gui.MoRectangle;
+import tools.Out;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class Trial {
         // params in managed in subclasses
     }
 
-    public Rectangle getBoundRect() {
+    public MoRectangle getBoundRect() {
         return boundRect;
     }
 
@@ -35,7 +36,7 @@ public class Trial {
     /**
      * Overriden in subclasses
      */
-    public void setElementsLocations() {
+    protected void positionElements() {
     }
 
     public String toLogString() {
@@ -46,4 +47,8 @@ public class Trial {
         return "";
     }
 
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }

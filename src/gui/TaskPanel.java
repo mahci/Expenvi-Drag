@@ -2,6 +2,7 @@ package gui;
 
 import experiment.Block;
 import experiment.Experiment;
+import experiment.Task;
 import tools.MinMax;
 import tools.Out;
 import tools.Utils;
@@ -9,18 +10,24 @@ import tools.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Area;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
+
+import static experiment.Experiment.DIRECTION.*;
+import static experiment.Experiment.DIRECTION.E;
+import static java.lang.Math.*;
+import static experiment.Experiment.*;
 
 public class TaskPanel extends JLayeredPane {
     private final String NAME = "TaskPanel/";
 
     // Constants
     protected double TB_MARGIN_mm = 20;
-    protected double LR_MARGIN_mm = 10;
+    protected double LR_MARGIN_mm = 20;
     protected int MAX_CEHCK_POS = 100;
 
     // Experiment
+    protected Task mTask;
     protected Block mBlock;
 
     // Flags
@@ -33,36 +40,41 @@ public class TaskPanel extends JLayeredPane {
     protected Graphix mGraphix;
 
     // Methods ------------------------------------------------------------------------------------
-    public void start() {
+    protected void start() { }
+
+    protected void startBlock(int blkNum) {
+        final String TAG = NAME + "showBlock";
+
+        mBlock = mTask.getBlock(blkNum);
+        Out.d(TAG, mTask.getNumBlocks(), mBlock);
+
+        // Try to find positions for all the trials in the block
+        if (findAllTrialsPosition(1) == 0) {
+            mBlock.positionAllTrialsElements();
+
+            nextTrial();
+        } else {
+            Out.e(TAG, "Couldn't find positions for the trials in the block!");
+        }
     }
 
-    public boolean isHit() {
+    protected void nextTrial() { }
+
+    protected boolean isHit() {
         return false;
     }
 
-    public void grab() {
+    protected void grab() { }
 
-    }
+    protected void drag() { }
 
-    public void drag() {
+    protected void release() { }
 
-    }
+    protected void cancel() { }
 
-    public void release() {
+    protected void hit() { }
 
-    }
-
-    public void cancel() {
-
-    }
-
-    protected void hit() {
-
-    }
-
-    protected void miss() {
-
-    }
+    protected void miss() { }
 
     protected Dimension getDispDim() {
         Dimension result = new Dimension();
@@ -98,12 +110,28 @@ public class TaskPanel extends JLayeredPane {
         return new MinMax(vtMargin, getHeight() - vtMargin);
     }
 
-    protected MoRectangle getPanelBounds() {
+    protected MoRectangle getPanelRect() {
         final int wMargin = Utils.mm2px(LR_MARGIN_mm);
         final int hMargin = Utils.mm2px(TB_MARGIN_mm);
         return new MoRectangle(
                 wMargin, hMargin,
-                getWidth() - wMargin, getHeight() - hMargin);
+                getWidth() - wMargin,
+                getHeight() - hMargin);
+    }
+
+    protected boolean contains(MoRectangle moRect) {
+        return getPanelRect().contains(moRect);
+    }
+
+    protected Point findPosition(MoRectangle rect) {
+        final int wMargin = Utils.mm2px(LR_MARGIN_mm);
+        final int hMargin = Utils.mm2px(TB_MARGIN_mm);
+
+        if (rect.height > getDispH() || rect.width > getDispW()) return null;
+        else { return new Point(
+                    Utils.randInt(wMargin, getDispW() - rect.width),
+                    Utils.randInt(hMargin, getDispH() - rect.height));
+        }
     }
 
     /**
@@ -118,101 +146,129 @@ public class TaskPanel extends JLayeredPane {
     }
 
     /**
-     * Recursively find suitable positions for a list of trials, from (incl.) trNum
-     * @param trNum Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
+     * Recursively find suitable positions for a list of trials, from (incl.) startTrNum
+     * @param startTrNum Index of the first trial. If > 1  => prev. Trial restricts, otherwise, free
      * @return Success (0) Fail (1)
      */
-    public int findTrialListPosition(int trNum) {
-        final String TAG = NAME + "findTrialListPosition";
+    public int findAllTrialsPosition(int startTrNum) {
+        final String TAG = NAME + "findAllTrialsPosition";
 
         final int minNtDist = Utils.mm2px(Experiment.BoxTask.NT_DIST_mm);
-        int maxNtDist = minNtDist;
+        final int maxNtDist = minNtDist + Utils.mm2px(50);
+
+        if (startTrNum == mBlock.getNumTrials() + 1) return 0;
 
         Point foundPosition = null;
-        Point refP = null;
-
-        // Find position for the trNum trial
-        if (trNum > 1) {
-            refP = mBlock.getTrial(trNum - 1).getEndPoint();
-            maxNtDist = minNtDist + Utils.mm2px(100);
+        Point prevEndPoint = null;
+        MoRectangle prevBoundRect = null;
+        if (startTrNum > 1) {
+            prevEndPoint = mBlock.getTrial(startTrNum - 1).getEndPoint();
+            prevBoundRect = mBlock.getTrial(startTrNum - 1).getBoundRect();
         }
 
-        foundPosition = findTrialPosition(mBlock.getTrial(trNum).getBoundRect(), refP, minNtDist, maxNtDist);
-        if (foundPosition != null) mBlock.setTrialLocation(trNum, foundPosition);
-        else {
-            // TODO: find a solution...
-            return 1;
-        }
+        // Search position for the start trial
+//        foundPosition = findTrialPosition(
+//                mBlock.getTrial(startTrNum).getBoundRect(),
+//                prevEndPoint,
+//                minNtDist, maxNtDist);
+        Out.d(TAG, "startTrNum", startTrNum);
+        foundPosition = findPosition(
+                mBlock.getTrial(startTrNum).getBoundRect(),
+                prevEndPoint,
+                minNtDist);
 
-        // Next trials
-        for (int ti = trNum + 1; ti <= mBlock.getNumTrials(); ti++) {
-            Out.d(TAG, "Finding position for trial", ti);
-            foundPosition = findTrialPosition(
-                    mBlock.getTrial(ti).getBoundRect(),
-                    mBlock.getTrial(ti - 1).getEndPoint(),
-                    minNtDist, maxNtDist);
-
-            // Search to the max cound
-            if (foundPosition == null) {
-                Out.d(TAG, "Position not found for trial");
-                if (mPosCount < MAX_CEHCK_POS) {
-                    mPosCount++;
-                    return findTrialListPosition(trNum);
-                } else {
-                    return 1;
-                }
-            } else {
-                Out.d(TAG, "Position found for trial");
-                mBlock.setTrialLocation(ti, foundPosition);
+        if (foundPosition != null) { // Position found => set the position and move on to the rest
+            mBlock.setTrialLocation(startTrNum, foundPosition);
+            return findAllTrialsPosition(startTrNum + 1);
+        } else {
+            Out.d(TAG, "Starting again", mPosCount);
+            if (mPosCount < MAX_CEHCK_POS) {
+                mPosCount++;
+                return findAllTrialsPosition(startTrNum);
             }
         }
 
-        return 0;
+        return 1;
     }
 
-    /**
-     * Find a position for a trial
-     * @param trBoundRect Boudning box of the trial
-     * @param ptP Previous trial position (null if not reference)
-     * @return The found point or null (if nothing found)
-     */
-    public Point findTrialPosition(Rectangle trBoundRect, Point ptP, int minNtDist, int maxNtDist) {
-        final String TAG = NAME + "findTrialPosition";
-        Out.d(TAG, "BoundRect", trBoundRect.toString());
-        Out.d(TAG, "W | H", getWidthMinMax(), getHeightMinMax());
-        Circle rangeCircle = new Circle();
-        int ntDist = minNtDist;
-        Out.d(TAG, "ptP | ntDist", ptP, ntDist);
-        if (ptP != null) { // Contrained by the previous trial
+    public Point findPosition(MoRectangle ntBoundRect, Point ctEndPoint, int minNtDist) {
+        final String TAG = NAME + "findPosition";
 
-            while (ntDist <= maxNtDist) {
+        MoRectangle dispRect = getPanelRect();
 
-                rangeCircle = new Circle(ptP, ntDist);
-                final List<Point> rangePoints = rangeCircle.getPoints();
-                Collections.shuffle(rangePoints); // Shuffle for random iteration
+        if (ctEndPoint == null) {
+            return findPosition(ntBoundRect);
+        } else {
+            // Create margined rectangle
+//            MoRectangle ctMarginRect = ctBoundRect.getMarginedRectangel(minNtDist);
+//            MoRectangle ctMarginRect = new MoRectangle(
+//                    ctBoundRect.getCenter().x,
+//                    ctBoundRect.getCenter().y,
+//                    minNtDist);
+            MoRectangle ctMarginRect = new MoRectangle(ctEndPoint, minNtDist);
+            MoRectangle ntMarginRect = ntBoundRect.getMarginedRectangel(0);
+            Out.d(TAG, ctMarginRect, ntMarginRect);
+            List<DIRECTION> dirs = Arrays.asList(N, S, E, W);
+            Collections.shuffle(dirs);
+            Out.d(TAG, dirs);
+            // Check each direction
+            for (DIRECTION dir : dirs) {
+                switch (dir) {
+                    case N -> {
+                        Out.d(TAG, "Checking N", ctMarginRect.y - ntMarginRect.height);
+                        if (ctMarginRect.y - ntMarginRect.height > dispRect.minY()) {
+                            ntMarginRect.y = ctMarginRect.y - ntMarginRect.height;
+                            ntMarginRect.x = Utils.randInt(
+                                    max(dispRect.minX(), ctMarginRect.minX() - ntMarginRect.width),
+                                    min(dispRect.maxX() - ntMarginRect.width, ctMarginRect.maxX()));
 
-                Rectangle rect = trBoundRect;
-                for (Point candP : rangePoints) {
-                    rect.setLocation(candP);
-                    if (getPanelBounds().contains(rect)) { // Fits the window?
-                        return candP;
+                            return ntMarginRect.getLocation();
+                        }
+                    }
+
+                    case S -> {
+                        Out.d(TAG, "Checking S", ctMarginRect.maxY() + ntMarginRect.height);
+                        if (ctMarginRect.maxY() + ntMarginRect.height < dispRect.maxY()) {
+                            ntMarginRect.y = ctMarginRect.maxY();
+                            ntMarginRect.x = Utils.randInt(
+                                    max(dispRect.minX(), ctMarginRect.minX() - ntMarginRect.width),
+                                    min(dispRect.maxX() - ntMarginRect.width, ctMarginRect.maxX()));
+
+                            return ntMarginRect.getLocation();
+                        }
+                    }
+
+                    case E -> {
+                        Out.d(TAG, "Checking E", ctMarginRect.maxX() + ntMarginRect.width);
+                        if (ctMarginRect.maxX() + ntMarginRect.width < dispRect.maxX()) {
+                            ntMarginRect.x = ctMarginRect.maxX();
+                            ntMarginRect.y = Utils.randInt(
+                                    max(dispRect.minY(), ctMarginRect.minY() - ntMarginRect.height),
+                                    min(dispRect.maxY() - ntMarginRect.height, ctMarginRect.maxY()));
+
+                            return ntMarginRect.getLocation();
+                        }
+                    }
+
+                    case W -> {
+                        Out.d(TAG, "Checking W", ctMarginRect.minX() - ntMarginRect.width);
+                        if (ctMarginRect.minX() - ntMarginRect.width > dispRect.minX()) {
+                            ntMarginRect.x = ctMarginRect.minX() - ntMarginRect.width;
+                            ntMarginRect.y = Utils.randInt(
+                                    max(dispRect.minY(), ctMarginRect.minY() - ntMarginRect.height),
+                                    min(dispRect.maxY() - ntMarginRect.height, ctMarginRect.maxY()));
+
+                            return ntMarginRect.getLocation();
+                        }
                     }
                 }
-
-                Out.d(TAG, "Distance checked", ntDist);
-                ntDist += 5; // Increase by 10 px
             }
 
-        } else {
-            return getPanelBounds().fitRect(trBoundRect);
         }
 
-        repaint();
+
         return null;
     }
 
-//    protected Point toPanel(Point inP) {
-//        return new Point(inP.x + Utils.mm2px(LR_MARGIN_mm), inP.y + Utils.mm2px(TB_MARGIN_mm));
-//    }
 
 }

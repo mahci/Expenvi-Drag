@@ -32,7 +32,7 @@ public class MinMax {
      * Get the range
      * @return Range between min and max
      */
-    public int getRange() {return max - min;}
+    public int diff() {return max - min;}
 
     /**
      * Move both the min and max

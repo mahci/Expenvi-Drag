@@ -1,11 +1,8 @@
 package gui;
 
-import experiment.Block;
 import experiment.BoxTrial;
 import experiment.Experiment;
-import experiment.TunnelTrial;
 import tools.Consts;
-import tools.MinMax;
 import tools.Out;
 import tools.Utils;
 
@@ -32,15 +29,10 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private KeyStroke KS_RA; // Right arrow
 
     // Constants
-//    private final double OBJECT_W_mm = 20; // Object width (always square)
-//    private final double TARGET_W_mm = 60; // Window width (always squeate)
-//    private final double DIST_mm = 100; // Distance from edge/corner of Object to edge/corner of Target
     private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
-//    private final double NEXT_TRIAL_DIST_mm = 50; // Measured from center of Obj. to the next center
-//    private int MAX_CEHCK_POS = 100;
 
     // Experiment
-    private BoxTask mTask;
+//    private BoxTask mTask;
     private BoxTrial mTrial;
 
     private int mBlockNum;
@@ -72,7 +64,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            showTrial();
+            nextTrial();
         }
     };
 
@@ -96,6 +88,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
     }
 
+    /**
+     * Set the task
+     * @param boxTask BoxTask
+     * @return Self instance
+     */
     public BoxTaskPanel setTask(Experiment.BoxTask boxTask) {
         mTask = boxTask;
         return this;
@@ -104,63 +101,17 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void start() {
         final String TAG = NAME + "start";
-//        mTargetPnl.setSize(Utils.mm2px(TARGET_W_mm), Utils.mm2px(TARGET_W_mm));
-//        BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
-//        mTargetPnl.setBorder(bord);
-//        mTargetPnl.setBackground(COLORS.GRAY_200);
-//
-//        mObject.setSize(Utils.mm2px(OBJECT_W_mm), Utils.mm2px(OBJECT_W_mm));
 
-//        mDir = DIRECTION.random();
-//        mDir = DIRECTION.E;
-//        firstRandPos();
-//        translateToPanel();
-//        mGroup = new Group(
-//                Utils.mm2px(OBJECT_W_mm), Utils.mm2px(TARGET_W_mm),
-//                mDir, Utils.mm2px(DIST_mm));
-
-//        if (mGroup.position() == 0) {
-//            mGroup.translateToPanel();
-//
-//            removeAll();
-//            add(mGroup.target, DEFAULT_LAYER);
-//
-//            repaint();
-//        } else {
-//            Out.e(NAME, "Couldn't find suitable position!");
-//        }
-
-//        showTrial();
-
-//        mBlockNum = 1;
-        showBlock();
+        mBlockNum = 1;
+        startBlock(mBlockNum);
 
     }
 
-    private void showBlock() {
-        final String TAG = NAME + "showBlock";
 
-        mBlockNum++;
-        mBlock = mTask.getBlock(mBlockNum);
-        Out.d(TAG, mTask.getNumBlocks(), mBlock);
-        int positioningSuccess = findTrialListPosition(1);
-        if (positioningSuccess == 0) {
-//            setTrialPositions();
-            mBlock.setTrialElements();
-
-//            mTrialNum = 1;
-            showTrial();
-        } else {
-            Out.e(TAG, "Couldn't find positions for the trials in the block!");
-        }
-    }
-
-    /**
-     * Show the trial
-     */
-    private void showTrial() {
-        String TAG = NAME + "showTrial";
-        firstMove = false;
+    @Override
+    protected void nextTrial() {
+        String TAG = NAME + "nextTrial";
+//        firstMove = false;
 
         mTrialNum++;
         mTrial = (BoxTrial) mBlock.getTrial(mTrialNum);
@@ -173,14 +124,11 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
         mTrial.targetPanel.setBorder(bord);
         mTrial.targetPanel.setBackground(COLORS.GRAY_200);
-
         add(mTrial.targetPanel);
 
         mTrialActive = true;
 
         repaint();
-
-
     }
 
     @Override
@@ -199,18 +147,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mGrabbed) {
             Out.d(TAG, isHit());
             if (isHit()) {
-                Consts.SOUNDS.playHit();
-                Out.d(TAG, "Hit");
-//                mGroup.moveObjInsideTarget();
-                moveObjInside();
-
-                repaint();
-
+//                moveObjInside();
                 hit();
-
             } else {
-                Consts.SOUNDS.playMiss();
-
                 miss();
             }
         }
@@ -225,19 +164,16 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         Consts.SOUNDS.playHit();
 
         mTrialActive = false;
+        moveObjInside();
 
         // Wait a certain delay, then show the next trial (or next block)
         Out.d(TAG, mTrialNum, mBlock.getNumTrials());
         if (mTrialNum < mBlock.getNumTrials()) {
             Out.d(TAG, "NEXT!");
-//            mTrialNum++;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
-            mBlock = mTask.getBlock(mBlockNum);
-
-//            mTrialNum = 0;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            startBlock(mBlockNum);
         } else {
             // Task is finished
 
@@ -253,13 +189,13 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         // Shuffle back and reposition the next ones
         final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
         Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-        if (findTrialListPosition(trNewInd) == 1) {
+        if (findAllTrialsPosition(trNewInd) == 1) {
             Out.e(TAG, "Couldn't find position for the trials");
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
             // Next trial
 //            mTrialNum++;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
         mTrialActive = false;
@@ -280,59 +216,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 //        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
         mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);
 //        mObjectLbl.translate(dMinX + dMaxX, dMinY + dMaxY);
-    }
 
-    /**
-     * Recursively find suitable positions for a list of trials, from (incl.) trNum
-     * @param trNum Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
-     * @return Success (0) Fail (1)
-     */
-    public int findTrialListPosition(int trNum) {
-        final String TAG = NAME + "findTrialListPosition";
-
-        final int minNtDist = Utils.mm2px(BoxTask.NT_DIST_mm);
-        int maxNtDist = minNtDist;
-
-        Point foundPosition = null;
-        Point refP = null;
-
-        // Find position for the trNum trial
-        if (trNum > 1) {
-            refP = mBlock.getTrial(trNum - 1).getEndPoint();
-            maxNtDist = minNtDist + Utils.mm2px(100);
-        }
-
-        foundPosition = findTrialPosition(mBlock.getTrial(trNum).getBoundRect(), refP, minNtDist, maxNtDist);
-        if (foundPosition != null) mBlock.setTrialLocation(trNum, foundPosition);
-        else {
-            // TODO: find a solution...
-            return 1;
-        }
-
-        // Next trials
-        for (int ti = trNum + 1; ti <= mBlock.getNumTrials(); ti++) {
-            Out.d(TAG, "Finding position for trial", ti);
-            foundPosition = findTrialPosition(
-                    mBlock.getTrial(ti).getBoundRect(),
-                    mBlock.getTrial(ti - 1).getEndPoint(),
-                    minNtDist, maxNtDist);
-
-            // Search to the max cound
-            if (foundPosition == null) {
-                Out.d(TAG, "Position not found for trial");
-                if (mPosCount < MAX_CEHCK_POS) {
-                    mPosCount++;
-                    return findTrialListPosition(trNum);
-                } else {
-                    return 1;
-                }
-            } else {
-                Out.d(TAG, "Position found for trial");
-                mBlock.setTrialLocation(ti, foundPosition);
-            }
-        }
-
-        return 0;
+        repaint();
     }
 
     @Override
@@ -342,7 +227,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     // -------------------------------------------------------------------------------------------
 
-//    @Override
+    @Override
     public void paint(Graphics g) {
         super.paint(g);
 
@@ -358,15 +243,14 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mGraphix.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
 
         // Draw block-trial num
-        if (mTrialActive) {
-
-        }
-
         String stateText =
                 Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                         Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
         mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                 getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+
+        // TEMP: draw bound rect
+//        mGraphix.drawRectangle(COLORS.GRAY_500, mTrial.getBoundRect());
     }
 
     private void mapKeys() {
@@ -375,239 +259,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
         getInputMap().put(KS_RA, KeyEvent.VK_RIGHT);
-    }
-
-
-    // -------------------------------------------------------------------------------------------
-    // Group of things to show!
-    private class Group {
-        public Rectangle object = new Rectangle();
-        public MoPanel target = new MoPanel();
-        private Rectangle circumRect = new Rectangle();
-
-        public DIRECTION dir;
-        public int dist;
-
-        // Helper vars
-        private int mObjHalfW, mTarHalfW, mSideDist, mLongL, mSideL, mDiffHalf;
-
-        public Group(int objW, int tgtW, DIRECTION dir, int dist) {
-            object.setSize(objW, objW);
-
-            target.setSize(tgtW, tgtW);
-            BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
-            target.setBorder(bord);
-            target.setBackground(COLORS.GRAY_200);
-
-            this.dist = dist;
-            this.dir = dir;
-
-            // Set helper vars
-            mObjHalfW = object.width / 2;
-            mTarHalfW = target.getWidth() / 2;
-            mSideDist = (int) (dist * 1.0 / sqrt(2));
-            mLongL = mObjHalfW + this.dist + target.getWidth();
-            mSideL = (int) (mObjHalfW + (this.dist * 1.0 / sqrt(2)) + target.getWidth());
-            mDiffHalf = mTarHalfW - mObjHalfW;
-
-            // Create the cicrum rectangle
-            circumRect.setLocation(-1, -1);
-            setCircumRectSize(dir);
-
-        }
-
-        private void setCircumRectSize(DIRECTION dir) {
-
-            final int tgtW = target.getWidth();
-            final int objW = object.width;
-
-            switch (dir) {
-                case N, S -> circumRect.setSize(tgtW, tgtW + objW + dist);
-                case E, W -> circumRect.setSize(tgtW + objW + dist, tgtW);
-                case NE, NW, SE, SW -> {
-                    final int s = (int) (tgtW + objW + mSideDist);
-                    circumRect.setSize(s, s); // Square
-                }
-            };
-        }
-
-        /**
-         * Position things w/o any constraints (only fitting the display area)
-         * @return Success: 0, fail: 1
-         */
-        public int position() {
-
-            // If it fits the display area, position obj. and target accordingly and return 0
-            while(!getDispArea().contains(circumRect)) {
-                positionCircumRect();
-            }
-
-            positionElements();
-            return 0;
-        }
-
-        public int position(Point curPoint, DIRECTION dir, int ntD) {
-            final String TAG = NAME + "position";
-
-            this.dir = dir;
-            setCircumRectSize(dir);
-
-            // Find the possible Xs
-            final Circle nextTrialRange = new Circle(curPoint, ntD);
-
-            // Get all the candidate points
-            List<Point> candidPoints = new ArrayList<>();
-            final int cx = curPoint.x;
-            final int cy = curPoint.y;
-            final double d2 = pow(ntD, 2);
-            final int minY = max(0, cy - ntD);
-            final int maxY = min(getDispDim().height, cy + ntD);
-            for (int y = minY; y < maxY; y++) {
-//                Out.d(TAG, y, cy, d2, pow(y - cy, 2), sqrt(d2 - pow(y - cy, 2)), cx);
-                Point p1 = new Point((int) (sqrt(d2 - pow(y - cy, 2)) + cx), y);
-                Point p2 = new Point((int) (-sqrt(d2 - pow(y - cy, 2)) + cx), y);
-                candidPoints.add(p1);
-                candidPoints.add(p2);
-            }
-
-            // Try to find a position
-            for (Point p : candidPoints) {
-//                Out.d(TAG, p);
-                positionCircumRect(p.x, p.y);
-
-                if (getDispArea().contains(circumRect)) {
-                    positionElements();
-                    return 0;
-                }
-            }
-
-            return 1;
-        }
-
-        private void positionCircumRect() {
-            int dispW = getDispDim().width;
-            int dispH = getDispDim().height;
-
-            circumRect.setLocation(
-                    Utils.randInt(0, dispW - circumRect.width),
-                    Utils.randInt(0, dispH - circumRect.height));
-        }
-
-        /**
-         * Position circum rectangle based on object's center point
-         * @param objCX Object center X
-         * @param objCY Object center Y
-         */
-        private void positionCircumRect(int objCX, int objCY) {
-
-            switch (dir) {
-                case N -> circumRect.setLocation(objCX - mTarHalfW, objCY - mLongL);
-                case S -> circumRect.setLocation(objCX - mTarHalfW, objCY - mObjHalfW);
-
-                case E -> circumRect.setLocation(objCX - mObjHalfW, objCY - mTarHalfW);
-                case W -> circumRect.setLocation(objCX - mLongL, objCY - mTarHalfW);
-
-                case NE -> circumRect.setLocation(objCX - mObjHalfW, objCY - mSideL);
-                case NW -> circumRect.setLocation(objCX - mSideL, objCY - mSideL);
-
-                case SE -> circumRect.setLocation(objCX - mObjHalfW, objCY - mObjHalfW);
-                case SW -> circumRect.setLocation(objCX - mSideL, objCY - mObjHalfW);
-            };
-        }
-
-        private void positionElements() {
-
-            switch (dir) {
-                case N -> {
-                    object.setLocation(
-                            circumRect.x + mDiffHalf,
-                            circumRect.y + circumRect.height - object.width);
-                    target.setLocation(circumRect.getLocation()); // UL point the same
-                }
-
-                case S -> {
-                    object.setLocation(circumRect.x + mDiffHalf, circumRect.y);
-                    target.setLocation(circumRect.x, circumRect.y + circumRect.height - target.getWidth());
-                }
-
-                case E -> {
-                    object.setLocation(circumRect.x, circumRect.y + mDiffHalf);
-                    target.setLocation(circumRect.x + circumRect.width - target.getWidth(), circumRect.y);
-                }
-
-                case W -> {
-                    object.setLocation(
-                            circumRect.x + circumRect.width - object.width,
-                            circumRect.y + mDiffHalf);
-                    target.setLocation(circumRect.getLocation()); // UL point the same
-                }
-
-                case NE -> {
-                    object.setLocation(circumRect.x, circumRect.y + circumRect.height - object.width);
-                    target.setLocation(circumRect.x + circumRect.width - target.getWidth(), circumRect.y);
-                }
-
-                case NW -> {
-                    object.setLocation(
-                            circumRect.x + circumRect.width - object.width,
-                            circumRect.y + circumRect.height - object.width);
-                    target.setLocation(circumRect.getLocation());
-                }
-
-                case SE -> {
-                    object.setLocation(circumRect.getLocation());
-                    target.setLocation(
-                            circumRect.x + circumRect.width - target.getWidth(),
-                            circumRect.y + circumRect.height - target.getWidth());
-                }
-
-                case SW -> {
-                    object.setLocation(circumRect.x + circumRect.width - object.width, circumRect.y);
-                    target.setLocation(circumRect.x, circumRect.y + circumRect.height - target.getWidth());
-                }
-            };
-        }
-
-        public void translateToPanel() {
-            final int lrMargin = Utils.mm2px(LR_MARGIN_mm);
-            final int tbMargin = Utils.mm2px(TB_MARGIN_mm);
-
-            circumRect.translate(lrMargin, tbMargin);
-            positionElements();
-        }
-
-        public void translateObject(int dX, int dY) {
-            object.translate(dX, dY);
-        }
-
-        /**
-         * Move obj. inside only if not already in
-         */
-        public void moveObjInsideTarget() {
-
-            if (target.getBounds().contains(object)) return;
-
-            final Rectangle tgtBounds = target.getBounds();
-            final Rectangle objBounds = object.getBounds();
-            final Rectangle intersection = tgtBounds.intersection(objBounds);
-
-            final int dMinX = (int) (intersection.getMinX() - objBounds.getMinX());
-            final int dMaxX = (int) (intersection.getMaxX() - objBounds.getMaxX());
-
-            final int dMinY =  (int) (intersection.getMinY() - objBounds.getMinY());
-            final int dMaxY =  (int) (intersection.getMaxY() - objBounds.getMaxY());
-
-            object.translate(dMinX + dMaxX, dMinY + dMaxY);
-        }
-
-        public boolean objectContains(Point p) {
-            return object.contains(p);
-        }
-
-        public boolean targetContains(Point p) {
-            return target.getBounds().contains(p);
-        }
-
     }
 
     // -------------------------------------------------------------------------------------------
@@ -651,7 +302,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        Out.d(NAME, "mouseReleased", e.getButton());
         if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             release();
         }

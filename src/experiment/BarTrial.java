@@ -82,8 +82,8 @@ public class BarTrial extends Trial {
     }
 
     @Override
-    public void setElementsLocations() {
-        super.setElementsLocations();
+    protected void positionElements() {
+        super.positionElements();
 
         switch (dir) {
             case N -> {

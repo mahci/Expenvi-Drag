@@ -10,24 +10,19 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 import static tools.Consts.*;
+import static experiment.Experiment.*;
 
 public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "TunnelTaskPanel/";
     private final String LOG = "Enter/";
 
-    private int MAX_CEHCK_POS = 100;
-
     // Experiment
-    private Experiment.TunnelTask mTask;
-    private Block mBlock;
     private TunnelTrial mTrial;
 
     private int mBlockNum = 0;
@@ -38,8 +33,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private Trace mTrace;
 
     private Circle showCirc = new Circle();
-
-//    private List<Point> trialPositions = new ArrayList<>();
 
     // Keys
     private KeyStroke KS_SPACE;
@@ -74,7 +67,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         @Override
         public void actionPerformed(ActionEvent e) {
             mTrialNum++;
-            showTrial();
+            nextTrial();
         }
     };
 
@@ -102,33 +95,22 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
         mTask = tunnelTask;
-
-
         return this;
     }
 
     @Override
-    public void start() {
-        super.start();
-
-        mBlockNum++;
-        mBlock = mTask.getBlock(mBlockNum);
-        int positioningSuccess = findTrialListPosition(1);
-        if (positioningSuccess == 0) {
-//            setTrialPositions();
-            mBlock.setTrialElements();
-
-//            mTrialNum = 0;
-            showTrial();
-        }
+    protected void start() {
+        mBlockNum = 1;
+//        nextBlock();
+        startBlock(mBlockNum);
 
     }
 
     /**
      * Show the trial
      */
-    private void showTrial() {
-        String TAG = NAME + "showTrial";
+    protected void nextTrial() {
+        String TAG = NAME + "nextTrial";
         Out.d(TAG, mTrialNum, "===============================================");
         mGrabbed = false;
         mDragging = false;
@@ -142,9 +124,11 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mPosCount = 0;
 
+        Out.d(TAG, "Number of trials", mBlock.getNumTrials());
         mTrialNum++;
+        Out.d(TAG, "Trial", mBlock.getTrial(mTrialNum));
         mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
-//        Out.d(TAG, mTrial);
+        Out.d(TAG, mTrial);
 
         repaint();
 
@@ -177,17 +161,14 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     @Override
     public void release() {
 
-        if (mGrabbed && !mMissed) {
-            if (mExited) hit();
-            else if (mTrialStarted) {
-                miss();
-            } else {
-                startError();
-            }
-        }
-
         mGrabbed = false;
-        mDragging = false;
+
+        if (mTrialStarted) { // Entered the tunnel
+            if (mExited) hit();
+            else miss();
+        } else if (mGrabbed) { // Still outside the tunnel
+            startError();
+        }
 
     }
 
@@ -204,15 +185,15 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mTrialActive = false;
 
         // Wait a certain delay, then show the next trial (or next block)
-        if (mTrialNum < mBlock.getNumTrials() - 1) {
+        if (mTrialNum < mBlock.getNumTrials()) {
 //            mTrialNum++;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks() - 1) {
+            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
             mBlock = mTask.getBlock(mBlockNum);
 
             mTrialNum = 0;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else {
             // Task is finished
 
@@ -223,23 +204,23 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     protected void miss() {
         final String TAG = NAME + "miss";
 
+        mTrialActive = false;
+        mTrialStarted = false;
+
         SOUNDS.playMiss();
-        mMissed = true;
+//        mMissed = true;
         Out.d(TAG, "Missed on trial", mTrialNum);
         // Shuffle back and reposition the next ones
-        final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
+        final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
         Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-        if (findTrialListPosition(trNewInd) == 1) {
+        if (findAllTrialsPosition(trNewInd) == 1) {
             Out.e(TAG, "Couldn't find position for the trials");
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
-            // Next trial
-//            mTrialNum++;
-            executorService.schedule(this::showTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+//            // Next trial
+////            mTrialNum++;
+            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
-
-        mTrialActive = false;
-
 
     }
 
@@ -248,9 +229,15 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         Out.e(TAG, "Trial Num", mTrialNum);
         SOUNDS.playStartError();
 
-        mTrialActive = false;
+        mVisualTrace.reset();
+        mTrace.reset();
+
+//        repaint();
+
+//        mTrialActive = false;
+
         // Respawn the trial (everything will be reset)
-        showTrial();
+//        nextTrial();
     }
 
 
@@ -281,11 +268,9 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                     // TODO: Set the start of trial
                     mTrialStarted = true;
                     mTrace.reset(); // Start again from inside
-                    Out.d(TAG, lastP, mTrial.inRect.printCorners());
 
                     return true;
                 } else {
-                    Out.e(TAG, "Not from start!");
                     return false;
                 }
 
@@ -294,9 +279,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         } else { // Trial started
 
             // Touched start again!
-            Out.d(TAG, mTrace);
             if (mTrace.intersects(mTrial.startLine)) {
-                Out.e(TAG, "Touched start again!");
                 return false;
             }
 
@@ -332,14 +315,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mGraphix = new Graphix(g2d);
 
-        // Draw trace
-        final int rad = Trace.TRACE_R;
-        for (Point tp : mVisualTrace.getPoints()) {
-            mGraphix.fillCircle(COLORS.BLUE_900, new Circle(tp, rad));
-        }
-
         // Draw Targets
+//        mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
         if (mTrial != null) {
+//            Out.d(TAG, mTrialNum, mTrial.toString());
             mGraphix.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
 
             // Draw Start text
@@ -354,140 +333,18 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             mGraphix.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
+            // Draw trace
+            final int rad = Trace.TRACE_R;
+            for (Point tp : mVisualTrace.getPoints()) {
+                mGraphix.fillCircle(COLORS.BLUE_900, new Circle(tp, rad));
+            }
+
             // Temp: show range circle
 //            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
 //            mGraphix.drawCircle(COLORS.GREEN_700, showCirc);
 //            mGraphix.drawLine(COLORS.GREEN_700, mTrial.startLine);
 
         }
-    }
-
-
-    /**
-     * Recursively find suitable positions for a list of trials, from (incl.) trInd
-     * @param trNum Index of the first trial. If > 0 => prev. Trial restricts, otherwise, free
-     * @return Success (0) Fail (1)
-     */
-    public int findTrialListPosition(int trNum) {
-        final String TAG = NAME + "findTrialListPosition";
-        Out.d(TAG, "-----------------------------------------------");
-        Out.d(TAG, "trInd | nTrials", trNum, mBlock.getNumTrials());
-        final int minNtDist = Utils.mm2px(mTask.NT_DIST_mm);
-        int maxNtDist = minNtDist;
-
-        Point foundPosition = null;
-        Point refP = null;
-
-//        if (trInd == mBlock.getNTrials() - 1 && trInd > 0) { // Last trial
-//            refP = mBlock.getTrial(trInd - 1).getEndPoint();
-//            // Loops the points aroung the refP to find suitable position
-//            foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, ntDist);
-//
-//            if (foundPosition != null) { // Found!
-//                Out.d(TAG, "foundPosition", foundPosition);
-//                mBlock.setTrialLocation(trInd, foundPosition);
-//                return 0;
-//            } else { // No position found
-//                Out.d(TAG, "foundPosition", foundPosition);
-//                // TODO: Chnage distance?
-//                return 1;
-//            }
-//        } else { // Recursive
-//
-//            if (trInd - 1 > 0) refP = mBlock.getTrial(trInd - 1).getEndPoint();
-//
-//            foundPosition = findTrialPosition(mBlock.getTrial(trInd).getBoundRect(), refP, ntDist);
-//
-//            if (foundPosition != null) { // Found!
-//                Out.d(TAG, "foundPosition - rec", foundPosition);
-//                mBlock.setTrialLocation(trInd, foundPosition);
-//                return findTrialListPosition(trInd + 1);
-//            } else { // No position found
-//                // TODO: Chnage distance?
-//                Out.d(TAG, "foundPosition - rec", foundPosition);
-//                return 1;
-//            }
-//        }
-
-        // Find position for the trInd trial
-        if (trNum > 1) {
-            refP = mBlock.getTrial(trNum - 1).getEndPoint();
-            maxNtDist = minNtDist + Utils.mm2px(100);
-        }
-
-        foundPosition = findTrialPosition(mBlock.getTrial(trNum).getBoundRect(), refP, minNtDist, maxNtDist);
-        if (foundPosition != null) mBlock.setTrialLocation(trNum, foundPosition);
-        else {
-            // TODO: find a solution...
-            return 1;
-        }
-
-        // Next trials
-        for (int ti = trNum + 1; ti <= mBlock.getNumTrials(); ti++) {
-            Out.d(TAG, "Finding position for trial", ti);
-            foundPosition = findTrialPosition(
-                    mBlock.getTrial(ti).getBoundRect(),
-                    mBlock.getTrial(ti - 1).getEndPoint(),
-                    minNtDist, maxNtDist);
-
-            // Search to the max cound
-            if (foundPosition == null) {
-                Out.d(TAG, "Position not found for trial");
-                if (mPosCount < MAX_CEHCK_POS) {
-                    mPosCount++;
-                    return findTrialListPosition(trNum);
-                } else {
-                    return 1;
-                }
-            } else {
-                Out.d(TAG, "Position found for trial");
-                mBlock.setTrialLocation(ti, foundPosition);
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Find a position for a trial
-     * @param trBoundRect Boudning box of the trial
-     * @param ptP Previous trial position (null if not reference)
-     * @return The found point or null (if nothing found)
-     */
-    public Point findTrialPosition(Rectangle trBoundRect, Point ptP, int minNtDist, int maxNtDist) {
-        final String TAG = NAME + "findTrialPosition";
-        Out.d(TAG, "BoundRect", trBoundRect.toString());
-        Out.d(TAG, "W | H", getWidthMinMax(), getHeightMinMax());
-        Circle rangeCircle = new Circle();
-        int ntDist = minNtDist;
-        Out.d(TAG, "ptP | ntDist", ptP, ntDist);
-        if (ptP != null) { // Contrained by the previous trial
-
-            while (ntDist <= maxNtDist) {
-
-                rangeCircle = new Circle(ptP, ntDist);
-                final List<Point> rangePoints = rangeCircle.getPoints();
-                Collections.shuffle(rangePoints); // Shuffle for random iteration
-
-                Rectangle rect = trBoundRect;
-                for (Point candP : rangePoints) {
-                    rect.setLocation(candP);
-                    if (getPanelBounds().contains(rect)) { // Fits the window?
-                        return candP;
-                    }
-                }
-
-                Out.d(TAG, "Distance checked", ntDist);
-                ntDist += 5; // Increase by 10 px
-            }
-
-        } else {
-            return getPanelBounds().fitRect(trBoundRect);
-        }
-
-        showCirc = rangeCircle;
-        repaint();
-        return null;
     }
 
 
@@ -538,7 +395,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
             final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
 
-            if (dragDist > Utils.mm2px(mTask.DRAG_THRSH_mm)) drag();
+            if (dragDist > Utils.mm2px(TunnelTask.DRAG_THRSH_mm)) drag();
 
             repaint();
 

@@ -78,7 +78,7 @@ public class MainFrame extends JFrame implements MouseListener {
         mActivePanel.requestFocusInWindow();
         mActivePanel.start();
 
-        repaint();
+//        repaint();
     }
 
 
