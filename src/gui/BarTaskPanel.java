@@ -130,7 +130,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public boolean isHit() {
-        return mTrial.inRect.contains(mTrial.objectRect);
+        return mTrial.targetRect.contains(mTrial.objectRect);
     }
 
     @Override
@@ -189,9 +189,10 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         mGraphix = new Graphix(g2d);
 
 
-        // Draw the target lines
-        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
-        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
+        // Draw the target
+        mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
+//        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
+//        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
 
         // Draw the object
         mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);

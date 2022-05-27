@@ -186,7 +186,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials()) {
-//            mTrialNum++;
             executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
