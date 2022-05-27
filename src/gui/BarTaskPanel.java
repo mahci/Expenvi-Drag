@@ -1,7 +1,6 @@
 package gui;
 
 import experiment.BarTrial;
-import experiment.BoxTrial;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
@@ -52,7 +51,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            nextTrial();
+            hit();
         }
     };
 
@@ -91,18 +90,16 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         final String TAG = NAME + "start";
 
         mBlockNum = 1;
+        mTrialNum = 1;
         startBlock(mBlockNum);
     }
 
     @Override
-    protected void nextTrial() {
-        final String TAG = NAME + "nextTrial";
-
-        mTrialNum++;
-        mTrial = (BarTrial) mBlock.getTrial(mTrialNum);
-
+    protected void showTrial(int trNum) {
+        final String TAG = NAME + "showTrial";
+        Out.d(TAG, trNum);
+        mTrial = (BarTrial) mBlock.getTrial(trNum);
         repaint();
-
         mTrialActive = true;
     }
 
@@ -141,13 +138,14 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
-            mBlock = mTask.getBlock(mBlockNum);
-
-            mTrialNum = 0;
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            mTrialNum = 1;
+//            mBlock = mTask.getBlock(mBlockNum);
+            startBlock(mBlockNum);
+//            mTrialNum = 0;
+//            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else {
             // Task is finished
         }
@@ -169,7 +167,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
             // Next trial
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
     }
@@ -188,24 +186,26 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         mGraphix = new Graphix(g2d);
 
+        if (mTrial != null) {
 
-        // Draw the target
-        mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
+            // Draw the target
+            mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
 //        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
 //        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
 
-        // Draw the object
-        mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
+            // Draw the object
+            mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
 
-        // Draw block-trial num
-        String stateText =
-                Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                        Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-        mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
-                getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+            // Draw block-trial num
+            String stateText =
+                    Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
+                            Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+            mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+                    getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
-        // TEMP: draw bounding box
-//        mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
+            // TEMP: draw bounding box
+            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
+        }
 
     }
 

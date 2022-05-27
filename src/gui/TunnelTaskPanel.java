@@ -1,6 +1,5 @@
 package gui;
 
-import experiment.Block;
 import experiment.Experiment;
 import experiment.TunnelTrial;
 import tools.*;
@@ -66,8 +65,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            mTrialNum++;
-            nextTrial();
+            hit();
         }
     };
 
@@ -101,6 +99,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     @Override
     protected void start() {
         mBlockNum = 1;
+        mTrialNum = 1;
 //        nextBlock();
         startBlock(mBlockNum);
 
@@ -109,7 +108,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     /**
      * Show the trial
      */
-    protected void nextTrial() {
+    protected void showTrial(int trNum) {
         String TAG = NAME + "nextTrial";
         Out.d(TAG, mTrialNum, "===============================================");
         mGrabbed = false;
@@ -124,9 +123,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mPosCount = 0;
 
-        Out.d(TAG, "Number of trials", mBlock.getNumTrials());
-        mTrialNum++;
-        Out.d(TAG, "Trial", mBlock.getTrial(mTrialNum));
         mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
         Out.d(TAG, mTrial);
 
@@ -186,13 +182,13 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
             mBlock = mTask.getBlock(mBlockNum);
 
             mTrialNum = 0;
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else {
             // Task is finished
 
@@ -218,7 +214,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         } else {
 //            // Next trial
 ////            mTrialNum++;
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
     }

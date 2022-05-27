@@ -51,14 +51,14 @@ public class TaskPanel extends JLayeredPane {
         // Try to find positions for all the trials in the block
         if (findAllTrialsPosition(1) == 0) {
             mBlock.positionAllTrialsElements();
-
-            nextTrial();
+            Out.d(TAG, "Showing the trials");
+            showTrial(1);
         } else {
             Out.e(TAG, "Couldn't find positions for the trials in the block!");
         }
     }
 
-    protected void nextTrial() { }
+    protected void showTrial(int trNum) { }
 
     protected boolean isHit() {
         return false;
@@ -171,7 +171,7 @@ public class TaskPanel extends JLayeredPane {
 //                mBlock.getTrial(startTrNum).getBoundRect(),
 //                prevEndPoint,
 //                minNtDist, maxNtDist);
-        Out.d(TAG, "startTrNum", startTrNum);
+//        Out.d(TAG, "startTrNum", startTrNum);
         foundPosition = findPosition(
                 mBlock.getTrial(startTrNum).getBoundRect(),
                 prevEndPoint,
@@ -181,7 +181,7 @@ public class TaskPanel extends JLayeredPane {
             mBlock.setTrialLocation(startTrNum, foundPosition);
             return findAllTrialsPosition(startTrNum + 1);
         } else {
-            Out.d(TAG, "Starting again", mPosCount);
+//            Out.d(TAG, "Starting again", mPosCount);
             if (mPosCount < MAX_CEHCK_POS) {
                 mPosCount++;
                 return findAllTrialsPosition(startTrNum);
@@ -207,15 +207,15 @@ public class TaskPanel extends JLayeredPane {
 //                    minNtDist);
             MoRectangle ctMarginRect = new MoRectangle(ctEndPoint, minNtDist);
             MoRectangle ntMarginRect = ntBoundRect.getMarginedRectangel(0);
-            Out.d(TAG, ctMarginRect, ntMarginRect);
+//            Out.d(TAG, ctMarginRect, ntMarginRect);
             List<DIRECTION> dirs = Arrays.asList(N, S, E, W);
             Collections.shuffle(dirs);
-            Out.d(TAG, dirs);
+
             // Check each direction
             for (DIRECTION dir : dirs) {
                 switch (dir) {
                     case N -> {
-                        Out.d(TAG, "Checking N", ctMarginRect.y - ntMarginRect.height);
+//                        Out.d(TAG, "Checking N", ctMarginRect.y - ntMarginRect.height);
                         if (ctMarginRect.y - ntMarginRect.height > dispRect.minY()) {
                             ntMarginRect.y = ctMarginRect.y - ntMarginRect.height;
                             ntMarginRect.x = Utils.randInt(
@@ -227,7 +227,7 @@ public class TaskPanel extends JLayeredPane {
                     }
 
                     case S -> {
-                        Out.d(TAG, "Checking S", ctMarginRect.maxY() + ntMarginRect.height);
+//                        Out.d(TAG, "Checking S", ctMarginRect.maxY() + ntMarginRect.height);
                         if (ctMarginRect.maxY() + ntMarginRect.height < dispRect.maxY()) {
                             ntMarginRect.y = ctMarginRect.maxY();
                             ntMarginRect.x = Utils.randInt(
@@ -239,7 +239,7 @@ public class TaskPanel extends JLayeredPane {
                     }
 
                     case E -> {
-                        Out.d(TAG, "Checking E", ctMarginRect.maxX() + ntMarginRect.width);
+//                        Out.d(TAG, "Checking E", ctMarginRect.maxX() + ntMarginRect.width);
                         if (ctMarginRect.maxX() + ntMarginRect.width < dispRect.maxX()) {
                             ntMarginRect.x = ctMarginRect.maxX();
                             ntMarginRect.y = Utils.randInt(
@@ -251,7 +251,7 @@ public class TaskPanel extends JLayeredPane {
                     }
 
                     case W -> {
-                        Out.d(TAG, "Checking W", ctMarginRect.minX() - ntMarginRect.width);
+//                        Out.d(TAG, "Checking W", ctMarginRect.minX() - ntMarginRect.width);
                         if (ctMarginRect.minX() - ntMarginRect.width > dispRect.minX()) {
                             ntMarginRect.x = ctMarginRect.minX() - ntMarginRect.width;
                             ntMarginRect.y = Utils.randInt(

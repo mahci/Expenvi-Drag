@@ -10,12 +10,12 @@ public class Out {
     static {
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
-//        toLogList.add("TaskPanel");
+        toLogList.add("TaskPanel");
         toLogList.add("TunnelTaskPanel");
         toLogList.add("Enter");
         toLogList.add("Circle");
         toLogList.add("Server");
-        toLogList.add("Block");
+//        toLogList.add("Block");
 //        toLogList.add("BoxTrial");
         toLogList.add("TunnelTrial");
     }

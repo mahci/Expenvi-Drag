@@ -10,14 +10,11 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static experiment.Experiment.*;
-import static java.lang.Math.*;
 
 import static tools.Consts.COLORS;
 
@@ -64,7 +61,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            nextTrial();
+            hit();
         }
     };
 
@@ -103,18 +100,18 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         final String TAG = NAME + "start";
 
         mBlockNum = 1;
+        mTrialNum = 1;
         startBlock(mBlockNum);
 
     }
 
 
     @Override
-    protected void nextTrial() {
+    protected void showTrial(int trNum) {
         String TAG = NAME + "nextTrial";
 //        firstMove = false;
 
-        mTrialNum++;
-        mTrial = (BoxTrial) mBlock.getTrial(mTrialNum);
+        mTrial = (BoxTrial) mBlock.getTrial(trNum);
         Out.d(TAG, mTrialNum);
         Out.e(TAG, mTrial);
 
@@ -170,9 +167,10 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         Out.d(TAG, mTrialNum, mBlock.getNumTrials());
         if (mTrialNum < mBlock.getNumTrials()) {
             Out.d(TAG, "NEXT!");
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
             mBlockNum++;
+            mTrialNum = 1;
             startBlock(mBlockNum);
         } else {
             // Task is finished
@@ -195,7 +193,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         } else {
             // Next trial
 //            mTrialNum++;
-            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
         }
 
         mTrialActive = false;
