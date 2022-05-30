@@ -22,9 +22,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private KeyStroke KS_SPACE;
     private KeyStroke KS_RA; // Right arrow
 
-    // Constants
-    private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
-
     // Experiment
     private BarTrial mTrial;
 
@@ -42,6 +39,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     // Shapes
     private Point mGrabPos = new Point();
 
+    // Executor
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     private long t0;

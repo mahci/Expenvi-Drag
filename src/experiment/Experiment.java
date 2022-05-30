@@ -199,6 +199,52 @@ public class Experiment {
     }
 
     // -------------------------------------------------------------------------------------
+    public static class PeekTask extends Task {
+        private static final int[] OBJECT_WIDTHS = new int[] {1, 3}; // Object widths (mm)
+        private static final int[] TARGET_WIDTHS = new int[] {5, 8}; // Target widths (mm)
+        private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
+
+        public static final int LEN_mm = 100; // mm
+        public static final int DIST_mm = 50; // mm
+
+        public PeekTask(int nBlocks) {
+            super(nBlocks);
+
+            for (int i = 0; i < nBlocks; i++) {
+                mBlocks.add(genBlock());
+            }
+        }
+
+        private Block genBlock() {
+            Block result = new Block();
+
+            List<Integer> config = new ArrayList<>();
+            final int len = Utils.mm2px(LEN_mm);
+            final int dist = Utils.mm2px(DIST_mm);
+
+            for (int vi : OBJECT_WIDTHS) {
+                for (int vj : TARGET_WIDTHS) {
+                    for (int vk : AXISES) {
+                        config.add(Utils.mm2px(vi));
+                        config.add(Utils.mm2px(vj));
+                        config.add(vk);
+
+                        // Create trials based on the combination
+                        result.mTrials.add(new PeekTrial(config, len, dist));
+
+                        config.clear();
+                    }
+                }
+            }
+
+            // Shuffle trials
+            Collections.shuffle(result.mTrials);
+
+            return result;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
     public static class TunnelTask extends Task {
         //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
         private final int[] DIRS = new int[]{0, 1, 2, 3};

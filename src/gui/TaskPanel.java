@@ -9,6 +9,7 @@ import tools.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.geom.Area;
 import java.util.*;
 import java.util.List;
@@ -38,6 +39,14 @@ public class TaskPanel extends JLayeredPane {
 
     // Helpers
     protected Graphix mGraphix;
+
+    // Actions ------------------------------------------------------------------------------------
+    private final Action NEXT_TRIAL = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            hit();
+        }
+    };
 
     // Methods ------------------------------------------------------------------------------------
     protected void start() { }

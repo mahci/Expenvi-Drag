@@ -38,6 +38,8 @@ public class Consts {
         public final static Color GREEN_700 = Color.decode("#388E3C");
         public final static Color GREEN_A400 = Color.decode("#00E676");
 
+        public final static Color ORANGE_400 = Color.decode("#FFA726");
+        public final static Color ORANGE_200 = Color.decode("#FFCC80");
     }
 
     //-- Fonts and related

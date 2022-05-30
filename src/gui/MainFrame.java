@@ -8,16 +8,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import static experiment.Experiment.*;
+
 public class MainFrame extends JFrame implements MouseListener {
     private final static String NAME = "MainFrame/";
-    // -------------------------------------------------------------------------------------------
+
     private static MainFrame self; // Singelton instance
 
     private Rectangle scrBound;
     private int scrW, scrH;
     private int frW, frH;
-
-    private Experiment mExperiment;
 
     private TaskPanel mActivePanel;
 
@@ -69,7 +69,8 @@ public class MainFrame extends JFrame implements MouseListener {
 
 //        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
-        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(1));
+        mActivePanel = new PeekTaskPanel(panelDim).setTask(new PeekTask(1));
+//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(1));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

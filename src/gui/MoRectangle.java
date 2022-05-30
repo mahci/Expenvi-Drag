@@ -1,5 +1,6 @@
 package gui;
 
+import experiment.Experiment;
 import tools.Utils;
 
 import java.awt.*;
@@ -29,6 +30,37 @@ public class MoRectangle extends Rectangle {
         this.y = center.y - margin;
         this.width = 2 * margin;
         this.height = 2 * margin;
+    }
+
+    public void resize(Experiment.DIRECTION dir, int dVt, int dHz) {
+        switch (dir) {
+            case N -> {
+                final int newH = height - dVt;
+                if (newH > 0) {
+                    height = newH;
+                    y += dVt;
+                }
+            }
+            case S -> {
+                final int newH = height + dVt;
+                if (newH > 0) {
+                    height = newH;
+                }
+            }
+            case E -> {
+                final int newW = width + dHz;
+                if (newW > 0) {
+                    width = newW;
+                }
+            }
+            case W -> {
+                final int newW = width - dHz;
+                if (newW > 0) {
+                    width = newW;
+                    x += dHz;
+                }
+            }
+        }
     }
 
     public Point getUpLeft() {
@@ -82,7 +114,9 @@ public class MoRectangle extends Rectangle {
     }
 
     public MoRectangle getMarginedRectangel(int margin) {
-        return new MoRectangle(x - margin, y - margin, width + 2 * margin, height + 2 * margin);
+        return new MoRectangle(
+                x - margin, y - margin,
+                width + 2 * margin, height + 2 * margin);
     }
 
     public String printCorners() {
