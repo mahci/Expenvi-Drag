@@ -1,6 +1,7 @@
-package gui;
+package panels;
 
 import experiment.BarTrial;
+import graphic.MoGraphics;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
@@ -10,7 +11,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static experiment.Experiment.*;
 import static tools.Consts.*;
@@ -128,27 +128,27 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        mGraphix = new Graphix(g2d);
+        mMoGraphics = new MoGraphics(g2d);
 
         if (mTrial != null) {
 
             // Draw the target
-            mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
-//        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
-//        mGraphix.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
+            mMoGraphics.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
+//        mMoGraphics.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
+//        mMoGraphics.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
 
             // Draw the object
-            mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
+            mMoGraphics.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
 
             // Draw block-trial num
             String stateText =
                     Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                             Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+            mMoGraphics.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // TEMP: draw bounding box
-//            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
+//            mMoGraphics.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
         }
 
     }

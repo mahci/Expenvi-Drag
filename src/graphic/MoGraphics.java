@@ -1,13 +1,13 @@
-package gui;
+package graphic;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
 
-public class Graphix {
+public class MoGraphics {
 
     private Graphics2D g2d;
 
-    public Graphix(Graphics2D g2d) {
+    public MoGraphics(Graphics2D g2d) {
         this.g2d = g2d;
     }
 
@@ -21,12 +21,12 @@ public class Graphix {
         g2d.drawLine((int)line.getX1(), (int)line.getY1(), (int)line.getX2(), (int)line.getY2());
     }
 
-    public void drawCircle(Color color, Circle circ) {
+    public void drawCircle(Color color, MoCircle circ) {
         g2d.setColor(color);
         g2d.draw(circ);
     }
 
-    public void fillCircle(Color color, Circle circ) {
+    public void fillCircle(Color color, MoCircle circ) {
         g2d.setColor(color);
         g2d.fill(circ);
     }

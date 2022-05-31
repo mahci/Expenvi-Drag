@@ -1,18 +1,17 @@
-package gui;
+package panels;
 
 import experiment.BoxTrial;
 import experiment.Experiment;
+import graphic.MoGraphics;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static experiment.Experiment.*;
 
@@ -32,14 +31,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private BoxTrial mTrial;
 
     // Flags
-//    private boolean mTrialActive = false;
     private boolean mGrabbed = false;
-
-    // Shapes
-    private Rectangle mObject = new Rectangle();
-    private final MoPanel mTargetPnl = new MoPanel();
-    private Group mGroup;
-//    private Circle nextTrialD = new Circle();
 
     // Other
     private Point mGrabPos = new Point();
@@ -51,7 +43,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private long t0, t1;
     private boolean firstMove;
 
-//    private Graphix mGraphix;
+//    private MoGraphics mMoGraphics;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -216,23 +208,23 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        mGraphix = new Graphix(g2d);
+        mMoGraphics = new MoGraphics(g2d);
 
         // Draw the target
-        mGraphix.fillRectangle(COLORS.GRAY_400, mTrial.targetRect);
+        mMoGraphics.fillRectangle(COLORS.GRAY_400, mTrial.targetRect);
 
         // Draw the object
-        mGraphix.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
+        mMoGraphics.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
 
         // Draw block-trial num
         String stateText =
                 Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                         Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-        mGraphix.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+        mMoGraphics.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                 getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
         // TEMP: draw bound rect
-//        mGraphix.drawRectangle(COLORS.GRAY_500, mTrial.getBoundRect());
+//        mMoGraphics.drawRectangle(COLORS.GRAY_500, mTrial.getBoundRect());
     }
 
     private void mapKeys() {

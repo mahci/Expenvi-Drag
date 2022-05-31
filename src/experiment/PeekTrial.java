@@ -1,7 +1,6 @@
 package experiment;
 
-import gui.MoRectangle;
-import tools.MinMax;
+import graphic.MoRectangle;
 import tools.Out;
 
 import java.awt.*;
@@ -97,7 +96,7 @@ public class PeekTrial extends Trial {
             case N -> {
                 tempRect.setLocation(boundRect.getTopLeft());
                 targetRect.setLocationLoLeft(boundRect.getLoLeft());
-                objectRect.setLocationLoLeft(boundRect.getTopLeft());
+                objectRect.setLocationLoLeft(boundRect.getLoLeft());
 
                 curtainRect.setLocation(boundRect.getTopLeft());
             }

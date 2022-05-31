@@ -1,4 +1,4 @@
-package gui;
+package panels;
 
 import javax.swing.*;
 import java.awt.*;

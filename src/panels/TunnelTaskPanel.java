@@ -1,7 +1,9 @@
-package gui;
+package panels;
 
 import experiment.Experiment;
 import experiment.TunnelTrial;
+import graphic.MoCircle;
+import graphic.MoGraphics;
 import tools.*;
 
 import javax.swing.*;
@@ -11,7 +13,6 @@ import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 import static tools.Consts.*;
@@ -28,7 +29,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private Trace mVisualTrace;
     private Trace mTrace;
 
-    private Circle showCirc = new Circle();
+    private MoCircle showCirc = new MoCircle();
 
     // Keys
     private KeyStroke KS_SPACE;
@@ -56,7 +57,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     private int mPosCount = 0;
 
-    private Graphix mGraphix;
+    private MoGraphics mMoGraphics;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -262,16 +263,16 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        mGraphix = new Graphix(g2d);
+        mMoGraphics = new MoGraphics(g2d);
 
         // Draw Targets
 //        mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
         if (mTrial != null) {
 //            Out.d(TAG, mTrialNum, mTrial.toString());
-            mGraphix.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
+            mMoGraphics.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
 
             // Draw Start text
-            mGraphix.drawString(COLORS.GREEN_700, FONTS.DIALOG,"Start",
+            mMoGraphics.drawString(COLORS.GREEN_700, FONTS.DIALOG,"Start",
                     mTrial.startTextRect.x,
                     mTrial.startTextRect.y + mTrial.startTextRect.height / 2);
 
@@ -279,19 +280,19 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             String stateText =
                     STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                     STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mGraphix.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+            mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // Draw trace
             final int rad = Trace.TRACE_R;
             for (Point tp : mVisualTrace.getPoints()) {
-                mGraphix.fillCircle(COLORS.BLUE_900, new Circle(tp, rad));
+                mMoGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
             }
 
             // Temp: show range circle
-//            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
-//            mGraphix.drawCircle(COLORS.GREEN_700, showCirc);
-//            mGraphix.drawLine(COLORS.GREEN_700, mTrial.startLine);
+//            mMoGraphics.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
+//            mMoGraphics.drawCircle(COLORS.GREEN_700, showCirc);
+//            mMoGraphics.drawLine(COLORS.GREEN_700, mTrial.startLine);
 
         }
     }

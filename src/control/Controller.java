@@ -1,8 +1,6 @@
 package control;
 
 
-import gui.MainFrame;
-
 /**
  * Class responsible for getting the data from the Server and perform the actions
  */

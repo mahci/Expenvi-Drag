@@ -1,8 +1,7 @@
 package control;
 
 import experiment.Trial;
-import gui.Main;
-import gui.MainFrame;
+import panels.MainFrame;
 import tools.Utils;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static tools.Consts.STRINGS.*;
-import static experiment.Experiment.*;
 
 public class Logger {
     private final static String NAME = "Logger/";

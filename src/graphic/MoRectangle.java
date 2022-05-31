@@ -1,4 +1,4 @@
-package gui;
+package graphic;
 
 import experiment.Experiment;
 import tools.Utils;

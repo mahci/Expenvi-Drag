@@ -1,6 +1,6 @@
 package experiment;
 
-import gui.MoRectangle;
+import graphic.MoRectangle;
 import tools.Out;
 
 import java.awt.*;

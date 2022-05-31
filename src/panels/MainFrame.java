@@ -1,7 +1,6 @@
-package gui;
+package panels;
 
 import control.Server;
-import experiment.Experiment;
 import tools.Consts;
 
 import javax.swing.*;

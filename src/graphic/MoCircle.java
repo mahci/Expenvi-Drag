@@ -1,38 +1,37 @@
-package gui;
+package graphic;
 
 import tools.Out;
 
 import java.awt.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.Math.*;
 
-public class Circle implements Shape {
-    private final static String NAME = "Circle/";
+public class MoCircle implements Shape {
+    private final static String NAME = "MoCircle/";
 
     public Point center;
     public int radius;
     private Ellipse2D ell = new Ellipse2D.Double();
 
-    public Circle() {
+    public MoCircle() {
         center = new Point();
         radius = 0;
     }
 
-    public Circle(Point cntr, int r) {
+    public MoCircle(Point cntr, int r) {
         center = cntr;
         radius = r;
         ell.setFrameFromCenter(center, getUL());
     }
 
-    public Circle(int cx, int cy, int r) {
+    public MoCircle(int cx, int cy, int r) {
         this(new Point(cx, cy), r);
     }
 
-    public Circle(double cx, double cy, int r) {
+    public MoCircle(double cx, double cy, int r) {
         this(new Point((int) cx, (int) cy), r);
     }
 
@@ -154,7 +153,7 @@ public class Circle implements Shape {
 
     @Override
     public String toString() {
-        return "Circle{" +
+        return "MoCircle{" +
                 "center=" + center +
                 ", radius=" + radius +
                 '}';

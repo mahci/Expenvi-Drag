@@ -1,8 +1,11 @@
-package gui;
+package panels;
 
 import experiment.Block;
 import experiment.Experiment;
 import experiment.Task;
+import dialogs.BreakDialog;
+import graphic.MoGraphics;
+import graphic.MoRectangle;
 import tools.Consts;
 import tools.MinMax;
 import tools.Out;
@@ -48,7 +51,7 @@ public class TaskPanel extends JLayeredPane {
     protected int mPosCount = 0;
 
     // Helpers
-    protected Graphix mGraphix;
+    protected MoGraphics mMoGraphics;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 

@@ -1,6 +1,6 @@
 package control;
 
-import gui.MainFrame;
+import panels.MainFrame;
 import tools.Out;
 import tools.Memo;
 

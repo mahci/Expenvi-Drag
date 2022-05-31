@@ -1,8 +1,7 @@
-package gui;
+package panels;
 
-import experiment.BarTrial;
-import experiment.Experiment;
 import experiment.PeekTrial;
+import graphic.MoGraphics;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
@@ -65,6 +64,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         final String TAG = NAME + "showTrial";
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
+        Out.d(TAG, mTrial);
 
         repaint();
         mTrialActive = true;
@@ -112,31 +112,31 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        mGraphix = new Graphix(g2d);
+        mMoGraphics = new MoGraphics(g2d);
 
         if (mTrial != null) {
 
             // Draw the target
-            mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
+            mMoGraphics.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
 
             // Draw the temp rectangle
-            mGraphix.fillRectangle(COLORS.GREEN_700, mTrial.tempRect);
+            mMoGraphics.fillRectangle(COLORS.GREEN_700, mTrial.tempRect);
 
             // Draw curtain
-            mGraphix.fillRectangle(COLORS.ORANGE_200, mTrial.curtainRect);
+            mMoGraphics.fillRectangle(COLORS.ORANGE_200, mTrial.curtainRect);
 
             // Draw the object
-            mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
+            mMoGraphics.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
 
             // Draw block-trial num
             String stateText =
                     Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                             Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mGraphix.drawString(Consts.COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+            mMoGraphics.drawString(Consts.COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // TEMP: Draw boundRect
-//            mGraphix.drawRectangle(COLORS.GRAY_200, mTrial.getBoundRect());
+//            mMoGraphics.drawRectangle(COLORS.GRAY_200, mTrial.getBoundRect());
 
         }
     }
