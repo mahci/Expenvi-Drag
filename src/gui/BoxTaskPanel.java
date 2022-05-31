@@ -29,11 +29,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final long DROP_DELAY_ms = 700; // Delay before showing the next trial
 
     // Experiment
-//    private BoxTask mTask;
     private BoxTrial mTrial;
-
-    private int mBlockNum;
-    private int mTrialNum;
 
     // Flags
 //    private boolean mTrialActive = false;
@@ -96,17 +92,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public void start() {
-        final String TAG = NAME + "start";
-
-        mBlockNum = 1;
-        mTrialNum = 1;
-        startBlock(mBlockNum);
-
-    }
-
-
-    @Override
     protected void showTrial(int trNum) {
         String TAG = NAME + "nextTrial";
 //        firstMove = false;
@@ -115,17 +100,18 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         Out.d(TAG, mTrialNum);
         Out.e(TAG, mTrial);
 
-        removeAll();
+//        removeAll();
+//
+//        // Add the target panel (+ effect) to the panel
+//        BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
+//        mTrial.targetPanel.setBorder(bord);
+//        mTrial.targetPanel.setBackground(COLORS.GRAY_200);
+//        add(mTrial.targetPanel);
 
-        // Add the target panel (+ effect) to the panel
-        BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
-        mTrial.targetPanel.setBorder(bord);
-        mTrial.targetPanel.setBackground(COLORS.GRAY_200);
-        add(mTrial.targetPanel);
-
-        mTrialActive = true;
 
         repaint();
+
+        mTrialActive = true;
     }
 
     @Override
@@ -134,6 +120,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mTrial.objectRect.contains(curP)) {
             mGrabbed = true;
             mGrabPos = curP;
+        } else { // Grab outside the object
+            startError();
         }
     }
 
@@ -152,58 +140,34 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
 
         mGrabbed = false;
-
     }
 
     @Override
     protected void hit() {
         final String TAG = NAME + "hit";
-        Consts.SOUNDS.playHit();
 
-        mTrialActive = false;
+//        mTrialActive = false;
         moveObjInside();
 
+        super.hit();
         // Wait a certain delay, then show the next trial (or next block)
-        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
-        if (mTrialNum < mBlock.getNumTrials()) {
-            Out.d(TAG, "NEXT!");
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks()) {
-            mBlockNum++;
-            mTrialNum = 1;
-            startBlock(mBlockNum);
-        } else {
-            // Task is finished
-
-        }
-    }
-
-    @Override
-    protected void miss() {
-        final String TAG = NAME + "miss";
-
-        Consts.SOUNDS.playMiss();
-        Out.d(TAG, "Missed on trial", mTrialNum);
-        // Shuffle back and reposition the next ones
-        final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
-        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-        if (findAllTrialsPosition(trNewInd) == 1) {
-            Out.e(TAG, "Couldn't find position for the trials");
-            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
-        } else {
-            // Next trial
-//            mTrialNum++;
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        }
-
-        mTrialActive = false;
-
+//        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
+//        if (mTrialNum < mBlock.getNumTrials()) {
+//            Out.d(TAG, "NEXT!");
+//            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+//        } else if (mBlockNum < mTask.getNumBlocks()) {
+//            mBlockNum++;
+//            mTrialNum = 1;
+//            startBlock(mBlockNum);
+//        } else {
+//            // Task is finished
+//        }
     }
 
     public void moveObjInside() {
-        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
+//        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
 //        final Rectangle objBounds = mObject.getBounds();
-        final Rectangle intersection = tgtBounds.intersection(mTrial.objectRect);
+        final Rectangle intersection = mTrial.targetRect.intersection(mTrial.objectRect);
 
         final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
         final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
@@ -220,8 +184,25 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public boolean isHit() {
-        return mTrial.targetPanel.getBounds().contains(getCursorPos());
+        return mTrial.targetRect.contains(getCursorPos());
+//        return mTrial.targetPanel.getBounds().contains(getCursorPos());
     }
+
+//    @Override
+//    protected void miss() {
+//        Consts.SOUNDS.playMiss();
+//
+//        mTrialActive = false;
+//
+//        // Shuffle back and reposition the next ones
+//        final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
+////        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
+//        if (findAllTrialsPosition(trNewInd) == 1) {
+//            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
+//        } else {
+//            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+//        }
+//    }
 
     // -------------------------------------------------------------------------------------------
 
@@ -236,6 +217,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
         mGraphix = new Graphix(g2d);
+
+        // Draw the target
+        mGraphix.fillRectangle(COLORS.GRAY_400, mTrial.targetRect);
 
         // Draw the object
         mGraphix.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);

@@ -3,6 +3,7 @@ package gui;
 import experiment.Block;
 import experiment.Experiment;
 import experiment.Task;
+import tools.Consts;
 import tools.MinMax;
 import tools.Out;
 import tools.Utils;
@@ -13,6 +14,9 @@ import java.awt.event.ActionEvent;
 import java.awt.geom.Area;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static experiment.Experiment.DIRECTION.*;
 import static experiment.Experiment.DIRECTION.E;
@@ -30,6 +34,7 @@ public class TaskPanel extends JLayeredPane {
     // Experiment
     protected Task mTask;
     protected Block mBlock;
+    protected int mBlockNum, mTrialNum;
 
     // Flags
     protected boolean mTrialActive = false;
@@ -40,6 +45,8 @@ public class TaskPanel extends JLayeredPane {
     // Helpers
     protected Graphix mGraphix;
 
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
@@ -49,7 +56,11 @@ public class TaskPanel extends JLayeredPane {
     };
 
     // Methods ------------------------------------------------------------------------------------
-    protected void start() { }
+    protected void start() {
+        mBlockNum = 1;
+        mTrialNum = 1;
+        startBlock(mBlockNum);
+    }
 
     protected void startBlock(int blkNum) {
         final String TAG = NAME + "showBlock";
@@ -81,9 +92,50 @@ public class TaskPanel extends JLayeredPane {
 
     protected void cancel() { }
 
-    protected void hit() { }
+    protected void startError() {
+        final String TAG = NAME + "startError";
 
-    protected void miss() { }
+        Consts.SOUNDS.playStartError();
+    }
+
+    protected void hit() {
+        final String TAG = NAME + "hit";
+
+        Consts.SOUNDS.playHit();
+
+        mTrialActive = false;
+
+        // Wait a certain delay, then show the next trial (or next block)
+        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
+        if (mTrialNum < mBlock.getNumTrials()) {
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        } else if (mBlockNum < mTask.getNumBlocks()) {
+            MainFrame.get().showDialog(new BreakDialog());
+            mBlockNum++;
+            mTrialNum = 1;
+            startBlock(mBlockNum);
+        } else {
+            // Task is finished
+        }
+    }
+
+    protected void miss() {
+        final String TAG = NAME + "miss";
+
+        Consts.SOUNDS.playMiss();
+
+        mTrialActive = false;
+
+        // Shuffle back and reposition the next ones
+        final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
+//        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
+        if (findAllTrialsPosition(trNewInd) == 1) {
+            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
+        } else {
+            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+        }
+
+    }
 
     protected Dimension getDispDim() {
         Dimension result = new Dimension();

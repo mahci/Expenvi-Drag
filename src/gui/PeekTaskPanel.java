@@ -87,6 +87,28 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         }
     }
 
+    @Override
+    public void release() {
+        final String TAG = NAME + "release";
+        Out.d(TAG, mGrabbed);
+//        if (mGrabbed) {
+//            Out.d(TAG, isHit());
+//            if (isHit()) {
+////                moveObjInside();
+//                hit();
+//            } else {
+//                miss();
+//            }
+//        }
+
+        mGrabbed = false;
+    }
+
+    @Override
+    protected boolean isHit() {
+        return false;
+    }
+
     // -------------------------------------------------------------------------------------------
     @Override
     protected void paintComponent(Graphics g) {
@@ -120,6 +142,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             mGraphix.drawString(Consts.COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
+            // TEMP: Draw boundRect
+//            mGraphix.drawRectangle(COLORS.GRAY_200, mTrial.getBoundRect());
+
         }
     }
 
@@ -131,14 +156,16 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             grab();
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+            release();
+        }
     }
 
     @Override
@@ -167,6 +194,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseMoved(MouseEvent e) {
-
+        mouseDragged(e);
     }
 }

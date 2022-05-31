@@ -150,7 +150,7 @@ public class Server {
 
     public void close() {
         try {
-            if (serverSocket != null) {
+            if (serverSocket != null && socket != null) {
                 Out.d(NAME, "Closing the socket...");
                 serverSocket.close();
                 socket.close();

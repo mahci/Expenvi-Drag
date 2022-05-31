@@ -24,9 +24,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     // Experiment
     private TunnelTrial mTrial;
 
-    private int mBlockNum = 0;
-    private int mTrialNum = 0;
-
     // Things to show
     private Trace mVisualTrace;
     private Trace mTrace;
@@ -96,14 +93,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         return this;
     }
 
-    @Override
-    protected void start() {
-        mBlockNum = 1;
-        mTrialNum = 1;
-//        nextBlock();
-        startBlock(mBlockNum);
-
-    }
 
     /**
      * Show the trial
@@ -175,51 +164,16 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     }
 
     @Override
-    protected void hit() {
-        SOUNDS.playHit();
-
-        mTrialActive = false;
-
-        // Wait a certain delay, then show the next trial (or next block)
-        if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks()) {
-            mBlockNum++;
-            mBlock = mTask.getBlock(mBlockNum);
-
-            mTrialNum = 0;
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else {
-            // Task is finished
-
-        }
-    }
-
-    @Override
     protected void miss() {
         final String TAG = NAME + "miss";
 
-        mTrialActive = false;
         mTrialStarted = false;
 
-        SOUNDS.playMiss();
-//        mMissed = true;
-        Out.d(TAG, "Missed on trial", mTrialNum);
-        // Shuffle back and reposition the next ones
-        final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
-        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-        if (findAllTrialsPosition(trNewInd) == 1) {
-            Out.e(TAG, "Couldn't find position for the trials");
-            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
-        } else {
-//            // Next trial
-////            mTrialNum++;
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        }
-
+        super.miss();
     }
 
-    private void startError() {
+    @Override
+    protected void startError() {
         final String TAG = NAME + "startError";
         Out.e(TAG, "Trial Num", mTrialNum);
         SOUNDS.playStartError();

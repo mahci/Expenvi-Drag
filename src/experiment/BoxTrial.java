@@ -1,6 +1,7 @@
 package experiment;
 
 import gui.MoPanel;
+import gui.MoRectangle;
 import tools.Out;
 
 import java.awt.*;
@@ -12,8 +13,9 @@ import static java.lang.Math.*;
 public class BoxTrial extends Trial {
     private final String NAME = "BoxTrial/";
 
-    public Rectangle objectRect = new Rectangle();
-    public MoPanel targetPanel = new MoPanel();
+    public MoRectangle objectRect = new MoRectangle();
+//    public MoPanel targetPanel = new MoPanel();
+    public MoRectangle targetRect = new MoRectangle();
 
     // Vraiables
     private AXIS axis;
@@ -37,38 +39,60 @@ public class BoxTrial extends Trial {
 
         //-- Set variables
         objectRect.setSize(conf.get(0), conf.get(0));
-        targetPanel.setSize(conf.get(1), conf.get(1));
+//        targetPanel.setSize(conf.get(1), conf.get(1));
+        targetRect.setSize(conf.get(1), conf.get(1));
         axis = AXIS.get(conf.get(2));
 
         dir = axis.randDir();
 
         // Set the bound box size based on the axis
-        Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetPanel.getWidth(),
-                (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()));
+        Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetRect.width,
+                (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width));
         switch (axis) {
             case VERTICAL -> {
                 boundRect.setSize(
-                        targetPanel.getWidth(),
-                        objectRect.width + dist + targetPanel.getWidth());
+                        targetRect.width,
+                        objectRect.width + dist + targetRect.width);
             }
             case HORIZONTAL -> {
                 boundRect.setSize(
-                        objectRect.width + dist + targetPanel.getWidth(),
-                        targetPanel.getWidth());
+                        objectRect.width + dist + targetRect.width,
+                        targetRect.width);
             }
             case FOR_DIAG, BACK_DIAG -> {
                 boundRect.setSize(
-                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()),
-                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth())); // Always square
+                        (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width),
+                        (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width)); // Always square
             }
         }
+
+//        Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetPanel.getWidth(),
+//                (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()));
+//        switch (axis) {
+//            case VERTICAL -> {
+//                boundRect.setSize(
+//                        targetPanel.getWidth(),
+//                        objectRect.width + dist + targetPanel.getWidth());
+//            }
+//            case HORIZONTAL -> {
+//                boundRect.setSize(
+//                        objectRect.width + dist + targetPanel.getWidth(),
+//                        targetPanel.getWidth());
+//            }
+//            case FOR_DIAG, BACK_DIAG -> {
+//                boundRect.setSize(
+//                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()),
+//                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth())); // Always square
+//            }
+//        }
 
     }
 
     @Override
     public Point getEndPoint() {
-        final Rectangle tgtRect = targetPanel.getBounds();
-        return new Point((int) tgtRect.getCenterX(), (int) tgtRect.getCenterY());
+        return targetRect.getCenter();
+//        final Rectangle tgtRect = targetPanel.getBounds();
+//        return new Point((int) tgtRect.getCenterX(), (int) tgtRect.getCenterY());
     }
 
     @Override
@@ -82,7 +106,7 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         (int) (boundRect.getCenterX() - objectRect.width / 2),
                         boundRect.getLoLeft().y - objectRect.width);
-                targetPanel.setLocation(boundRect.getLocation());
+                targetRect.setLocation(boundRect.getLocation());
             }
 
             case S -> {
@@ -90,9 +114,9 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         (int) (boundRect.getCenterX() - objectRect.width / 2),
                         boundRect.y);
-                targetPanel.setLocation(
+                targetRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - targetPanel.getWidth());
+                        boundRect.getLoLeft().y - targetRect.width);
             }
 
             case E -> {
@@ -100,8 +124,8 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         boundRect.x,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
-                targetPanel.setLocation(
-                        boundRect.getUpRight().x - targetPanel.getWidth(),
+                targetRect.setLocation(
+                        boundRect.getUpRight().x - targetRect.width,
                         boundRect.y);
             }
 
@@ -110,7 +134,7 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         boundRect.getUpRight().x - objectRect.width,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
-                targetPanel.setLocation(boundRect.getLocation());
+                targetRect.setLocation(boundRect.getLocation());
             }
 
             case NE -> {
@@ -118,8 +142,8 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         boundRect.x,
                         boundRect.getLoLeft().y - objectRect.width);
-                targetPanel.setLocation(
-                        boundRect.getUpRight().x - targetPanel.getWidth(),
+                targetRect.setLocation(
+                        boundRect.getUpRight().x - targetRect.width,
                         boundRect.y);
             }
 
@@ -128,15 +152,15 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         boundRect.getLoRight().x - objectRect.width,
                         boundRect.getLoRight().y - objectRect.width);
-                targetPanel.setLocation(boundRect.getLocation());
+                targetRect.setLocation(boundRect.getLocation());
             }
 
             case SE -> {
                 Out.d(TAG, "dir: SE");
                 objectRect.setLocation(boundRect.getLocation());
-                targetPanel.setLocation(
-                        boundRect.getLoRight().x - targetPanel.getWidth(),
-                        boundRect.getLoRight().y - targetPanel.getWidth());
+                targetRect.setLocation(
+                        boundRect.getLoRight().x - targetRect.width,
+                        boundRect.getLoRight().y - targetRect.width);
             }
 
             case SW -> {
@@ -144,9 +168,9 @@ public class BoxTrial extends Trial {
                 objectRect.setLocation(
                         boundRect.getUpRight().x - objectRect.width,
                         boundRect.y);
-                targetPanel.setLocation(
+                targetRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - targetPanel.getWidth());
+                        boundRect.getLoLeft().y - targetRect.width);
             }
             
         }
@@ -157,7 +181,7 @@ public class BoxTrial extends Trial {
         return "BoxTrial{" +
                 "boundRect=" + boundRect +
                 ", objectRect=" + objectRect +
-                ", targetPanel=" + targetPanel +
+                ", targetRect=" + targetRect +
                 ", axis=" + axis +
                 ", dir=" + dir +
                 ", dist=" + dist +

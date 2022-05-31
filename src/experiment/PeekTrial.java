@@ -99,13 +99,13 @@ public class PeekTrial extends Trial {
             }
 
             case E -> {
-                objectRect.setLocation(boundRect.getLoLeft());
+                objectRect.setLocation(boundRect.getUpLeft());
                 curtainRect.setLocation(objectRect.getUpRight());
                 targetRect.setLocation(curtainRect.getUpRight());
             }
 
             case W -> {
-                targetRect.setLocation(boundRect.getUpRight());
+                targetRect.setLocation(boundRect.getUpLeft());
                 curtainRect.setLocation(targetRect.getUpRight());
                 objectRect.setLocation(curtainRect.getUpRight());
             }

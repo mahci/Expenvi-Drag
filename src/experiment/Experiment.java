@@ -155,8 +155,8 @@ public class Experiment {
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int DIST_mm = 50; // mm
-        public static final int OBJECT_LEN_mm = 30; // mm
-        public static final int TARGET_LEN_mm = 100; // mm
+        public static final int OBJECT_LEN_mm = 5; // mm
+        public static final int TARGET_LEN_mm = 50; // mm
         public static final int TARGET_LINES_THICKNESS_mm = 1; // mm
 
         public BarTask(int nBlocks) {

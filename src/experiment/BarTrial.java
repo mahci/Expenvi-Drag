@@ -14,7 +14,6 @@ public class BarTrial extends Trial {
 //    public MoRectangle inRect = new MoRectangle();
 
     public MoRectangle targetRect = new MoRectangle();
-
     public MoRectangle objectRect = new MoRectangle();
 
     // Vraiables

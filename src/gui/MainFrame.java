@@ -48,7 +48,7 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void start() {
-//        Server.get().start();
+        Server.get().start();
 
         // Show the Intro panel
         final AbstractAction showTaskAA = new AbstractAction() {
@@ -67,10 +67,10 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
+//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(2));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
         mActivePanel = new PeekTaskPanel(panelDim).setTask(new PeekTask(1));
-//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(1));
+//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

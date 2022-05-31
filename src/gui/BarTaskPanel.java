@@ -25,9 +25,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     // Experiment
     private BarTrial mTrial;
 
-    private int mBlockNum;
-    private int mTrialNum;
-
     // Config
     private final boolean mChangeCursor = false;
     private final boolean mHighlightObj = true;
@@ -60,8 +57,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
      * @param dim Desired dimension of the panel
      */
     public BarTaskPanel(Dimension dim) {
-//        setDoubleBuffered(true); //set Double buffering for JPanel
-
         setSize(dim);
         setLayout(null);
 
@@ -84,15 +79,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public void start() {
-        final String TAG = NAME + "start";
-
-        mBlockNum = 1;
-        mTrialNum = 1;
-        startBlock(mBlockNum);
-    }
-
-    @Override
     protected void showTrial(int trNum) {
         final String TAG = NAME + "showTrial";
         Out.d(TAG, trNum);
@@ -106,6 +92,8 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mTrial.objectRect.contains(getCursorPos())) {
             mGrabbed = true;
             mGrabPos = getCursorPos();
+        } else {
+            startError();
         }
     }
 
@@ -126,48 +114,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public boolean isHit() {
         return mTrial.targetRect.contains(mTrial.objectRect);
-    }
-
-    @Override
-    protected void hit() {
-        Consts.SOUNDS.playHit();
-
-        mTrialActive = false;
-
-        // Wait a certain delay, then show the next trial (or next block)
-        if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks()) {
-            mBlockNum++;
-            mTrialNum = 1;
-//            mBlock = mTask.getBlock(mBlockNum);
-            startBlock(mBlockNum);
-//            mTrialNum = 0;
-//            executorService.schedule(this::nextTrial, mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        } else {
-            // Task is finished
-        }
-    }
-
-    @Override
-    protected void miss() {
-        final String TAG = NAME + "miss";
-
-        mTrialActive = false;
-
-        Consts.SOUNDS.playMiss();
-        Out.d(TAG, "Missed on trial", mTrialNum);
-        // Shuffle back and reposition the next ones
-        final int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
-        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-        if (findAllTrialsPosition(trNewInd) == 1) {
-            Out.e(TAG, "Couldn't find position for the trials");
-            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
-        } else {
-            // Next trial
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-        }
-
     }
 
     // -------------------------------------------------------------------------------------------
@@ -202,7 +148,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // TEMP: draw bounding box
-            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
+//            mGraphix.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());
         }
 
     }
