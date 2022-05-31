@@ -1,6 +1,7 @@
 package experiment;
 
 import gui.MoRectangle;
+import tools.MinMax;
 import tools.Out;
 
 import java.awt.*;
@@ -11,23 +12,24 @@ import static experiment.Experiment.*;
 public class PeekTrial extends Trial {
     private final String NAME = "PeekTrial/";
 
-    public MoRectangle targetRect = new MoRectangle();
-    public MoRectangle curtainRect = new MoRectangle();
     public MoRectangle objectRect = new MoRectangle();
+    public MoRectangle curtainRect = new MoRectangle();
+    public MoRectangle tempRect = new MoRectangle();
+    public MoRectangle targetRect = new MoRectangle();
 
     // Vraiables
     public AXIS axis;
 
     // Cosntants and randoms
     private DIRECTION dir;
-    private int dist; // Corner-to-corner (diag) or edge-to-edge (straight)
+    private int dist;
     private int len;
-
+    private int tempW;
 
     /**
      * Constructor
      * @param conf [0] Obj W, [1] Target W
-     * @param params [0] len = ObjLen = TgtLen, [1] Distance
+     * @param params [0] len = ObjLen = TgtLen, [1] Distance, [2] Temp W
      */
     public PeekTrial(List<Integer> conf, int... params) {
         super(conf, params);
@@ -38,36 +40,42 @@ public class PeekTrial extends Trial {
         }
 
         //-- Set constants
-        if (params != null && params.length == 2) {
+        if (params != null && params.length == 3) {
             len = params[0];
             dist = params[1];
+            tempW = params[2];
         } else {
             Out.e(NAME, "Params not passed correctly!");
         }
 
-
         //-- Set variables
         axis = AXIS.get(conf.get(2));
-        switch (axis) {
 
+        switch (axis) {
             case VERTICAL -> { // N-S
                 objectRect.setSize(len, conf.get(0));
-                curtainRect.setSize(len, dist);
                 targetRect.setSize(len, conf.get(1));
+                tempRect.setSize(len, tempW);
 
                 boundRect.setSize(
                         len,
-                        conf.get(0) + dist + conf.get(1));
+                        targetRect.height + dist + tempRect.height);
+
+                // Curtain's size depends on the object movement range
+                curtainRect.setSize(len, boundRect.height - objectRect.height);
             }
 
             case HORIZONTAL -> { // E-W
                 objectRect.setSize(conf.get(0), len);
-                curtainRect.setSize(dist, len);
                 targetRect.setSize(conf.get(1), len);
+                tempRect.setSize(tempW, len);
 
                 boundRect.setSize(
-                        conf.get(0) + dist + conf.get(1),
+                        targetRect.width + dist + tempRect.width,
                         len);
+
+                // Curtain's size depends on the object movement range
+                curtainRect.setSize(boundRect.width - objectRect.width, len);
             }
         }
 
@@ -87,27 +95,35 @@ public class PeekTrial extends Trial {
 
         switch (dir) {
             case N -> {
-                targetRect.setLocation(boundRect.getUpLeft());
-                curtainRect.setLocation(targetRect.getLoLeft());
-                objectRect.setLocation(curtainRect.getLoLeft());
+                tempRect.setLocation(boundRect.getTopLeft());
+                targetRect.setLocationLoLeft(boundRect.getLoLeft());
+                objectRect.setLocationLoLeft(boundRect.getTopLeft());
+
+                curtainRect.setLocation(boundRect.getTopLeft());
             }
 
             case S -> {
-                objectRect.setLocation(boundRect.getUpLeft());
+                objectRect.setLocation(boundRect.getTopLeft());
+                targetRect.setLocation(boundRect.getTopLeft());
+                tempRect.setLocationLoLeft(boundRect.getLoLeft());
+
                 curtainRect.setLocation(objectRect.getLoLeft());
-                targetRect.setLocation(curtainRect.getLoLeft());
             }
 
             case E -> {
-                objectRect.setLocation(boundRect.getUpLeft());
-                curtainRect.setLocation(objectRect.getUpRight());
-                targetRect.setLocation(curtainRect.getUpRight());
+                objectRect.setLocation(boundRect.getTopLeft());
+                targetRect.setLocation(boundRect.getTopLeft());
+                tempRect.setLocationTopRight(boundRect.getTopRight());
+
+                curtainRect.setLocation(objectRect.getTopRight());
             }
 
             case W -> {
-                targetRect.setLocation(boundRect.getUpLeft());
-                curtainRect.setLocation(targetRect.getUpRight());
-                objectRect.setLocation(curtainRect.getUpRight());
+                tempRect.setLocation(boundRect.getTopLeft());
+                objectRect.setLocationTopRight(boundRect.getTopRight());
+                targetRect.setLocationTopRight(boundRect.getTopRight());
+
+                curtainRect.setLocation(boundRect.getTopLeft());
             }
         }
     }
@@ -116,31 +132,43 @@ public class PeekTrial extends Trial {
 
         switch (dir) {
             case N -> {
-                curtainRect.resize(DIRECTION.S, dY, dX);
-                boundRect.resize(DIRECTION.S, dY, dX);
+                final int yTopLimit = boundRect.y;
+                final int newY = objectRect.y + dY;
 
-                objectRect.setLocation(curtainRect.getLoLeft());
+                if (newY > yTopLimit) {
+                    objectRect.y = newY;
+                    curtainRect.resize(DIRECTION.S, dY, dX);
+                }
             }
 
             case S -> {
-                curtainRect.resize(DIRECTION.N, dY, dX);
-                boundRect.resize(DIRECTION.N, dY, dX);
+                final int yBottomLimit = boundRect.getLoLeft().y - objectRect.height;
+                final int newY = objectRect.y + dY;
 
-                objectRect.setLocation(boundRect.getUpLeft());
+                if (newY < yBottomLimit) {
+                    objectRect.y = newY;
+                    curtainRect.resize(DIRECTION.N, dY, dX);
+                }
             }
 
             case E -> {
-                curtainRect.resize(DIRECTION.W, dY, dX);
-                boundRect.resize(DIRECTION.W, dY, dX);
+                final int xRightLimit = boundRect.getTopRight().x - objectRect.width;
+                final int newX = objectRect.x + dX;
 
-                objectRect.setLocation(boundRect.getUpLeft());
+                if (newX < xRightLimit) {
+                    objectRect.x = newX;
+                    curtainRect.resize(DIRECTION.W, dY, dX);
+                }
             }
 
             case W -> {
-                curtainRect.resize(DIRECTION.E, dY, dX);
-                boundRect.resize(DIRECTION.E, dY, dX);
+                final int xLeftLimit = boundRect.x;
+                final int newX = objectRect.x + dX;
 
-                objectRect.setLocation(curtainRect.getUpRight());
+                if (newX > xLeftLimit) {
+                    objectRect.x = newX;
+                    curtainRect.resize(DIRECTION.E, dY, dX);
+                }
             }
         }
     }

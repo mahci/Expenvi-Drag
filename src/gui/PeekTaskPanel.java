@@ -61,15 +61,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     }
 
     @Override
-    public void start() {
-        final String TAG = NAME + "start";
-
-        mBlockNum = 1;
-        mTrialNum = 1;
-        startBlock(mBlockNum);
-    }
-
-    @Override
     protected void showTrial(int trNum) {
         final String TAG = NAME + "showTrial";
 
@@ -125,15 +116,17 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         if (mTrial != null) {
 
-            // Draw curtain
-            mGraphix.fillRectangle(COLORS.ORANGE_200, mTrial.curtainRect);
-
             // Draw the target
             mGraphix.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
 
+            // Draw the temp rectangle
+            mGraphix.fillRectangle(COLORS.GREEN_700, mTrial.tempRect);
+
+            // Draw curtain
+            mGraphix.fillRectangle(COLORS.ORANGE_200, mTrial.curtainRect);
+
             // Draw the object
             mGraphix.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
-
 
             // Draw block-trial num
             String stateText =
@@ -180,6 +173,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseDragged(MouseEvent e) {
+
         if (mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
             final int dY = e.getY() - mGrabPos.y;

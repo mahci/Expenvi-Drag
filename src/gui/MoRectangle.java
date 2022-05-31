@@ -32,6 +32,16 @@ public class MoRectangle extends Rectangle {
         this.height = 2 * margin;
     }
 
+    public void setLocationLoLeft(Point loLeftP) {
+        x = loLeftP.x;
+        y = loLeftP.y - height;
+    }
+
+    public void setLocationTopRight(Point topRightR) {
+        x = topRightR.x - width;
+        y = topRightR.y;
+    }
+
     public void resize(Experiment.DIRECTION dir, int dVt, int dHz) {
         switch (dir) {
             case N -> {
@@ -63,11 +73,11 @@ public class MoRectangle extends Rectangle {
         }
     }
 
-    public Point getUpLeft() {
+    public Point getTopLeft() {
         return new Point(x, y);
     }
 
-    public Point getUpRight() {
+    public Point getTopRight() {
         return new Point(x + width, y);
     }
 
@@ -120,8 +130,8 @@ public class MoRectangle extends Rectangle {
     }
 
     public String printCorners() {
-        String resSB = "[" + getUpLeft().x + "," + getUpLeft().y + "]" +
-                "[" + getUpRight().x + "," + getUpRight().y + "]" +
+        String resSB = "[" + getTopLeft().x + "," + getTopLeft().y + "]" +
+                "[" + getTopRight().x + "," + getTopRight().y + "]" +
                 "[" + getLoRight().x + "," + getLoRight().y + "]" +
                 "[" + getLoLeft().x + "," + getLoLeft().y + "]";
         return resSB;

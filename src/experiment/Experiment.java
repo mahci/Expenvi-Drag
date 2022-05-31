@@ -206,6 +206,7 @@ public class Experiment {
 
         public static final int LEN_mm = 100; // mm
         public static final int DIST_mm = 50; // mm
+        public static final int TEMP_W_mm = 10; // mm
 
         public PeekTask(int nBlocks) {
             super(nBlocks);
@@ -221,6 +222,7 @@ public class Experiment {
             List<Integer> config = new ArrayList<>();
             final int len = Utils.mm2px(LEN_mm);
             final int dist = Utils.mm2px(DIST_mm);
+            final int tempW = Utils.mm2px(TEMP_W_mm);
 
             for (int vi : OBJECT_WIDTHS) {
                 for (int vj : TARGET_WIDTHS) {
@@ -230,7 +232,7 @@ public class Experiment {
                         config.add(vk);
 
                         // Create trials based on the combination
-                        result.mTrials.add(new PeekTrial(config, len, dist));
+                        result.mTrials.add(new PeekTrial(config, len, dist, tempW));
 
                         config.clear();
                     }

@@ -141,7 +141,7 @@ public class TunnelTrial extends Trial implements Cloneable {
                         boundRect.x + boundRect.width - startTextRect.width,
                         line2Rect.y + line2Rect.height);
 
-                startLine.setLine(inRect.getUpRight(), inRect.getLoRight());
+                startLine.setLine(inRect.getTopRight(), inRect.getLoRight());
             }
 
             case E -> {
@@ -150,7 +150,7 @@ public class TunnelTrial extends Trial implements Cloneable {
                 line2Rect.setLocation(boundRect.x, inRect.y + inRect.height);
                 startTextRect.setLocation(boundRect.x, line2Rect.y + line2Rect.height);
 
-                startLine.setLine(inRect.getUpLeft(), inRect.getLoLeft());
+                startLine.setLine(inRect.getTopLeft(), inRect.getLoLeft());
             }
 
             case N -> {
@@ -174,7 +174,7 @@ public class TunnelTrial extends Trial implements Cloneable {
                 inRect.setLocation(line2Rect.x + line2Rect.width, boundRect.y);
                 line1Rect.setLocation(inRect.x + inRect.width, boundRect.y);
 
-                startLine.setLine(inRect.getUpLeft(), inRect.getUpRight());
+                startLine.setLine(inRect.getTopLeft(), inRect.getTopRight());
             }
         }
     }

@@ -121,7 +121,7 @@ public class BarTrial extends Trial {
                         boundRect.getCenter().y - objectRect.height / 2);
 
                 targetRect.setLocation(
-                        boundRect.getUpRight().x - targetRect.width,
+                        boundRect.getTopRight().x - targetRect.width,
                         boundRect.y);
 //                line1Rect.setLocation(boundRect.getUpRight().x - line1Rect.width, boundRect.y);
 //                inRect.setLocation(line1Rect.x - inRect.width, boundRect.y);
@@ -130,7 +130,7 @@ public class BarTrial extends Trial {
 
             case W -> {
                 objectRect.setLocation(
-                        boundRect.getUpRight().x - objectRect.width,
+                        boundRect.getTopRight().x - objectRect.width,
                         boundRect.getCenter().y - objectRect.height / 2);
 
                 targetRect.setLocation(boundRect.getLocation());

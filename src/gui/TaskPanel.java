@@ -11,6 +11,7 @@ import tools.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Area;
 import java.util.*;
 import java.util.List;
@@ -31,6 +32,10 @@ public class TaskPanel extends JLayeredPane {
     protected double LR_MARGIN_mm = 20;
     protected int MAX_CEHCK_POS = 100;
 
+    // Keys
+    private KeyStroke KS_SPACE;
+    private KeyStroke KS_RA; // Right arrow
+
     // Experiment
     protected Task mTask;
     protected Block mBlock;
@@ -48,7 +53,7 @@ public class TaskPanel extends JLayeredPane {
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Actions ------------------------------------------------------------------------------------
-    private final Action NEXT_TRIAL = new AbstractAction() {
+    protected final Action NEXT_TRIAL = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             hit();
@@ -60,6 +65,9 @@ public class TaskPanel extends JLayeredPane {
         mBlockNum = 1;
         mTrialNum = 1;
         startBlock(mBlockNum);
+
+        mapKeys();
+        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
     }
 
     protected void startBlock(int blkNum) {
@@ -331,5 +339,11 @@ public class TaskPanel extends JLayeredPane {
         return null;
     }
 
+    private void mapKeys() {
+        KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
+        KS_RA = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0, true);
 
+        getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
+        getInputMap().put(KS_RA, KeyEvent.VK_RIGHT);
+    }
 }

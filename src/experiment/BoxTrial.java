@@ -1,6 +1,5 @@
 package experiment;
 
-import gui.MoPanel;
 import gui.MoRectangle;
 import tools.Out;
 
@@ -125,14 +124,14 @@ public class BoxTrial extends Trial {
                         boundRect.x,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
                 targetRect.setLocation(
-                        boundRect.getUpRight().x - targetRect.width,
+                        boundRect.getTopRight().x - targetRect.width,
                         boundRect.y);
             }
 
             case W -> {
                 Out.d(TAG, "dir: W");
                 objectRect.setLocation(
-                        boundRect.getUpRight().x - objectRect.width,
+                        boundRect.getTopRight().x - objectRect.width,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
                 targetRect.setLocation(boundRect.getLocation());
             }
@@ -143,7 +142,7 @@ public class BoxTrial extends Trial {
                         boundRect.x,
                         boundRect.getLoLeft().y - objectRect.width);
                 targetRect.setLocation(
-                        boundRect.getUpRight().x - targetRect.width,
+                        boundRect.getTopRight().x - targetRect.width,
                         boundRect.y);
             }
 
@@ -166,7 +165,7 @@ public class BoxTrial extends Trial {
             case SW -> {
                 Out.d(TAG, "dir: SW");
                 objectRect.setLocation(
-                        boundRect.getUpRight().x - objectRect.width,
+                        boundRect.getTopRight().x - objectRect.width,
                         boundRect.y);
                 targetRect.setLocation(
                         boundRect.x,
