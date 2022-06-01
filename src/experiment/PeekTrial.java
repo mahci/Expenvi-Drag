@@ -85,7 +85,7 @@ public class PeekTrial extends Trial {
 
     @Override
     public Point getEndPoint() {
-        return targetRect.getCenter();
+        return targetRect.center();
     }
 
     @Override
@@ -94,35 +94,35 @@ public class PeekTrial extends Trial {
 
         switch (dir) {
             case N -> {
-                tempRect.setLocation(boundRect.getTopLeft());
-                targetRect.setLocationLoLeft(boundRect.getLoLeft());
-                objectRect.setLocationLoLeft(boundRect.getLoLeft());
+                tempRect.setLocation(boundRect.topLeft());
+                targetRect.setLocationLoLeft(boundRect.loLeft());
+                objectRect.setLocationLoLeft(boundRect.loLeft());
 
-                curtainRect.setLocation(boundRect.getTopLeft());
+                curtainRect.setLocation(boundRect.topLeft());
             }
 
             case S -> {
-                objectRect.setLocation(boundRect.getTopLeft());
-                targetRect.setLocation(boundRect.getTopLeft());
-                tempRect.setLocationLoLeft(boundRect.getLoLeft());
+                objectRect.setLocation(boundRect.topLeft());
+                targetRect.setLocation(boundRect.topLeft());
+                tempRect.setLocationLoLeft(boundRect.loLeft());
 
-                curtainRect.setLocation(objectRect.getLoLeft());
+                curtainRect.setLocation(objectRect.loLeft());
             }
 
             case E -> {
-                objectRect.setLocation(boundRect.getTopLeft());
-                targetRect.setLocation(boundRect.getTopLeft());
-                tempRect.setLocationTopRight(boundRect.getTopRight());
+                objectRect.setLocation(boundRect.topLeft());
+                targetRect.setLocation(boundRect.topLeft());
+                tempRect.setLocationTopRight(boundRect.topRight());
 
-                curtainRect.setLocation(objectRect.getTopRight());
+                curtainRect.setLocation(objectRect.topRight());
             }
 
             case W -> {
-                tempRect.setLocation(boundRect.getTopLeft());
-                objectRect.setLocationTopRight(boundRect.getTopRight());
-                targetRect.setLocationTopRight(boundRect.getTopRight());
+                tempRect.setLocation(boundRect.topLeft());
+                objectRect.setLocationTopRight(boundRect.topRight());
+                targetRect.setLocationTopRight(boundRect.topRight());
 
-                curtainRect.setLocation(boundRect.getTopLeft());
+                curtainRect.setLocation(boundRect.topLeft());
             }
         }
     }
@@ -141,7 +141,7 @@ public class PeekTrial extends Trial {
             }
 
             case S -> {
-                final int yBottomLimit = boundRect.getLoLeft().y - objectRect.height;
+                final int yBottomLimit = boundRect.loLeft().y - objectRect.height;
                 final int newY = objectRect.y + dY;
 
                 if (newY < yBottomLimit) {
@@ -151,7 +151,7 @@ public class PeekTrial extends Trial {
             }
 
             case E -> {
-                final int xRightLimit = boundRect.getTopRight().x - objectRect.width;
+                final int xRightLimit = boundRect.topRight().x - objectRect.width;
                 final int newX = objectRect.x + dX;
 
                 if (newX < xRightLimit) {

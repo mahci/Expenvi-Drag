@@ -83,7 +83,7 @@ public class BarTrial extends Trial {
 
     @Override
     public Point getEndPoint() {
-        return targetRect.getCenter();
+        return targetRect.center();
     }
 
     @Override
@@ -93,8 +93,8 @@ public class BarTrial extends Trial {
         switch (dir) {
             case N -> {
                 objectRect.setLocation(
-                        boundRect.getCenter().x - objectRect.width / 2,
-                        boundRect.getLoLeft().y - objectRect.height);
+                        boundRect.center().x - objectRect.width / 2,
+                        boundRect.loLeft().y - objectRect.height);
 
                 targetRect.setLocation(boundRect.getLocation());
 //                line1Rect.setLocation(boundRect.getLocation());
@@ -104,12 +104,12 @@ public class BarTrial extends Trial {
 
             case S -> {
                 objectRect.setLocation(
-                        boundRect.getCenter().x - objectRect.width / 2,
+                        boundRect.center().x - objectRect.width / 2,
                         boundRect.y);
 
                 targetRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - targetRect.height);
+                        boundRect.loLeft().y - targetRect.height);
 //                line1Rect.setLocation(boundRect.x, boundRect.getLoLeft().y - line1Rect.height);
 //                inRect.setLocation(boundRect.x, line1Rect.y - inRect.height);
 //                line2Rect.setLocation(boundRect.x, inRect.y - line2Rect.height);
@@ -118,10 +118,10 @@ public class BarTrial extends Trial {
             case E -> {
                 objectRect.setLocation(
                         boundRect.x,
-                        boundRect.getCenter().y - objectRect.height / 2);
+                        boundRect.center().y - objectRect.height / 2);
 
                 targetRect.setLocation(
-                        boundRect.getTopRight().x - targetRect.width,
+                        boundRect.topRight().x - targetRect.width,
                         boundRect.y);
 //                line1Rect.setLocation(boundRect.getUpRight().x - line1Rect.width, boundRect.y);
 //                inRect.setLocation(line1Rect.x - inRect.width, boundRect.y);
@@ -130,8 +130,8 @@ public class BarTrial extends Trial {
 
             case W -> {
                 objectRect.setLocation(
-                        boundRect.getTopRight().x - objectRect.width,
-                        boundRect.getCenter().y - objectRect.height / 2);
+                        boundRect.topRight().x - objectRect.width,
+                        boundRect.center().y - objectRect.height / 2);
 
                 targetRect.setLocation(boundRect.getLocation());
 //                line1Rect.setLocation(boundRect.getLocation());

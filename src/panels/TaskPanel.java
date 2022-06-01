@@ -91,7 +91,7 @@ public class TaskPanel extends JLayeredPane {
 
     protected void showTrial(int trNum) { }
 
-    protected boolean isHit() {
+    protected boolean checkHit() {
         return false;
     }
 

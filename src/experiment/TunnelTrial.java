@@ -19,6 +19,7 @@ public class TunnelTrial extends Trial implements Cloneable {
     public MoRectangle startTextRect = new MoRectangle();
 
     public Line2D.Double startLine = new Line2D.Double();
+    public Line2D.Double endLine = new Line2D.Double();
 
     // Variables
     private Experiment.DIRECTION dir;
@@ -141,7 +142,8 @@ public class TunnelTrial extends Trial implements Cloneable {
                         boundRect.x + boundRect.width - startTextRect.width,
                         line2Rect.y + line2Rect.height);
 
-                startLine.setLine(inRect.getTopRight(), inRect.getLoRight());
+                startLine.setLine(inRect.topRight(), inRect.loRight());
+                endLine.setLine(inRect.topLeft(), inRect.loLeft());
             }
 
             case E -> {
@@ -150,7 +152,8 @@ public class TunnelTrial extends Trial implements Cloneable {
                 line2Rect.setLocation(boundRect.x, inRect.y + inRect.height);
                 startTextRect.setLocation(boundRect.x, line2Rect.y + line2Rect.height);
 
-                startLine.setLine(inRect.getTopLeft(), inRect.getLoLeft());
+                startLine.setLine(inRect.topLeft(), inRect.loLeft());
+                endLine.setLine(inRect.topRight(), inRect.loRight());
             }
 
             case N -> {
@@ -163,7 +166,8 @@ public class TunnelTrial extends Trial implements Cloneable {
                 inRect.setLocation(line2Rect.x + line2Rect.width, boundRect.y);
                 line1Rect.setLocation(inRect.x + inRect.width, boundRect.y);
 
-                startLine.setLine(inRect.getLoLeft(), inRect.getLoRight());
+                startLine.setLine(inRect.loLeft(), inRect.loRight());
+                endLine.setLine(inRect.topLeft(), inRect.topRight());
             }
 
             case S -> {
@@ -174,7 +178,8 @@ public class TunnelTrial extends Trial implements Cloneable {
                 inRect.setLocation(line2Rect.x + line2Rect.width, boundRect.y);
                 line1Rect.setLocation(inRect.x + inRect.width, boundRect.y);
 
-                startLine.setLine(inRect.getTopLeft(), inRect.getTopRight());
+                startLine.setLine(inRect.topLeft(), inRect.topRight());
+                endLine.setLine(inRect.loLeft(), inRect.loRight());
             }
         }
     }

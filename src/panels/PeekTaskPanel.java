@@ -96,7 +96,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     }
 
     @Override
-    protected boolean isHit() {
+    protected boolean checkHit() {
         return false;
     }
 

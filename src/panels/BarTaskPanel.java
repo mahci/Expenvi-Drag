@@ -101,7 +101,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void release() {
         if (mGrabbed) {
 
-            if (isHit()) {
+            if (checkHit()) {
                 hit();
             } else {
                 miss();
@@ -112,7 +112,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public boolean isHit() {
+    public boolean checkHit() {
         return mTrial.targetRect.contains(mTrial.objectRect);
     }
 

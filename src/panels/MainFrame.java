@@ -1,13 +1,12 @@
 package panels;
 
 import control.Server;
+import experiment.Experiment;
 import tools.Consts;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-
-import static experiment.Experiment.*;
 
 public class MainFrame extends JFrame implements MouseListener {
     private final static String NAME = "MainFrame/";
@@ -68,8 +67,8 @@ public class MainFrame extends JFrame implements MouseListener {
 
 //        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(2));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
-        mActivePanel = new PeekTaskPanel(panelDim).setTask(new PeekTask(1));
-//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
+//        mActivePanel = new PeekTaskPanel(panelDim).setTask(new PeekTask(1));
+        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

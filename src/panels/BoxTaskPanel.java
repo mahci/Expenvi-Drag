@@ -122,8 +122,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         final String TAG = NAME + "release";
         Out.d(TAG, mGrabbed);
         if (mGrabbed) {
-            Out.d(TAG, isHit());
-            if (isHit()) {
+            Out.d(TAG, checkHit());
+            if (checkHit()) {
 //                moveObjInside();
                 hit();
             } else {
@@ -175,7 +175,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public boolean isHit() {
+    public boolean checkHit() {
         return mTrial.targetRect.contains(getCursorPos());
 //        return mTrial.targetPanel.getBounds().contains(getCursorPos());
     }

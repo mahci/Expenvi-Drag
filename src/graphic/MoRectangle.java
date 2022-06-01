@@ -73,23 +73,23 @@ public class MoRectangle extends Rectangle {
         }
     }
 
-    public Point getTopLeft() {
+    public Point topLeft() {
         return new Point(x, y);
     }
 
-    public Point getTopRight() {
+    public Point topRight() {
         return new Point(x + width, y);
     }
 
-    public Point getLoLeft() {
+    public Point loLeft() {
         return new Point(x, y + height);
     }
 
-    public Point getLoRight() {
+    public Point loRight() {
         return new Point(x + width, y + height);
     }
 
-    public Point getCenter() {
+    public Point center() {
         return new Point((int) getCenterX(), (int) getCenterY());
     }
 
@@ -130,10 +130,10 @@ public class MoRectangle extends Rectangle {
     }
 
     public String printCorners() {
-        String resSB = "[" + getTopLeft().x + "," + getTopLeft().y + "]" +
-                "[" + getTopRight().x + "," + getTopRight().y + "]" +
-                "[" + getLoRight().x + "," + getLoRight().y + "]" +
-                "[" + getLoLeft().x + "," + getLoLeft().y + "]";
+        String resSB = "[" + topLeft().x + "," + topLeft().y + "]" +
+                "[" + topRight().x + "," + topRight().y + "]" +
+                "[" + loRight().x + "," + loRight().y + "]" +
+                "[" + loLeft().x + "," + loLeft().y + "]";
         return resSB;
     }
 

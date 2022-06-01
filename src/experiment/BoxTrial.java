@@ -89,7 +89,7 @@ public class BoxTrial extends Trial {
 
     @Override
     public Point getEndPoint() {
-        return targetRect.getCenter();
+        return targetRect.center();
 //        final Rectangle tgtRect = targetPanel.getBounds();
 //        return new Point((int) tgtRect.getCenterX(), (int) tgtRect.getCenterY());
     }
@@ -104,7 +104,7 @@ public class BoxTrial extends Trial {
                 Out.d(TAG, "dir: N");
                 objectRect.setLocation(
                         (int) (boundRect.getCenterX() - objectRect.width / 2),
-                        boundRect.getLoLeft().y - objectRect.width);
+                        boundRect.loLeft().y - objectRect.width);
                 targetRect.setLocation(boundRect.getLocation());
             }
 
@@ -115,7 +115,7 @@ public class BoxTrial extends Trial {
                         boundRect.y);
                 targetRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - targetRect.width);
+                        boundRect.loLeft().y - targetRect.width);
             }
 
             case E -> {
@@ -124,14 +124,14 @@ public class BoxTrial extends Trial {
                         boundRect.x,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
                 targetRect.setLocation(
-                        boundRect.getTopRight().x - targetRect.width,
+                        boundRect.topRight().x - targetRect.width,
                         boundRect.y);
             }
 
             case W -> {
                 Out.d(TAG, "dir: W");
                 objectRect.setLocation(
-                        boundRect.getTopRight().x - objectRect.width,
+                        boundRect.topRight().x - objectRect.width,
                         (int) (boundRect.getCenterY() - objectRect.width / 2));
                 targetRect.setLocation(boundRect.getLocation());
             }
@@ -140,17 +140,17 @@ public class BoxTrial extends Trial {
                 Out.d(TAG, "dir: NE");
                 objectRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - objectRect.width);
+                        boundRect.loLeft().y - objectRect.width);
                 targetRect.setLocation(
-                        boundRect.getTopRight().x - targetRect.width,
+                        boundRect.topRight().x - targetRect.width,
                         boundRect.y);
             }
 
             case NW -> {
                 Out.d(TAG, "dir: NW");
                 objectRect.setLocation(
-                        boundRect.getLoRight().x - objectRect.width,
-                        boundRect.getLoRight().y - objectRect.width);
+                        boundRect.loRight().x - objectRect.width,
+                        boundRect.loRight().y - objectRect.width);
                 targetRect.setLocation(boundRect.getLocation());
             }
 
@@ -158,18 +158,18 @@ public class BoxTrial extends Trial {
                 Out.d(TAG, "dir: SE");
                 objectRect.setLocation(boundRect.getLocation());
                 targetRect.setLocation(
-                        boundRect.getLoRight().x - targetRect.width,
-                        boundRect.getLoRight().y - targetRect.width);
+                        boundRect.loRight().x - targetRect.width,
+                        boundRect.loRight().y - targetRect.width);
             }
 
             case SW -> {
                 Out.d(TAG, "dir: SW");
                 objectRect.setLocation(
-                        boundRect.getTopRight().x - objectRect.width,
+                        boundRect.topRight().x - objectRect.width,
                         boundRect.y);
                 targetRect.setLocation(
                         boundRect.x,
-                        boundRect.getLoLeft().y - targetRect.width);
+                        boundRect.loLeft().y - targetRect.width);
             }
             
         }

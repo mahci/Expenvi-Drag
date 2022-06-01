@@ -21,6 +21,13 @@ public class MoGraphics {
         g2d.drawLine((int)line.getX1(), (int)line.getY1(), (int)line.getX2(), (int)line.getY2());
     }
 
+    public void drawLines(Color color, Line2D... lines) {
+        g2d.setColor(color);
+        for (Line2D line : lines) {
+            g2d.drawLine((int)line.getX1(), (int)line.getY1(), (int)line.getX2(), (int)line.getY2());
+        }
+    }
+
     public void drawCircle(Color color, MoCircle circ) {
         g2d.setColor(color);
         g2d.draw(circ);

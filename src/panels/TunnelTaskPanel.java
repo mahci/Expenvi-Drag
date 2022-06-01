@@ -20,7 +20,6 @@ import static experiment.Experiment.*;
 
 public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "TunnelTaskPanel/";
-    private final String LOG = "Enter/";
 
     // Experiment
     private TunnelTrial mTrial;
@@ -37,6 +36,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     // Flags
     private boolean mTrialActive = false;
+    private boolean mDragOpen = true;
     private boolean mGrabbed = false;
     private boolean isInsideObj = false;
     private boolean highlightObj = false;
@@ -57,7 +57,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     private int mPosCount = 0;
 
-    private MoGraphics mMoGraphics;
+    private MoGraphics mGraphics;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -125,11 +125,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     @Override
     public void grab() {
         Point p = getCursorPos();
-        if (isValidGrab(p)) {
+
+        if (mDragOpen && checkGrab()) {
             mGrabbed = true;
             mLastGrabPos = p;
-        } else {
-            startError();
         }
     }
 
@@ -137,17 +136,24 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     public void drag() {
         mDragging = true;
 
-        if (mTrialStarted) {
-            if (!isValidDrag()) miss();
-        } else {
-            if (!isValidDrag()) startError();
+        if (mDragOpen) {
+            // Add cursor point to the traces
+            mVisualTrace.addPoint(getCursorPos());
+            mTrace.addNewPoint(getCursorPos());
+
+            if (!mTrialStarted) {
+                checkTrialStart();
+            } else { // Trial started
+                if (checkMiss()) miss();
+                else { // Dragging succesfully
+                    mExited = checkExit();
+                }
+            }
         }
     }
 
     @Override
     public void release() {
-
-        mGrabbed = false;
 
         if (mTrialStarted) { // Entered the tunnel
             if (mExited) hit();
@@ -156,11 +162,12 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             startError();
         }
 
+        mGrabbed = false;
+        mDragOpen = true;
     }
 
     @Override
-    public boolean isHit() {
-        Out.d(NAME, mMissed, mDragging, mEntered);
+    public boolean checkHit() {
         return !mMissed && mDragging && mEntered;
     }
 
@@ -182,7 +189,9 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mVisualTrace.reset();
         mTrace.reset();
 
-//        repaint();
+        mDragOpen = false; // Reactive when released (to avoind continuation of dragging)
+
+        repaint();
 
 //        mTrialActive = false;
 
@@ -197,8 +206,51 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         return !mTrial.isPointInside(grbP);
     }
 
+    private boolean checkGrab() {
+        if (mTrial.isPointInside(getCursorPos())) {
+            SOUNDS.playStartError();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void checkTrialStart() {
+        final String TAG = NAME + "checkTrialStart";
+
+        // Interesected the lines or the end line?
+        if (
+                mTrace.intersects(mTrial.line1Rect) ||
+                mTrace.intersects(mTrial.line2Rect) ||
+                mTrace.intersects(mTrial.endLine)) {
+            Out.d(TAG, "Touched the lines");
+            startError();
+        } else {
+            final Point lastP = mTrace.getLastPoint();
+
+            // Entered from the start
+            if (lastP != null && mTrial.inRect.contains(lastP) && mTrial.startLine.ptLineDist(lastP) > 0) {
+                mTrialStarted = true;
+                mTrace.reset(); // Reset to avoid start check again
+            }
+        }
+    }
+
+    private boolean checkMiss() {
+        return mTrace.intersects(mTrial.startLine);
+    }
+
+    private boolean checkExit() {
+        final Point lastP = mTrace.getLastPoint();
+        if (!mTrial.inRect.contains(lastP) && mTrace.intersects(mTrial.endLine)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private boolean isValidDrag() {
-        final String TAG = LOG + "isValidDrag";
+        final String TAG = NAME + "isValidDrag";
 
 //        final int traceSize = mTrace.size();
 
@@ -263,16 +315,16 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        mMoGraphics = new MoGraphics(g2d);
+        mGraphics = new MoGraphics(g2d);
 
         // Draw Targets
 //        mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
         if (mTrial != null) {
 //            Out.d(TAG, mTrialNum, mTrial.toString());
-            mMoGraphics.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
+            mGraphics.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
 
             // Draw Start text
-            mMoGraphics.drawString(COLORS.GREEN_700, FONTS.DIALOG,"Start",
+            mGraphics.drawString(COLORS.GREEN_700, FONTS.DIALOG,"Start",
                     mTrial.startTextRect.x,
                     mTrial.startTextRect.y + mTrial.startTextRect.height / 2);
 
@@ -280,16 +332,17 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             String stateText =
                     STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                     STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+            mGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // Draw trace
             final int rad = Trace.TRACE_R;
             for (Point tp : mVisualTrace.getPoints()) {
-                mMoGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
+                mGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
             }
 
             // Temp: show range circle
+            mGraphics.drawLines(COLORS.GRAY_400, mTrial.endLine);
 //            mMoGraphics.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
 //            mMoGraphics.drawCircle(COLORS.GREEN_700, showCirc);
 //            mMoGraphics.drawLine(COLORS.GREEN_700, mTrial.startLine);
@@ -330,7 +383,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        final String TAG = LOG + "mouseDragged";
+        final String TAG = NAME + "mouseDragged";
 
         if (mTrialActive && mGrabbed) {
 
@@ -338,10 +391,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
             final int dX = curP.x - mLastGrabPos.x;
             final int dY = curP.y - mLastGrabPos.y;
-
-            // Add cursor point to the traces
-            mVisualTrace.addPoint(curP);
-            mTrace.addNewPoint(curP);
 
             final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
 
