@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -27,6 +28,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     // Things to show
     private Trace mVisualTrace;
     private Trace mTrace;
+    private Trace mInTunnelTrace;
 
     private MoCircle showCirc = new MoCircle();
 
@@ -59,6 +61,9 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     private MoGraphics mGraphics;
 
+    private List<Integer> tunnelXs = new ArrayList<>();
+    private List<Integer> tunnelYs = new ArrayList<>();
+
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
         @Override
@@ -87,13 +92,13 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         // Init
         mVisualTrace = new Trace();
         mTrace = new Trace();
+        mInTunnelTrace = new Trace();
     }
 
     public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
         mTask = tunnelTask;
         return this;
     }
-
 
     /**
      * Show the trial
@@ -108,13 +113,28 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mMissed = false;
         mTrialStarted = false;
 
+        // Reset traces
         mVisualTrace.reset();
         mTrace.reset();
+        mInTunnelTrace.reset();
 
         mPosCount = 0;
 
         mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
-        Out.d(TAG, mTrial);
+//        Out.d(TAG, mTrial);
+
+        // Add all the points to the list
+        tunnelXs.clear();
+        tunnelYs.clear();
+        if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
+            for (int y = mTrial.inRect.minY(); y < mTrial.inRect.maxY(); y++) {
+                tunnelYs.add(y);
+            }
+        } else {
+            for (int x = mTrial.inRect.minX(); x < mTrial.inRect.maxX(); x++) {
+                tunnelXs.add(x);
+            }
+        }
 
         repaint();
 
@@ -139,11 +159,13 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         if (mDragOpen) {
             // Add cursor point to the traces
             mVisualTrace.addPoint(getCursorPos());
-            mTrace.addNewPoint(getCursorPos());
+
+            if (!mExited) mTrace.addNewPoint(getCursorPos()); // Only add to mTrace if not exited
 
             if (!mTrialStarted) {
                 checkTrialStart();
             } else { // Trial started
+                filterPoints();
                 if (checkMiss()) miss();
                 else { // Dragging succesfully
                     mExited = checkExit();
@@ -178,6 +200,12 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mTrialStarted = false;
 
         super.miss();
+    }
+
+    @Override
+    protected void hit() {
+        analyzeTrace();
+        super.hit();
     }
 
     @Override
@@ -231,7 +259,14 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             // Entered from the start
             if (lastP != null && mTrial.inRect.contains(lastP) && mTrial.startLine.ptLineDist(lastP) > 0) {
                 mTrialStarted = true;
-                mTrace.reset(); // Reset to avoid start check again
+                mTrace.reset(); // Reset the trace (to avoid start check again, to get points only after starting)
+
+                // Add all the inside points to the list
+                if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
+                    for (int y = mTrial.inRect.minY(); y <= mTrial.inRect.maxY(); y++) {
+
+                    }
+                }
             }
         }
     }
@@ -247,6 +282,61 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         } else {
             return false;
         }
+    }
+
+    private void filterPoints() {
+        final String TAG = NAME + "filterPoints";
+        Point p = getCursorPos();
+
+        if (mTrial.inRect.contains(p)) {
+//            Out.d(TAG, p);
+//            tunnelXs.remove((Integer) p.x);
+//            tunnelYs.remove((Integer) p.y);
+            mInTunnelTrace.addPoint(p);
+        }
+    }
+
+    private void analyzeTrace() {
+        final String TAG = NAME + "analyzeTrace";
+//        HashMap<Integer, List<Point>> map = new HashMap<>();
+        int inPointsCount = mInTunnelTrace.getNumPoints();
+        int totalNumInPoints = mTrace.getNumPoints();
+
+
+
+//        if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
+//            totalNumInPoints = mTrial.inRect.height;
+//            inPointsCount = tunnelYs.size();
+//            for (int y = mTrial.inRect.minY(); y <= mTrial.inRect.maxY(); y++) {
+////                map.put(y, new ArrayList<>());
+//                List<Point> yPoints = mTrace.getYPoints(y);
+//
+//                boolean toCount = true;
+//                for (Point p : yPoints) {
+//                    if (!mTrial.inRect.contains(p)) toCount = false;
+//                }
+//
+//                if (toCount) inPointsCount++;
+//            }
+//
+//        } else {
+//            totalNumInPoints = mTrial.inRect.width;
+//            inPointsCount = tunnelXs.size();
+//            for (int x = mTrial.inRect.minX(); x <= mTrial.inRect.maxX(); x++) {
+////                map.put(y, new ArrayList<>());
+//                List<Point> xPoints = mTrace.getXPoints(x);
+//
+//                boolean toCount = true;
+//                for (Point p : xPoints) {
+//                    if (!mTrial.inRect.contains(p)) toCount = false;
+//                }
+//
+//                if (toCount) inPointsCount++;
+//            }
+//        }
+
+        // Ratio of inside/total points
+        Out.d(TAG,"Accuracy", inPointsCount, totalNumInPoints, inPointsCount * 100.0 / totalNumInPoints);
     }
 
     private boolean isValidDrag() {
@@ -474,6 +564,30 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         public ArrayList<Point> getPoints() {
             return points;
+        }
+
+        public int getNumPoints() {
+            return points.size();
+        }
+
+        public List<Point> getXPoints(int x) {
+            List<Point> result = new ArrayList<>();
+
+            for (Point p : points) {
+                if (p.x == x) result.add(p);
+            }
+
+            return result;
+        }
+
+        public List<Point> getYPoints(int y) {
+            List<Point> result = new ArrayList<>();
+
+            for (Point p : points) {
+                if (p.y == y) result.add(p);
+            }
+
+            return result;
         }
 
         public Point getLastPoint() {
