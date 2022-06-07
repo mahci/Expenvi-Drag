@@ -88,6 +88,28 @@ public class PeekTrial extends Trial {
         return targetRect.center();
     }
 
+    public boolean isPointInRange(Point p) {
+        switch (dir) {
+            case N -> {
+                return p.y > tempRect.minY();
+            }
+
+            case S -> {
+                return p.y < tempRect.maxY();
+            }
+
+            case E -> {
+                return p.x < tempRect.maxX();
+            }
+
+            case W -> {
+                return p.x > tempRect.minX();
+            }
+        }
+
+        return false;
+    }
+
     @Override
     protected void positionElements() {
         super.positionElements();

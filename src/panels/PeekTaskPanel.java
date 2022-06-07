@@ -9,6 +9,8 @@ import tools.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -28,12 +30,48 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private int mTrialNum;
 
     // Trial
-    private boolean mGrabbed = false;
-    private boolean mWentInsideTarget = false;
-    private Point mGrabPos = new Point();
+    private boolean mTrialStarted = false;
+    private boolean mDragging = false;
+    private boolean mCurtainClosed = false;
+    private boolean mPastTempRect = false;
+    private Point mLastGrabPos = new Point();
+    private boolean mChangeCursor = true;
+    private boolean mHightlightObj = false;
 
-    // Executor
+    // Threading
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private Timer mDragTimer;
+
+    private int mEventCounter = 0;
+    private long mGrabTime;
+    private Set<Point> mPointSet = new HashSet<>();
+
+
+    // Actions ------------------------------------------------------------------------------------
+    private ActionListener mDrageListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (mTrialStarted) {
+                if (!mTrial.isPointInRange(getCursorPos())) {
+                    mTrialStarted = false;
+                } else {
+                    final int dX = getCursorPos().x - mLastGrabPos.x;
+                    final int dY = getCursorPos().y - mLastGrabPos.y;
+
+                    mLastGrabPos = getCursorPos();
+
+                    mTrial.moveObject(dX, dY);
+
+                    repaint();
+                }
+            } else {
+                if (mTrial.objectRect.contains(getCursorPos())) {
+                    mTrialStarted = true;
+                    mLastGrabPos = getCursorPos();
+                }
+            }
+        }
+    };
 
     // Methods ------------------------------------------------------------------------------------
 
@@ -56,6 +94,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
      */
     public PeekTaskPanel setTask(PeekTask peekTrial) {
         mTask = peekTrial;
+        mDragTimer = new Timer(0, mDrageListener);
+        mDragTimer.setDelay(5);
+
         return this;
     }
 
@@ -73,31 +114,39 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     public void grab() {
         if (mTrial.objectRect.contains(getCursorPos())) {
-            mGrabbed = true;
-            mGrabPos = getCursorPos();
+            mTrialStarted = true;
+            mDragging = true;
+
+            mLastGrabPos = getCursorPos();
+
+            mDragTimer.start();
         }
+    }
+
+    protected void drag(int dX, int dY) {
+        mTrial.moveObject(dX, dY);
+        repaint();
     }
 
     @Override
     public void release() {
         final String TAG = NAME + "release";
-        Out.d(TAG, mGrabbed);
-//        if (mGrabbed) {
-//            Out.d(TAG, isHit());
-//            if (isHit()) {
-////                moveObjInside();
-//                hit();
-//            } else {
-//                miss();
-//            }
-//        }
+        if (mTrialStarted) {
+            if (checkHit()) {
+//                moveObjInside();
+                hit();
+            } else {
+                miss();
+            }
+        }
 
-        mGrabbed = false;
+        mTrialStarted = false;
+        mDragTimer.stop();
     }
 
     @Override
     protected boolean checkHit() {
-        return false;
+        return mTrial.targetRect.contains(mTrial.objectRect);
     }
 
     // -------------------------------------------------------------------------------------------
@@ -141,6 +190,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         }
     }
 
+    // ----------------------------------------------------------------------------------------------
+
+
     // Listeners ------------------------------------------------------------------------------------
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -151,6 +203,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     public void mousePressed(MouseEvent e) {
         if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             grab();
+
+            mGrabTime = Utils.nowMillis();
         }
     }
 
@@ -158,6 +212,12 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     public void mouseReleased(MouseEvent e) {
         if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
             release();
+
+            Out.d(NAME, "Drag time | n(drag event)", Utils.nowMillis() - mGrabTime, mPointSet.size());
+//            Out.d(NAME, mPointSet);
+            mGrabTime = 0;
+            mEventCounter = 0;
+            mPointSet.clear();
         }
     }
 
@@ -173,21 +233,22 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseDragged(MouseEvent e) {
-
-        if (mGrabbed) {
-            final int dX = e.getX() - mGrabPos.x;
-            final int dY = e.getY() - mGrabPos.y;
-
-            mTrial.moveObject(dX, dY);
-
-            mGrabPos = e.getPoint();
-
-            repaint();
-        }
+        mEventCounter++;
+        mPointSet.add(e.getPoint());
+//        if (mTrialActive) {
+//            final int dX = e.getX() - mLastCurPos.x;
+//            final int dY = e.getY() - mLastCurPos.y;
+//
+//            mLastCurPos = e.getPoint();
+//
+//            drag(dX, dY);
+//
+//            repaint();
+//        }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        mouseDragged(e);
+//        mouseDragged(e);
     }
 }

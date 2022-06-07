@@ -93,6 +93,9 @@ public class MoRectangle extends Rectangle {
         return new Point((int) getCenterX(), (int) getCenterY());
     }
 
+    public int area() {
+        return height * width;
+    }
     /**
      * Fit a rectangle inside this
      * @param rect Rectangle
