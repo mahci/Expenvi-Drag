@@ -4,6 +4,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -35,8 +36,13 @@ public class Consts {
         public final static Color BLUE_900 = Color.decode("#0D47A1");
         public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 170);
 
+        public final static Color INDIGO_900 = Color.decode("#1A237E");
+
         public final static Color GREEN_700 = Color.decode("#388E3C");
         public final static Color GREEN_A400 = Color.decode("#00E676");
+
+        public final static Color YELLOW_800 = Color.decode("#F9A825");
+        public final static Color YELLOW_900 = Color.decode("#F57F17");
 
         public final static Color ORANGE_400 = Color.decode("#FFA726");
         public final static Color ORANGE_200 = Color.decode("#FFCC80");
@@ -113,6 +119,23 @@ public class Consts {
         }
     }
 
+    public static class CURSORS {
+        public static Cursor RESIZE_NS, RESIZE_EW, DEFAULT;
+
+        static {
+            RESIZE_NS = Toolkit.getDefaultToolkit().createCustomCursor(
+                    new ImageIcon("./res/Resize_NS.png").getImage(),
+                    new Point(8,10),
+                    "Resize_NS");
+            RESIZE_EW = Toolkit.getDefaultToolkit().createCustomCursor(
+                    new ImageIcon("./res/Resize_EW.png").getImage(),
+                    new Point(15,8),
+                    "Resize_NS");
+
+            DEFAULT = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+        }
+    }
+
     //-- Strings and related
     public static class STRINGS {
         public final static String SP = ";";
@@ -150,7 +173,5 @@ public class Consts {
 
 
     }
-
-
 
 }

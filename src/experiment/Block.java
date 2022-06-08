@@ -63,9 +63,8 @@ public class Block {
      * @return Trial
      */
     public Trial getTrial(int trNum) {
-        Out.d(NAME, trNum, mTrials.size());
         if (trNum > mTrials.size()) return null;
-        else return mTrials.get(trNum - 1);
+        else return cloneTrial(mTrials.get(trNum - 1));
     }
 
     /**
@@ -91,16 +90,13 @@ public class Block {
     }
 
     public void setTrialLocation(int trNum, Point loc) {
-        Out.d(NAME, "setTrialLocation trial ", trNum);
         mTrials.get(trNum - 1).setBoundRectLocation(loc);
         mTrials.get(trNum - 1).positionElements();
-        Out.d(NAME, this.toString());
     }
 
     public void positionAllTrialsElements() {
-        Out.d(NAME, "positionAllTrialsElements");
         for (Trial tr : mTrials) {
-            Out.d(NAME, tr.getClass());
+//            Out.d(NAME, tr.getClass());
             tr.positionElements();
         }
     }
@@ -114,15 +110,25 @@ public class Block {
         final String TAG = NAME + "dupeShuffleTrial";
 
         final int trInd = trNum - 1;
-        Gson gson = new Gson();
+
+        final Gson gson = new Gson();
         final String trialJSON = gson.toJson(mTrials.get(trInd));
         final Class<? extends Trial> trialType = mTrials.get(trInd).getClass();
 
 //        final int lastInd = mTrials.size() - 1;
         final int insertInd = Utils.randInt(trInd + 1, mTrials.size());
         mTrials.add(insertInd, gson.fromJson(trialJSON, trialType));
+        Out.d(TAG, "insertInd | total", insertInd, mTrials.size());
 
         return insertInd + 1; // Return the number
+    }
+
+    public Trial cloneTrial(Trial inTr) {
+        final Gson gson = new Gson();
+        final String trialJSON = gson.toJson(inTr);
+        final Class<? extends Trial> trialType = inTr.getClass();
+
+        return gson.fromJson(trialJSON, trialType);
     }
 
     @Override

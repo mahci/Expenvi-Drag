@@ -26,17 +26,25 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     // Experiment
     private PeekTrial mTrial;
-    private int mBlockNum;
-    private int mTrialNum;
 
     // Trial
     private boolean mTrialStarted = false;
+    private boolean mTempEntered = false;
     private boolean mDragging = false;
     private boolean mCurtainClosed = false;
     private boolean mPastTempRect = false;
     private Point mLastGrabPos = new Point();
     private boolean mChangeCursor = true;
     private boolean mHightlightObj = false;
+
+    // Colors
+    private Color COLOR_OBJECT = COLORS.BLUE_900;
+    private Color COLOR_OBJ_HIGHLIGHT = COLORS.YELLOW_900;
+    private Color COLOR_OBJ_DEFAULT = COLORS.BLUE_900;
+    private Color COLOR_TARGET_RECT = COLORS.GRAY_500;
+    private Color COLOR_TEMP_RECT = COLORS.GREEN_700;
+    private Color COLOR_CURTAIN = COLORS.ORANGE_200;
+    private Color COLOR_TEXT = COLORS.GRAY_900;
 
     // Threading
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -96,7 +104,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         mTask = peekTrial;
         mDragTimer = new Timer(0, mDrageListener);
         mDragTimer.setDelay(5);
-
+        Out.d(NAME, "1 mm to px = ", Utils.mm2px(1));
         return this;
     }
 
@@ -106,6 +114,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
         Out.d(TAG, mTrial);
+
+        // Set flags
+        mTempEntered = false;
 
         repaint();
         mTrialActive = true;
@@ -123,8 +134,14 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         }
     }
 
-    protected void drag(int dX, int dY) {
-        mTrial.moveObject(dX, dY);
+    protected void drag() {
+//        mTrial.moveObject(dX, dY);
+        mEventCounter++;
+        mPointSet.add(getCursorPos());
+
+        // Only set it once per trial
+        if (!mTempEntered && mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+
         repaint();
     }
 
@@ -138,6 +155,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             } else {
                 miss();
             }
+
         }
 
         mTrialStarted = false;
@@ -146,7 +164,20 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     protected boolean checkHit() {
-        return mTrial.targetRect.contains(mTrial.objectRect);
+        return mTempEntered && mTrial.targetRect.contains(mTrial.objectRect);
+    }
+
+    private void enableObjHint(boolean enable) {
+        if (enable) {
+            if (mHightlightObj) COLOR_OBJECT = COLOR_OBJ_HIGHLIGHT;
+            if (mChangeCursor) {
+                if (mTrial.axis.equals(AXIS.VERTICAL)) setCursor(CURSORS.RESIZE_NS);
+                else setCursor(CURSORS.RESIZE_EW);
+            }
+        } else {
+            COLOR_OBJECT = COLOR_OBJ_DEFAULT;
+            setCursor(CURSORS.DEFAULT);
+        }
     }
 
     // -------------------------------------------------------------------------------------------
@@ -166,22 +197,22 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         if (mTrial != null) {
 
             // Draw the target
-            mMoGraphics.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
+            mMoGraphics.fillRectangle(COLOR_TARGET_RECT, mTrial.targetRect);
 
             // Draw the temp rectangle
-            mMoGraphics.fillRectangle(COLORS.GREEN_700, mTrial.tempRect);
+            mMoGraphics.fillRectangle(COLOR_TEMP_RECT, mTrial.tempRect);
 
             // Draw curtain
-            mMoGraphics.fillRectangle(COLORS.ORANGE_200, mTrial.curtainRect);
+            mMoGraphics.fillRectangle(COLOR_CURTAIN, mTrial.curtainRect);
 
             // Draw the object
-            mMoGraphics.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
+            mMoGraphics.fillRectangle(COLOR_OBJECT, mTrial.objectRect);
 
             // Draw block-trial num
             String stateText =
                     Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
                             Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mMoGraphics.drawString(Consts.COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+            mMoGraphics.drawString(COLOR_TEXT, Consts.FONTS.STATUS, stateText,
                     getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
             // TEMP: Draw boundRect
@@ -189,9 +220,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         }
     }
-
-    // ----------------------------------------------------------------------------------------------
-
 
     // Listeners ------------------------------------------------------------------------------------
     @Override
@@ -233,8 +261,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        mEventCounter++;
-        mPointSet.add(e.getPoint());
+        drag();
 //        if (mTrialActive) {
 //            final int dX = e.getX() - mLastCurPos.x;
 //            final int dY = e.getY() - mLastCurPos.y;
@@ -249,6 +276,12 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        if (mTrialActive) {
+            if (mTrial.objectRect.contains(e.getPoint())) enableObjHint(true);
+            else enableObjHint(false);
+
+            repaint();
+        }
 //        mouseDragged(e);
     }
 }

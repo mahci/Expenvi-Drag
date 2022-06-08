@@ -16,7 +16,7 @@ public class Out {
         toLogList.add("Enter");
         toLogList.add("MoCircle");
         toLogList.add("Server");
-//        toLogList.add("Block");
+        toLogList.add("Block");
 //        toLogList.add("BoxTrial");
         toLogList.add("TunnelTrial");
     }

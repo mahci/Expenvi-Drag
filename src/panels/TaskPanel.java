@@ -142,7 +142,7 @@ public class TaskPanel extends JLayeredPane {
 
         // Shuffle back and reposition the next ones
         final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
-//        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
+        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
         if (findAllTrialsPosition(trNewInd) == 1) {
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
