@@ -128,8 +128,8 @@ public class MainFrame extends JFrame implements MouseListener {
         if (mActivePanel != null) mActivePanel.release();
     }
 
-    public void cancel() {
-        if (mActivePanel != null) mActivePanel.cancel();
+    public void revert() {
+        if (mActivePanel != null) mActivePanel.revert();
     }
 
 

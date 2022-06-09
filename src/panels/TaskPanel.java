@@ -101,7 +101,7 @@ public class TaskPanel extends JLayeredPane {
 
     protected void release() { }
 
-    protected void cancel() { }
+    protected void revert() { }
 
     protected void startError() {
         final String TAG = NAME + "startError";
@@ -117,7 +117,6 @@ public class TaskPanel extends JLayeredPane {
         mTrialActive = false;
 
         Out.d(TAG, "Number of ");
-
 
         // Wait a certain delay, then show the next trial (or next block)
         Out.d(TAG, mTrialNum, mBlock.getNumTrials());

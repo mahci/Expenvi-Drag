@@ -8,6 +8,8 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
 
+import static tools.Consts.*;
+
 public class Server {
     private final static String NAME = "Server/";
 
@@ -89,9 +91,9 @@ public class Server {
                         if (memo.getAction().equals("DRAG")) {
 
                             switch (memo.getMode()) {
-                                case "GRAB" -> MainFrame.get().grab();
-                                case "REL" -> MainFrame.get().release();
-                                case "CANCEL" -> MainFrame.get().cancel();
+                                case STRINGS.GRAB -> MainFrame.get().grab();
+                                case STRINGS.RELEASE -> MainFrame.get().release();
+                                case STRINGS.REVERT -> MainFrame.get().revert();
                             }
                         }
 

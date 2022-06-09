@@ -148,10 +148,29 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     public void release() {
         final String TAG = NAME + "release";
+
         if (mTrialStarted) {
             if (checkHit()) {
 //                moveObjInside();
                 hit();
+            } else {
+                miss();
+            }
+
+        }
+
+        mTrialStarted = false;
+        mDragTimer.stop();
+    }
+
+    @Override
+    protected void revert() {
+        final String TAG = NAME + "revert";
+
+        if (mTrialStarted) {
+            if (mTrial.tempRect.contains(mTrial.objectRect)) {
+                hit();
+                mTrial.revertObject();
             } else {
                 miss();
             }
@@ -178,6 +197,10 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             COLOR_OBJECT = COLOR_OBJ_DEFAULT;
             setCursor(CURSORS.DEFAULT);
         }
+    }
+
+    private void revertObjToTarget() {
+        mPointSet.add(getCursorPos());
     }
 
     // -------------------------------------------------------------------------------------------
@@ -282,6 +305,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
             repaint();
         }
-//        mouseDragged(e);
+
+        if (mDragging) {
+            drag();
+        }
     }
 }

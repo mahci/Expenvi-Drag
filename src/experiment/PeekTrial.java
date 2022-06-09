@@ -16,6 +16,10 @@ public class PeekTrial extends Trial {
     public MoRectangle tempRect = new MoRectangle();
     public MoRectangle targetRect = new MoRectangle();
 
+    // Init positions for reverting
+    private Point initObjPosition = new Point();
+//    private Point initCurtainPosition = new Point();
+
     // Vraiables
     public AXIS axis;
 
@@ -24,6 +28,7 @@ public class PeekTrial extends Trial {
     private int dist;
     private int len;
     private int tempW;
+
 
     /**
      * Constructor
@@ -147,6 +152,10 @@ public class PeekTrial extends Trial {
                 curtainRect.setLocation(boundRect.topLeft());
             }
         }
+
+        // Set the initial positions
+        initObjPosition = objectRect.getLocation();
+//        initCurtainPosition = curtainRect.getLocation();
     }
 
     public void moveObject(int dX, int dY) {
@@ -192,6 +201,10 @@ public class PeekTrial extends Trial {
                 }
             }
         }
+    }
+
+    public void revertObject() {
+        moveObject(initObjPosition.x - objectRect.x, initObjPosition.y - objectRect.y);
     }
 
     @Override
