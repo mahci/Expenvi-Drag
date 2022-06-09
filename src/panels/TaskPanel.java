@@ -228,7 +228,7 @@ public class TaskPanel extends JLayeredPane {
         final String TAG = NAME + "findAllTrialsPosition";
 
         final int minNtDist = Utils.mm2px(Experiment.BoxTask.NT_DIST_mm);
-        final int maxNtDist = minNtDist + Utils.mm2px(50);
+//        final int maxNtDist = minNtDist + Utils.mm2px(50);
 
         if (startTrNum == mBlock.getNumTrials() + 1) return 0;
 

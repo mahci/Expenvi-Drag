@@ -22,6 +22,9 @@ import static experiment.Experiment.*;
 public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "TunnelTaskPanel/";
 
+    // Constants
+    private final int DRAG_TICK = 5; // millisecs
+
     // Experiment
     private TunnelTrial mTrial;
 
@@ -53,6 +56,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private Experiment.DIRECTION mDir;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private Timer mDragTimer;
 
     private long t0;
     private boolean firstMove;
@@ -69,6 +73,27 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         @Override
         public void actionPerformed(ActionEvent e) {
             hit();
+        }
+    };
+
+    private ActionListener mDrageListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            if (mTrialActive && mGrabbed) {
+
+                final Point curP = getCursorPos();
+
+                final int dX = curP.x - mLastGrabPos.x;
+                final int dY = curP.y - mLastGrabPos.y;
+
+                final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
+
+                if (dragDist > Utils.mm2px(TunnelTask.DRAG_THRSH_mm)) drag();
+
+                repaint();
+            }
+
         }
     };
 
@@ -97,6 +122,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
         mTask = tunnelTask;
+
+        mDragTimer = new Timer(0, mDrageListener);
+        mDragTimer.setDelay(DRAG_TICK);
+
         return this;
     }
 
@@ -149,6 +178,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         if (mDragOpen && checkGrab()) {
             mGrabbed = true;
             mLastGrabPos = p;
+
+            mDragTimer.start();
         }
     }
 
@@ -431,8 +462,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                 mGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
             }
 
-            // Temp: show range circle
-            mGraphics.drawLines(COLORS.GRAY_400, mTrial.endLine);
+            // Temp draws
+//            mGraphics.drawLines(COLORS.GRAY_400, mTrial.endLine);
 //            mMoGraphics.drawRectangle(COLORS.GRAY_400, mTrial.inRect);
 //            mMoGraphics.drawCircle(COLORS.GREEN_700, showCirc);
 //            mMoGraphics.drawLine(COLORS.GREEN_700, mTrial.startLine);
@@ -475,20 +506,19 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     public void mouseDragged(MouseEvent e) {
         final String TAG = NAME + "mouseDragged";
 
-        if (mTrialActive && mGrabbed) {
-
-            final Point curP = e.getPoint();
-
-            final int dX = curP.x - mLastGrabPos.x;
-            final int dY = curP.y - mLastGrabPos.y;
-
-            final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
-
-            if (dragDist > Utils.mm2px(TunnelTask.DRAG_THRSH_mm)) drag();
-
-            repaint();
-
-        }
+//        if (mTrialActive && mGrabbed) {
+//
+//            final Point curP = e.getPoint();
+//
+//            final int dX = curP.x - mLastGrabPos.x;
+//            final int dY = curP.y - mLastGrabPos.y;
+//
+//            final double dragDist = sqrt(pow(dX, 2) + pow(dY, 2));
+//
+//            if (dragDist > Utils.mm2px(TunnelTask.DRAG_THRSH_mm)) drag();
+//
+//            repaint();
+//        }
     }
 
     @Override

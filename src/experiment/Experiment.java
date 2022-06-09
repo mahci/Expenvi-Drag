@@ -103,13 +103,13 @@ public class Experiment {
 
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {
-        private static final int[] OBJECT_WIDTHS = new int[] {13, 42}; // Object widths
-        private static final int[] TARGET_WIDTHS = new int[] {80, 160}; // Tunnel widths (mm)
+        private static final int[] OBJECT_WIDTHS = new int[] {13, 20}; // Object widths
+        private static final int[] TARGET_WIDTHS = new int[] {40, 60}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
 
-        public static final int DIST_mm = 30; // mm
+        public static final int DIST_mm = 20; // mm
 
-        public static final double NT_DIST_mm = 30;
+        public static final double NT_DIST_mm = 20;
 
         public BoxTask(int nBlocks) {
             super(nBlocks);
@@ -151,7 +151,7 @@ public class Experiment {
     // -------------------------------------------------------------------------------------
     public static class BarTask extends Task {
         private static final int[] OBJECT_WIDTHS = new int[] {2, 5}; // Object widths (mm)
-        private static final int[] TARGET_WIDTHS = new int[] {8, 10}; // Tunnel widths (mm)
+        private static final int[] TARGET_WIDTHS = new int[] {6, 8}; // Tunnel widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int DIST_mm = 50; // mm
@@ -250,7 +250,8 @@ public class Experiment {
     public static class TunnelTask extends Task {
         //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
         private final int[] DIRS = new int[]{0, 1, 2, 3};
-        private final int[] DISTS = new int[]{150}; // Tunnel length (in mm)
+//        private final int[] DISTS = new int[]{150}; // Tunnel length (in mm)
+        private final int[] DISTS = new int[]{100}; // Tunnel length (in mm)
         private final int[] WIDTHS = new int[]{5, 10}; // Tunnel widths (in mm)
 
         public final double LINES_W_mm = 1; // Targets width

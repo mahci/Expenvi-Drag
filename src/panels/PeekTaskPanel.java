@@ -20,6 +20,9 @@ import static tools.Consts.*;
 public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, MouseListener {
     private final String NAME = "PeekTaskPanel/";
 
+    // Constants
+    private final int DRAG_TICK = 5; // millisecs
+
     // Keys
     private KeyStroke KS_SPACE;
     private KeyStroke KS_RA; // Right arrow
@@ -59,26 +62,11 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private ActionListener mDrageListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (mTrialStarted) {
-                if (!mTrial.isPointInRange(getCursorPos())) {
-                    mTrialStarted = false;
-                } else {
-                    final int dX = getCursorPos().x - mLastGrabPos.x;
-                    final int dY = getCursorPos().y - mLastGrabPos.y;
-
-                    mLastGrabPos = getCursorPos();
-
-                    mTrial.moveObject(dX, dY);
-
-                    repaint();
-                }
-            } else {
-                if (mTrial.objectRect.contains(getCursorPos())) {
-                    mTrialStarted = true;
-                    mLastGrabPos = getCursorPos();
-                }
+            if (mDragging) {
+                drag();
             }
         }
+
     };
 
     // Methods ------------------------------------------------------------------------------------
@@ -103,7 +91,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     public PeekTaskPanel setTask(PeekTask peekTrial) {
         mTask = peekTrial;
         mDragTimer = new Timer(0, mDrageListener);
-        mDragTimer.setDelay(5);
+        mDragTimer.setDelay(DRAG_TICK);
         Out.d(NAME, "1 mm to px = ", Utils.mm2px(1));
         return this;
     }
@@ -139,8 +127,29 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         mEventCounter++;
         mPointSet.add(getCursorPos());
 
-        // Only set it once per trial
-        if (!mTempEntered && mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+        if (mTrialStarted) {
+
+            // Only set it once per trial
+            if (!mTempEntered && mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+
+            if (!mTrial.isPointInRange(getCursorPos())) {
+                mTrialStarted = false;
+            } else {
+                final int dX = getCursorPos().x - mLastGrabPos.x;
+                final int dY = getCursorPos().y - mLastGrabPos.y;
+
+                mLastGrabPos = getCursorPos();
+
+                mTrial.moveObject(dX, dY);
+
+                repaint();
+            }
+        } else {
+            if (mTrial.objectRect.contains(getCursorPos())) {
+                mTrialStarted = true;
+                mLastGrabPos = getCursorPos();
+            }
+        }
 
         repaint();
     }
@@ -160,6 +169,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         }
 
         mTrialStarted = false;
+        mDragging = false;
+
         mDragTimer.stop();
     }
 
@@ -284,7 +295,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        drag();
+//        drag();
 //        if (mTrialActive) {
 //            final int dX = e.getX() - mLastCurPos.x;
 //            final int dY = e.getY() - mLastCurPos.y;

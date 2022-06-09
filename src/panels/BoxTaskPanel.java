@@ -157,21 +157,23 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     public void moveObjInside() {
+        if (mTrial != null) {
 //        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
 //        final Rectangle objBounds = mObject.getBounds();
-        final Rectangle intersection = mTrial.targetRect.intersection(mTrial.objectRect);
+            final Rectangle intersection = mTrial.targetRect.intersection(mTrial.objectRect);
 
-        final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
-        final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
+            final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
+            final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
 
-        final int dMinY =  (int) (intersection.getMinY() - mTrial.objectRect.getMinY());
-        final int dMaxY =  (int) (intersection.getMaxY() - mTrial.objectRect.getMaxY());
+            final int dMinY = (int) (intersection.getMinY() - mTrial.objectRect.getMinY());
+            final int dMaxY = (int) (intersection.getMaxY() - mTrial.objectRect.getMaxY());
 
 //        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
-        mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);
+            mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);
 //        mObjectLbl.translate(dMinX + dMaxX, dMinY + dMaxY);
 
-        repaint();
+            repaint();
+        }
     }
 
     @Override

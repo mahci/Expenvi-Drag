@@ -19,7 +19,7 @@ public class Consts {
         public final static int APPLE_DISP_PPI = 109;
         public final static int BENQ_PPI = 89;
 
-        public final static int DPI = APPLE_DISP_PPI;
+        public final static int DPI = MACBOOK_PPI;
         public final static double MM_in_INCH = 25.4;
     }
 
