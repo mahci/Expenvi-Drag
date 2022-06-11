@@ -1,11 +1,15 @@
 package graphic;
 
-import experiment.Experiment;
 import tools.Utils;
-
 import java.awt.*;
 
+import static tools.Consts.*;
+
 public class MoRectangle extends Rectangle {
+
+    public Point topLeft, topRight, bottomLeft, bottomRight;
+    public Point center;
+    public int minX, maxX, minY, maxY;
 
     public MoRectangle() {
 
@@ -16,6 +20,8 @@ public class MoRectangle extends Rectangle {
         this.y = y;
         this.width = width;
         this.height = height;
+
+        updateSpecs();
     }
 
     public MoRectangle(int cx, int cy, int margin) {
@@ -23,6 +29,8 @@ public class MoRectangle extends Rectangle {
         this.y = cy - margin;
         this.width = 2 * margin;
         this.height = 2 * margin;
+
+        updateSpecs();
     }
 
     public MoRectangle(Point center, int margin) {
@@ -30,70 +38,177 @@ public class MoRectangle extends Rectangle {
         this.y = center.y - margin;
         this.width = 2 * margin;
         this.height = 2 * margin;
+
+        updateSpecs();
     }
 
-    public void setLocationLoLeft(Point loLeftP) {
-        x = loLeftP.x;
-        y = loLeftP.y - height;
+    public void setLocationTopLeft(Point topLeft) {
+        x = topLeft.x;
+        y = topLeft.y;
+
+        updateSpecs();
     }
 
-    public void setLocationTopRight(Point topRightR) {
-        x = topRightR.x - width;
-        y = topRightR.y;
+    public void setLocationTopRight(Point topRight) {
+        x = topRight.x - width;
+        y = topRight.y;
+
+        updateSpecs();
     }
 
-    public void resize(Experiment.DIRECTION dir, int dVt, int dHz) {
-        switch (dir) {
+    public void setLocationBottomLeft(Point bottomLeft) {
+        x = bottomLeft.x;
+        y = bottomLeft.y - height;
+
+        updateSpecs();
+    }
+
+    public void setLocationBottomRight(Point bottomRight) {
+        x = bottomRight.x;
+        y = bottomRight.y - height;
+
+        updateSpecs();
+    }
+
+    @Override
+    public void setLocation(Point p) {
+        super.setLocation(p);
+        updateSpecs();
+    }
+
+    @Override
+    public void setLocation(int x, int y) {
+        super.setLocation(x, y);
+        updateSpecs();
+    }
+
+    @Override
+    public void translate(int dx, int dy) {
+        super.translate(dx, dy);
+        updateSpecs();
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        super.setSize(width, height);
+        updateSpecs();
+    }
+
+    /**
+     * Set the height (location DOES NOT change)
+     * @param height New height
+     */
+    public void setHeight(int height) {
+        this.height = height;
+        updateSpecs();
+    }
+
+    /**
+     * Set the width (location DOES NOT change)
+     * @param width New width
+     */
+    public void setWidth(int width) {
+        this.width = width;
+        updateSpecs();
+    }
+
+    public void resizeDelta(DIRECTION side, int dH, int dW) {
+        switch (side) {
             case N -> {
-                final int newH = height - dVt;
-                if (newH > 0) {
+                final int newH = height - dH;
+                if (newH >= 0) {
                     height = newH;
-                    y += dVt;
+                    y += dH;
                 }
             }
             case S -> {
-                final int newH = height + dVt;
-                if (newH > 0) {
+                final int newH = height + dH;
+                if (newH >= 0) {
                     height = newH;
                 }
             }
             case E -> {
-                final int newW = width + dHz;
-                if (newW > 0) {
+                final int newW = width + dW;
+                if (newW >= 0) {
                     width = newW;
                 }
             }
             case W -> {
-                final int newW = width - dHz;
-                if (newW > 0) {
+                final int newW = width - dW;
+                if (newW >= 0) {
                     width = newW;
-                    x += dHz;
+                    x += dW;
                 }
             }
         }
+
+        updateSpecs();
     }
 
-    public Point topLeft() {
-        return new Point(x, y);
+    /**
+     * Set the W/H based on the direction
+     * @param side DIRECTION
+     * @param newH New height (-1 if to be ignored)
+     * @param newW New width (-1 if to be ignored)
+     */
+    public void resizeWH(DIRECTION side, int newH, int newW) {
+        if (newH < 0 && newW < 0) return; // Only one of the args can be ignored
+
+        switch (side) {
+            case N -> {
+                y += newH - height;
+                height = newH;
+            }
+            case S -> {
+                height = newH;
+            }
+            case E -> {
+                width = newW;
+            }
+            case W -> {
+                x += newW - width;
+                width = newW;
+            }
+        }
+
+        updateSpecs();
     }
 
-    public Point topRight() {
-        return new Point(x + width, y);
+    /**
+     * Resize by changing the X or Y (based on the direction)
+     */
+    public void resizeXY(DIRECTION side, int newX, int newY) {
+        if (newX < 0 && newY < 0) return; // Only one of the args can be ignored
+
+        switch (side) {
+            case N -> {
+                if (newY <= maxY) { // Height can't be < 0
+                    y = newY;
+                    height = maxY - newY;
+                }
+            }
+            case S -> {
+                if (newY >= minY) { // Height can't be < 0
+                    height = newY - minY;
+                }
+            }
+            case E -> {
+                if (newX >= minX) { // Width can't be < 0
+                    width = newX - x;
+                }
+            }
+            case W -> {
+                if (newX <= maxX) { // Width can't be < 0
+                    x = newX;
+                    width = maxX - newX;
+                }
+            }
+        }
+
+        updateSpecs();
     }
 
-    public Point loLeft() {
-        return new Point(x, y + height);
-    }
-
-    public Point loRight() {
-        return new Point(x + width, y + height);
-    }
-
-    public Point center() {
-        return new Point((int) getCenterX(), (int) getCenterY());
-    }
-
-    public int area() {
+    public int getArea() {
         return height * width;
     }
     /**
@@ -110,22 +225,6 @@ public class MoRectangle extends Rectangle {
         }
     }
 
-    public int minX() {
-        return x;
-    }
-
-    public int minY() {
-        return y;
-    }
-
-    public int maxX() {
-        return x + width;
-    }
-
-    public int maxY() {
-        return y + height;
-    }
-
     public MoRectangle getMarginedRectangel(int margin) {
         return new MoRectangle(
                 x - margin, y - margin,
@@ -133,11 +232,28 @@ public class MoRectangle extends Rectangle {
     }
 
     public String printCorners() {
-        String resSB = "[" + topLeft().x + "," + topLeft().y + "]" +
-                "[" + topRight().x + "," + topRight().y + "]" +
-                "[" + loRight().x + "," + loRight().y + "]" +
-                "[" + loLeft().x + "," + loLeft().y + "]";
+        String resSB = "[" + topLeft.x + "," + topLeft.y + "]" +
+                "[" + topRight.x + "," + topRight.y + "]" +
+                "[" + bottomRight.x + "," + bottomRight.y + "]" +
+                "[" + bottomLeft.x + "," + bottomLeft.y + "]";
         return resSB;
+    }
+
+    /**
+     * Set the corners based on the (x,y) and W/H
+     */
+    private void updateSpecs() {
+        topLeft = new Point(x, y);
+        topRight = new Point(x + width, y);
+        bottomLeft = new Point(x, y + height);
+        bottomRight = new Point(x + width, y + height);
+
+        center = Utils.intPoint(getCenterX(), getCenterY());
+
+        minX = topLeft.x;
+        maxX = topRight.x;
+        minY = topLeft.y;
+        maxY = bottomLeft.y;
     }
 
     @Override

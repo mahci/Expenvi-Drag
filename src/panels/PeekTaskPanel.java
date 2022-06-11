@@ -9,6 +9,7 @@ import tools.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -37,6 +38,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private boolean mCurtainClosed = false;
     private boolean mPastTempRect = false;
     private Point mLastGrabPos = new Point();
+    private Point mRelGrabPos = new Point();
     private boolean mChangeCursor = true;
     private boolean mHightlightObj = false;
 
@@ -117,6 +119,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             mDragging = true;
 
             mLastGrabPos = getCursorPos();
+            mRelGrabPos = Utils.subPoints(mLastGrabPos, mTrial.objectRect.getLocation());
 
             mDragTimer.start();
         }
@@ -127,31 +130,41 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         mEventCounter++;
         mPointSet.add(getCursorPos());
 
-        if (mTrialStarted) {
+//        final int dX = getCursorPos().x - mLastGrabPos.x;
+//        final int dY = getCursorPos().y - mLastGrabPos.y;
 
-            // Only set it once per trial
-            if (!mTempEntered && mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+//        mLastGrabPos = getCursorPos();
 
-            if (!mTrial.isPointInRange(getCursorPos())) {
-                mTrialStarted = false;
-            } else {
-                final int dX = getCursorPos().x - mLastGrabPos.x;
-                final int dY = getCursorPos().y - mLastGrabPos.y;
-
-                mLastGrabPos = getCursorPos();
-
-                mTrial.moveObject(dX, dY);
-
-                repaint();
-            }
-        } else {
-            if (mTrial.objectRect.contains(getCursorPos())) {
-                mTrialStarted = true;
-                mLastGrabPos = getCursorPos();
-            }
-        }
+//        mTrial.moveObject(dX, dY);
+        mTrial.moveObject(mRelGrabPos, getCursorPos());
 
         repaint();
+
+//        if (mTrialStarted) {
+//
+//            // Only set it once per trial
+//            if (!mTempEntered && mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+//
+//            if (!mTrial.isPointInRange(getCursorPos())) {
+//                mTrialStarted = false;
+//            } else {
+//                final int dX = getCursorPos().x - mLastGrabPos.x;
+//                final int dY = getCursorPos().y - mLastGrabPos.y;
+//
+//                mLastGrabPos = getCursorPos();
+//
+//                mTrial.moveObject(dX, dY);
+//
+//                repaint();
+//            }
+//        } else {
+//            if (mTrial.objectRect.contains(getCursorPos())) {
+//                mTrialStarted = true;
+//                mLastGrabPos = getCursorPos();
+//            }
+//        }
+
+//        repaint();
     }
 
     @Override

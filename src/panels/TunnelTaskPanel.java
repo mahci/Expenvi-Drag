@@ -53,7 +53,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     // Other
     private Point mLastGrabPos = new Point();
-    private Experiment.DIRECTION mDir;
+    private DIRECTION mDir;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private Timer mDragTimer;
@@ -120,7 +120,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mInTunnelTrace = new Trace();
     }
 
-    public TunnelTaskPanel setTask(Experiment.TunnelTask tunnelTask) {
+    public TunnelTaskPanel setTask(TunnelTask tunnelTask) {
         mTask = tunnelTask;
 
         mDragTimer = new Timer(0, mDrageListener);
@@ -156,11 +156,11 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         tunnelXs.clear();
         tunnelYs.clear();
         if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
-            for (int y = mTrial.inRect.minY(); y < mTrial.inRect.maxY(); y++) {
+            for (int y = mTrial.inRect.minY; y < mTrial.inRect.maxY; y++) {
                 tunnelYs.add(y);
             }
         } else {
-            for (int x = mTrial.inRect.minX(); x < mTrial.inRect.maxX(); x++) {
+            for (int x = mTrial.inRect.minX; x < mTrial.inRect.maxX; x++) {
                 tunnelXs.add(x);
             }
         }
@@ -294,7 +294,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
                 // Add all the inside points to the list
                 if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
-                    for (int y = mTrial.inRect.minY(); y <= mTrial.inRect.maxY(); y++) {
+                    for (int y = mTrial.inRect.minY; y <= mTrial.inRect.maxY; y++) {
 
                     }
                 }
@@ -338,7 +338,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 //        if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
 //            totalNumInPoints = mTrial.inRect.height;
 //            inPointsCount = tunnelYs.size();
-//            for (int y = mTrial.inRect.minY(); y <= mTrial.inRect.maxY(); y++) {
+//            for (int y = mTrial.inRect.minY; y <= mTrial.inRect.maxY; y++) {
 ////                map.put(y, new ArrayList<>());
 //                List<Point> yPoints = mTrace.getYPoints(y);
 //
@@ -353,7 +353,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 //        } else {
 //            totalNumInPoints = mTrial.inRect.width;
 //            inPointsCount = tunnelXs.size();
-//            for (int x = mTrial.inRect.minX(); x <= mTrial.inRect.maxX(); x++) {
+//            for (int x = mTrial.inRect.minX; x <= mTrial.inRect.maxX; x++) {
 ////                map.put(y, new ArrayList<>());
 //                List<Point> xPoints = mTrace.getXPoints(x);
 //

@@ -6,7 +6,7 @@ import tools.Out;
 import java.awt.*;
 import java.util.List;
 
-import static experiment.Experiment.*;
+import static tools.Consts.*;
 
 public class PeekTrial extends Trial {
     private final String NAME = "PeekTrial/";
@@ -90,25 +90,25 @@ public class PeekTrial extends Trial {
 
     @Override
     public Point getEndPoint() {
-        return targetRect.center();
+        return targetRect.center;
     }
 
     public boolean isPointInRange(Point p) {
         switch (dir) {
             case N -> {
-                return p.y > tempRect.minY();
+                return p.y > tempRect.minY;
             }
 
             case S -> {
-                return p.y < tempRect.maxY();
+                return p.y < tempRect.maxY;
             }
 
             case E -> {
-                return p.x < tempRect.maxX();
+                return p.x < tempRect.maxX;
             }
 
             case W -> {
-                return p.x > tempRect.minX();
+                return p.x > tempRect.minX;
             }
         }
 
@@ -121,35 +121,35 @@ public class PeekTrial extends Trial {
 
         switch (dir) {
             case N -> {
-                tempRect.setLocation(boundRect.topLeft());
-                targetRect.setLocationLoLeft(boundRect.loLeft());
-                objectRect.setLocationLoLeft(boundRect.loLeft());
+                tempRect.setLocation(boundRect.topLeft);
+                targetRect.setLocationBottomLeft(boundRect.bottomLeft);
+                objectRect.setLocationBottomLeft(boundRect.bottomLeft);
 
-                curtainRect.setLocation(boundRect.topLeft());
+                curtainRect.setLocation(boundRect.topLeft);
             }
 
             case S -> {
-                objectRect.setLocation(boundRect.topLeft());
-                targetRect.setLocation(boundRect.topLeft());
-                tempRect.setLocationLoLeft(boundRect.loLeft());
+                objectRect.setLocation(boundRect.topLeft);
+                targetRect.setLocation(boundRect.topLeft);
+                tempRect.setLocationBottomLeft(boundRect.bottomLeft);
 
-                curtainRect.setLocation(objectRect.loLeft());
+                curtainRect.setLocation(objectRect.bottomLeft);
             }
 
             case E -> {
-                objectRect.setLocation(boundRect.topLeft());
-                targetRect.setLocation(boundRect.topLeft());
-                tempRect.setLocationTopRight(boundRect.topRight());
+                objectRect.setLocation(boundRect.topLeft);
+                targetRect.setLocation(boundRect.topLeft);
+                tempRect.setLocationTopRight(boundRect.topRight);
 
-                curtainRect.setLocation(objectRect.topRight());
+                curtainRect.setLocation(objectRect.topRight);
             }
 
             case W -> {
-                tempRect.setLocation(boundRect.topLeft());
-                objectRect.setLocationTopRight(boundRect.topRight());
-                targetRect.setLocationTopRight(boundRect.topRight());
+                tempRect.setLocation(boundRect.topLeft);
+                objectRect.setLocationTopRight(boundRect.topRight);
+                targetRect.setLocationTopRight(boundRect.topRight);
 
-                curtainRect.setLocation(boundRect.topLeft());
+                curtainRect.setLocation(boundRect.topLeft);
             }
         }
 
@@ -158,53 +158,124 @@ public class PeekTrial extends Trial {
 //        initCurtainPosition = curtainRect.getLocation();
     }
 
-    public void moveObject(int dX, int dY) {
+    /**
+     * Move the object while holding the curtain constraints
+     * @param dX Movement in X
+     * @param dY Movement in Y
+     */
+//    public void moveObject(int dX, int dY) {
+//
+//        switch (dir) {
+//            case N -> {
+//                final int yTopLimit = boundRect.y;
+//                final int newY = objectRect.y + dY;
+//
+//                if (newY > yTopLimit) {
+//                    objectRect.y = newY;
+//                    curtainRect.resize(DIRECTION.S, dY, dX);
+//                }
+//            }
+//
+//            case S -> {
+//                final int yBottomLimit = boundRect.bottomLeft.y - objectRect.height;
+//                final int newY = objectRect.y + dY;
+//
+//                if (newY < yBottomLimit) {
+//                    objectRect.y = newY;
+//                    curtainRect.resize(DIRECTION.N, dY, dX);
+//                }
+//            }
+//
+//            case E -> {
+//                final int xRightLimit = boundRect.topRight.x - objectRect.width;
+//                final int newX = objectRect.x + dX;
+//
+//                if (newX < xRightLimit) {
+//                    objectRect.x = newX;
+//                    curtainRect.resize(DIRECTION.W, dY, dX);
+//                }
+//            }
+//
+//            case W -> {
+//                final int xLeftLimit = boundRect.x;
+//                final int newX = objectRect.x + dX;
+//
+//                if (newX > xLeftLimit) {
+//                    objectRect.x = newX;
+//                    curtainRect.resize(DIRECTION.E, dY, dX);
+//                }
+//            }
+//        }
+//    }
 
+    /**
+     * Move the object to be under the point p (relative to the top-left corner of the object)
+     * (with conditions)
+     * @param relGrabP Point relative to the top-left corner of the object (= grab point)
+     * @param newLoc The new location of the relGrabP
+     */
+    public void moveObject(Point relGrabP, Point newLoc) {
+        final String TAG = NAME + "moveObject";
+
+        Out.d(TAG, relGrabP, newLoc);
         switch (dir) {
             case N -> {
-                final int yTopLimit = boundRect.y;
-                final int newY = objectRect.y + dY;
-
-                if (newY > yTopLimit) {
-                    objectRect.y = newY;
-                    curtainRect.resize(DIRECTION.S, dY, dX);
+                Point objNewTL = new Point();
+                objNewTL.x = objectRect.x; // X doesn't change
+                if (isPointInRange(newLoc)) {
+                    objNewTL.y = newLoc.y - relGrabP.y;
+                } else { // Past the tempRect => just stick the object to the end!
+                    objNewTL = tempRect.topLeft;
                 }
+
+                objectRect.setLocationTopLeft(objNewTL);
+                curtainRect.resizeXY(DIRECTION.S, -1, objectRect.topLeft.y); // Stick to the object
             }
 
             case S -> {
-                final int yBottomLimit = boundRect.loLeft().y - objectRect.height;
-                final int newY = objectRect.y + dY;
-
-                if (newY < yBottomLimit) {
-                    objectRect.y = newY;
-                    curtainRect.resize(DIRECTION.N, dY, dX);
+                Point objNewBL = new Point();
+                objNewBL.x = objectRect.x; // X doesn't change
+                if (isPointInRange(newLoc)) {
+                    objNewBL.y = (newLoc.y - relGrabP.y) + objectRect.height; // relGrabP is relative to *TL*
+                } else { // Past the tempRect => just stick the object to the end!
+                    objNewBL = tempRect.bottomLeft;
                 }
+
+                objectRect.setLocationBottomLeft(objNewBL);
+                curtainRect.resizeXY(DIRECTION.N, -1, objectRect.bottomLeft.y); // Stick to the object
             }
 
             case E -> {
-                final int xRightLimit = boundRect.topRight().x - objectRect.width;
-                final int newX = objectRect.x + dX;
-
-                if (newX < xRightLimit) {
-                    objectRect.x = newX;
-                    curtainRect.resize(DIRECTION.W, dY, dX);
+                Point objNewTR = new Point();
+                objNewTR.y = objectRect.y; // Y doesn't change
+                if (isPointInRange(newLoc)) {
+                    objNewTR.x = (newLoc.x - relGrabP.x) + objectRect.width; // relGrabP is relative to *TL*
+                } else { // Past the tempRect => just stick the object to the end!
+                    objNewTR = tempRect.topRight;
                 }
+
+                objectRect.setLocationTopRight(objNewTR);
+                curtainRect.resizeXY(DIRECTION.W, objectRect.topRight.x, -1); // Stick to the object
             }
 
             case W -> {
-                final int xLeftLimit = boundRect.x;
-                final int newX = objectRect.x + dX;
-
-                if (newX > xLeftLimit) {
-                    objectRect.x = newX;
-                    curtainRect.resize(DIRECTION.E, dY, dX);
+                Point objNewTL = new Point();
+                objNewTL.y = objectRect.y; // Y doesn't change
+                if (isPointInRange(newLoc)) {
+                    objNewTL.x = newLoc.x - relGrabP.x;
+                } else { // Past the tempRect => just stick the object to the end!
+                    objNewTL = tempRect.topLeft;
                 }
+
+                objectRect.setLocationTopLeft(objNewTL);
+                curtainRect.resizeXY(DIRECTION.E, objectRect.topLeft.x, -1); // Stick to the object
             }
         }
     }
 
+    // TODO: change to relative moveObject()
     public void revertObject() {
-        moveObject(initObjPosition.x - objectRect.x, initObjPosition.y - objectRect.y);
+//        moveObject(initObjPosition.x - objectRect.x, initObjPosition.y - objectRect.y);
     }
 
     @Override

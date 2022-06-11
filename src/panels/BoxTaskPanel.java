@@ -3,7 +3,7 @@ package panels;
 import experiment.BoxTrial;
 import experiment.Experiment;
 import graphic.MoGraphics;
-import tools.Consts;
+import graphic.MoRectangle;
 import tools.Out;
 import tools.Utils;
 
@@ -13,7 +13,7 @@ import java.awt.event.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import static experiment.Experiment.*;
+import static tools.Consts.*;
 
 import static tools.Consts.COLORS;
 
@@ -160,13 +160,13 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mTrial != null) {
 //        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
 //        final Rectangle objBounds = mObject.getBounds();
-            final Rectangle intersection = mTrial.targetRect.intersection(mTrial.objectRect);
+            final MoRectangle intersection = (MoRectangle) mTrial.targetRect.intersection(mTrial.objectRect);
 
-            final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
-            final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
+            final int dMinX = intersection.minX - mTrial.objectRect.minX;
+            final int dMaxX = intersection.maxX - mTrial.objectRect.maxX;
 
-            final int dMinY = (int) (intersection.getMinY() - mTrial.objectRect.getMinY());
-            final int dMaxY = (int) (intersection.getMaxY() - mTrial.objectRect.getMaxY());
+            final int dMinY = intersection.minY - mTrial.objectRect.minY;
+            final int dMaxY = intersection.maxY - mTrial.objectRect.maxY;
 
 //        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
             mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);
@@ -220,9 +220,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         // Draw block-trial num
         String stateText =
-                Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                        Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-        mMoGraphics.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
+                STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
+                        STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+        mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
                 getWidth() - Utils.mm2px(70), Utils.mm2px(10));
 
         // TEMP: draw bound rect

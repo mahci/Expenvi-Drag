@@ -22,10 +22,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static experiment.Experiment.DIRECTION.*;
-import static experiment.Experiment.DIRECTION.E;
 import static java.lang.Math.*;
-import static experiment.Experiment.*;
+import static tools.Consts.*;
 
 public class TaskPanel extends JLayeredPane {
     private final String NAME = "TaskPanel/";
@@ -282,7 +280,7 @@ public class TaskPanel extends JLayeredPane {
             MoRectangle ctMarginRect = new MoRectangle(ctEndPoint, minNtDist);
             MoRectangle ntMarginRect = ntBoundRect.getMarginedRectangel(0);
 //            Out.d(TAG, ctMarginRect, ntMarginRect);
-            List<DIRECTION> dirs = Arrays.asList(N, S, E, W);
+            List<DIRECTION> dirs = Arrays.asList(DIRECTION.N, DIRECTION.S, DIRECTION.E, DIRECTION.W);
             Collections.shuffle(dirs);
 
             // Check each direction
@@ -290,47 +288,47 @@ public class TaskPanel extends JLayeredPane {
                 switch (dir) {
                     case N -> {
 //                        Out.d(TAG, "Checking N", ctMarginRect.y - ntMarginRect.height);
-                        if (ctMarginRect.y - ntMarginRect.height > dispRect.minY()) {
+                        if (ctMarginRect.y - ntMarginRect.height > dispRect.minY) {
                             ntMarginRect.y = ctMarginRect.y - ntMarginRect.height;
                             ntMarginRect.x = Utils.randInt(
-                                    max(dispRect.minX(), ctMarginRect.minX() - ntMarginRect.width),
-                                    min(dispRect.maxX() - ntMarginRect.width, ctMarginRect.maxX()));
+                                    max(dispRect.minX, ctMarginRect.minX - ntMarginRect.width),
+                                    min(dispRect.maxX - ntMarginRect.width, ctMarginRect.maxX));
 
                             return ntMarginRect.getLocation();
                         }
                     }
 
                     case S -> {
-//                        Out.d(TAG, "Checking S", ctMarginRect.maxY() + ntMarginRect.height);
-                        if (ctMarginRect.maxY() + ntMarginRect.height < dispRect.maxY()) {
-                            ntMarginRect.y = ctMarginRect.maxY();
+//                        Out.d(TAG, "Checking S", ctMarginRect.maxY + ntMarginRect.height);
+                        if (ctMarginRect.maxY + ntMarginRect.height < dispRect.maxY) {
+                            ntMarginRect.y = ctMarginRect.maxY;
                             ntMarginRect.x = Utils.randInt(
-                                    max(dispRect.minX(), ctMarginRect.minX() - ntMarginRect.width),
-                                    min(dispRect.maxX() - ntMarginRect.width, ctMarginRect.maxX()));
+                                    max(dispRect.minX, ctMarginRect.minX - ntMarginRect.width),
+                                    min(dispRect.maxX - ntMarginRect.width, ctMarginRect.maxX));
 
                             return ntMarginRect.getLocation();
                         }
                     }
 
                     case E -> {
-//                        Out.d(TAG, "Checking E", ctMarginRect.maxX() + ntMarginRect.width);
-                        if (ctMarginRect.maxX() + ntMarginRect.width < dispRect.maxX()) {
-                            ntMarginRect.x = ctMarginRect.maxX();
+//                        Out.d(TAG, "Checking E", ctMarginRect.maxX + ntMarginRect.width);
+                        if (ctMarginRect.maxX + ntMarginRect.width < dispRect.maxX) {
+                            ntMarginRect.x = ctMarginRect.maxX;
                             ntMarginRect.y = Utils.randInt(
-                                    max(dispRect.minY(), ctMarginRect.minY() - ntMarginRect.height),
-                                    min(dispRect.maxY() - ntMarginRect.height, ctMarginRect.maxY()));
+                                    max(dispRect.minY, ctMarginRect.minY - ntMarginRect.height),
+                                    min(dispRect.maxY - ntMarginRect.height, ctMarginRect.maxY));
 
                             return ntMarginRect.getLocation();
                         }
                     }
 
                     case W -> {
-//                        Out.d(TAG, "Checking W", ctMarginRect.minX() - ntMarginRect.width);
-                        if (ctMarginRect.minX() - ntMarginRect.width > dispRect.minX()) {
-                            ntMarginRect.x = ctMarginRect.minX() - ntMarginRect.width;
+//                        Out.d(TAG, "Checking W", ctMarginRect.minX - ntMarginRect.width);
+                        if (ctMarginRect.minX - ntMarginRect.width > dispRect.minX) {
+                            ntMarginRect.x = ctMarginRect.minX - ntMarginRect.width;
                             ntMarginRect.y = Utils.randInt(
-                                    max(dispRect.minY(), ctMarginRect.minY() - ntMarginRect.height),
-                                    min(dispRect.maxY() - ntMarginRect.height, ctMarginRect.maxY()));
+                                    max(dispRect.minY, ctMarginRect.minY - ntMarginRect.height),
+                                    min(dispRect.maxY - ntMarginRect.height, ctMarginRect.maxY));
 
                             return ntMarginRect.getLocation();
                         }

@@ -244,4 +244,12 @@ public class Utils {
 
         return false;
     }
+
+    public static Point subPoints(Point p1, Point p2) {
+        return new Point(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    public static Point intPoint(double x, double y) {
+        return new Point((int) x, (int) y);
+    }
 }

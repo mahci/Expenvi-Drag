@@ -67,8 +67,8 @@ public class MainFrame extends JFrame implements MouseListener {
 
 //        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
-//        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(1));
-        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
+        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(1));
+//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);
@@ -107,7 +107,7 @@ public class MainFrame extends JFrame implements MouseListener {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] gd = ge.getScreenDevices();
 
-        scrBound = gd[0].getDefaultConfiguration().getBounds();
+        scrBound = gd[1].getDefaultConfiguration().getBounds();
         scrW = scrBound.width;
         scrH = scrBound.height;
 

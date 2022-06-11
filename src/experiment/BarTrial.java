@@ -6,6 +6,8 @@ import tools.Out;
 import java.awt.*;
 import java.util.List;
 
+import static tools.Consts.*;
+
 public class BarTrial extends Trial {
     private final String NAME = "BarTrial/";
 
@@ -17,10 +19,10 @@ public class BarTrial extends Trial {
     public MoRectangle objectRect = new MoRectangle();
 
     // Vraiables
-    private Experiment.AXIS axis;
+    private AXIS axis;
 
     // Cosntants and randoms
-    private Experiment.DIRECTION dir;
+    private DIRECTION dir;
     private int dist; // Corner-to-corner (diag) or edge-to-edge (straight)
     private int objLen, tgtLen, tgtLinesThickness;
 
@@ -48,7 +50,7 @@ public class BarTrial extends Trial {
         }
 
         //-- Set variables
-        axis = Experiment.AXIS.get(conf.get(2));
+        axis = AXIS.get(conf.get(2));
         switch (axis) {
 
             case VERTICAL -> { // N-S
@@ -83,7 +85,7 @@ public class BarTrial extends Trial {
 
     @Override
     public Point getEndPoint() {
-        return targetRect.center();
+        return targetRect.center;
     }
 
     @Override
@@ -93,24 +95,24 @@ public class BarTrial extends Trial {
         switch (dir) {
             case N -> {
                 objectRect.setLocation(
-                        boundRect.center().x - objectRect.width / 2,
-                        boundRect.loLeft().y - objectRect.height);
+                        boundRect.center.x - objectRect.width / 2,
+                        boundRect.bottomLeft.y - objectRect.height);
 
                 targetRect.setLocation(boundRect.getLocation());
 //                line1Rect.setLocation(boundRect.getLocation());
-//                inRect.setLocation(line1Rect.getLoLeft());
-//                line2Rect.setLocation(inRect.getLoLeft());
+//                inRect.setLocation(line1Rect.getbottomLeft);
+//                line2Rect.setLocation(inRect.getbottomLeft);
             }
 
             case S -> {
                 objectRect.setLocation(
-                        boundRect.center().x - objectRect.width / 2,
+                        boundRect.center.x - objectRect.width / 2,
                         boundRect.y);
 
                 targetRect.setLocation(
                         boundRect.x,
-                        boundRect.loLeft().y - targetRect.height);
-//                line1Rect.setLocation(boundRect.x, boundRect.getLoLeft().y - line1Rect.height);
+                        boundRect.bottomLeft.y - targetRect.height);
+//                line1Rect.setLocation(boundRect.x, boundRect.getbottomLeft.y - line1Rect.height);
 //                inRect.setLocation(boundRect.x, line1Rect.y - inRect.height);
 //                line2Rect.setLocation(boundRect.x, inRect.y - line2Rect.height);
             }
@@ -118,10 +120,10 @@ public class BarTrial extends Trial {
             case E -> {
                 objectRect.setLocation(
                         boundRect.x,
-                        boundRect.center().y - objectRect.height / 2);
+                        boundRect.center.y - objectRect.height / 2);
 
                 targetRect.setLocation(
-                        boundRect.topRight().x - targetRect.width,
+                        boundRect.topRight.x - targetRect.width,
                         boundRect.y);
 //                line1Rect.setLocation(boundRect.getUpRight().x - line1Rect.width, boundRect.y);
 //                inRect.setLocation(line1Rect.x - inRect.width, boundRect.y);
@@ -130,8 +132,8 @@ public class BarTrial extends Trial {
 
             case W -> {
                 objectRect.setLocation(
-                        boundRect.topRight().x - objectRect.width,
-                        boundRect.center().y - objectRect.height / 2);
+                        boundRect.topRight.x - objectRect.width,
+                        boundRect.center.y - objectRect.height / 2);
 
                 targetRect.setLocation(boundRect.getLocation());
 //                line1Rect.setLocation(boundRect.getLocation());
