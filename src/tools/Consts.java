@@ -141,6 +141,7 @@ public class Consts {
         private final int n;
 
         DIRECTION(int i) { n = i; }
+
         // Get a NE/NW/SE/SW randomly
         public static DIRECTION randDiag() {
             return DIRECTION.values()[Utils.randInt(4, 8)];
@@ -167,6 +168,21 @@ public class Consts {
             if (this.equals(N) || this.equals(S)) return AXIS.VERTICAL;
             if (this.equals(W) || this.equals(E)) return AXIS.HORIZONTAL;
             else return AXIS.FOR_DIAG;
+        }
+        public DIRECTION opposite() {
+            switch (this) {
+                case N -> { return S; }
+                case S -> { return N; }
+                case W -> { return E; }
+                case E -> { return W; }
+
+                case NE -> { return SW; }
+                case NW -> { return SE; }
+                case SE -> { return NW; }
+                case SW -> { return NE; }
+            }
+
+            return N;
         }
 
         // Get the opposite direction (Horizontal)

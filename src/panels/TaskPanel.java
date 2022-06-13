@@ -114,8 +114,6 @@ public class TaskPanel extends JLayeredPane {
 
         mTrialActive = false;
 
-        Out.d(TAG, "Number of ");
-
         // Wait a certain delay, then show the next trial (or next block)
         Out.d(TAG, mTrialNum, mBlock.getNumTrials());
         if (mTrialNum < mBlock.getNumTrials()) {

@@ -18,7 +18,7 @@ public class PeekTrial extends Trial {
 
     // Init positions for reverting
     private Point initObjPosition = new Point();
-//    private Point initCurtainPosition = new Point();
+    private MoRectangle initCurtainRect = new MoRectangle();
 
     // Vraiables
     public AXIS axis;
@@ -155,7 +155,7 @@ public class PeekTrial extends Trial {
 
         // Set the initial positions
         initObjPosition = objectRect.getLocation();
-//        initCurtainPosition = curtainRect.getLocation();
+        initCurtainRect = (MoRectangle) curtainRect.clone();
     }
 
     /**
@@ -217,7 +217,6 @@ public class PeekTrial extends Trial {
     public void moveObject(Point relGrabP, Point newLoc) {
         final String TAG = NAME + "moveObject";
 
-        Out.d(TAG, relGrabP, newLoc);
         switch (dir) {
             case N -> {
                 Point objNewTL = new Point();
@@ -275,7 +274,8 @@ public class PeekTrial extends Trial {
 
     // TODO: change to relative moveObject()
     public void revertObject() {
-//        moveObject(initObjPosition.x - objectRect.x, initObjPosition.y - objectRect.y);
+        objectRect.setLocation(initObjPosition);
+        curtainRect = initCurtainRect;
     }
 
     @Override
