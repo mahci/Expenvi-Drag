@@ -160,13 +160,13 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         if (mTrial != null) {
 //        final Rectangle tgtBounds = mTrial.targetPanel.getBounds();
 //        final Rectangle objBounds = mObject.getBounds();
-            final MoRectangle intersection = (MoRectangle) mTrial.targetRect.intersection(mTrial.objectRect);
+            final Rectangle intersection = mTrial.targetRect.intersection(mTrial.objectRect);
 
-            final int dMinX = intersection.minX - mTrial.objectRect.minX;
-            final int dMaxX = intersection.maxX - mTrial.objectRect.maxX;
+            final int dMinX = (int) (intersection.getMinX() - mTrial.objectRect.getMinX());
+            final int dMaxX = (int) (intersection.getMaxX() - mTrial.objectRect.getMaxX());
 
-            final int dMinY = intersection.minY - mTrial.objectRect.minY;
-            final int dMaxY = intersection.maxY - mTrial.objectRect.maxY;
+            final int dMinY = (int) (intersection.getMinY() - mTrial.objectRect.getMinY());
+            final int dMaxY = (int) (intersection.getMaxY() - mTrial.objectRect.getMaxY());
 
 //        mObject.translate(dMinX + dMaxX, dMinY + dMaxY);
             mTrial.objectRect.translate(dMinX + dMaxX, dMinY + dMaxY);

@@ -14,13 +14,13 @@ public class Experiment {
 
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {
-        private static final int[] OBJECT_WIDTHS = new int[] {13, 20}; // Object widths
-        private static final int[] TARGET_WIDTHS = new int[] {40, 60}; // Target widths (mm)
+        private static final double[] OBJECT_WIDTHS = new double[] {28, 40}; // Object widths
+        private static final double[] TARGET_WIDTHS = new double[] {82, 134}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
 
-        public static final int DIST_mm = 20; // mm
+        public static final int DIST_mm = 50; // mm
 
-        public static final double NT_DIST_mm = 20;
+        public static final double NT_DIST_mm = 30;
 
         public BoxTask(int nBlocks) {
             super(nBlocks);
@@ -33,11 +33,11 @@ public class Experiment {
         private Block genBlock() {
             Block result = new Block();
 
-            List<Integer> config = new ArrayList<>();
             final int dist = Utils.mm2px(DIST_mm);
 
-            for (int vi : OBJECT_WIDTHS) {
-                for (int vj : TARGET_WIDTHS) {
+            List<Integer> config = new ArrayList<>();
+            for (double vi : OBJECT_WIDTHS) {
+                for (double vj : TARGET_WIDTHS) {
                     for (int vk : AXISES) {
                         config.add(Utils.mm2px(vi));
                         config.add(Utils.mm2px(vj));
@@ -61,13 +61,13 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class BarTask extends Task {
-        private static final int[] OBJECT_WIDTHS = new int[] {2, 5}; // Object widths (mm)
-        private static final int[] TARGET_WIDTHS = new int[] {6, 8}; // Tunnel widths (mm)
+        private static final double[] OBJECT_WIDTHS = new double[] {1, 2}; // Object widths (mm)
+        private static final double[] TARGET_WIDTHS = new double[] {3, 4}; // Tunnel widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int DIST_mm = 50; // mm
         public static final int OBJECT_LEN_mm = 5; // mm
-        public static final int TARGET_LEN_mm = 50; // mm
+        public static final int TARGET_LEN_mm = 30; // mm
         public static final int TARGET_LINES_THICKNESS_mm = 1; // mm
 
         public BarTask(int nBlocks) {
@@ -81,14 +81,14 @@ public class Experiment {
         private Block genBlock() {
             Block result = new Block();
 
-            List<Integer> config = new ArrayList<>();
             final int dist = Utils.mm2px(DIST_mm);
             final int objLen = Utils.mm2px(OBJECT_LEN_mm);
             final int tgtLen = Utils.mm2px(TARGET_LEN_mm);
-            final int tgtLinesThickness = Utils.mm2px(TARGET_LINES_THICKNESS_mm);
+            final int tgtLinesThickness = Utils.mm2px(TARGET_LINES_THICKNESS_mm); // Not using this
 
-            for (int vi : OBJECT_WIDTHS) {
-                for (int vj : TARGET_WIDTHS) {
+            List<Integer> config = new ArrayList<>(); // Best to have as int so px values + enums
+            for (double vi : OBJECT_WIDTHS) {
+                for (double vj : TARGET_WIDTHS) {
                     for (int vk : AXISES) {
                         config.add(Utils.mm2px(vi));
                         config.add(Utils.mm2px(vj));
@@ -111,8 +111,8 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class PeekTask extends Task {
-        private static final int[] OBJECT_WIDTHS = new int[] {1, 3}; // Object widths (mm)
-        private static final int[] TARGET_WIDTHS = new int[] {5, 8}; // Target widths (mm)
+        private static final double[] OBJECT_WIDTHS = new double[] {2, 3}; // Object widths (mm)
+        private static final double[] TARGET_WIDTHS = new double[] {5, 8}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int LEN_mm = 100; // mm
@@ -135,8 +135,8 @@ public class Experiment {
             final int dist = Utils.mm2px(DIST_mm);
             final int tempW = Utils.mm2px(TEMP_W_mm);
 
-            for (int vi : OBJECT_WIDTHS) {
-                for (int vj : TARGET_WIDTHS) {
+            for (double vi : OBJECT_WIDTHS) {
+                for (double vj : TARGET_WIDTHS) {
                     for (int vk : AXISES) {
                         config.add(Utils.mm2px(vi));
                         config.add(Utils.mm2px(vj));
@@ -160,17 +160,14 @@ public class Experiment {
     // -------------------------------------------------------------------------------------
     public static class TunnelTask extends Task {
         //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
-        private final int[] DIRS = new int[]{0, 1, 2, 3};
-//        private final int[] DISTS = new int[]{150}; // Tunnel length (in mm)
-        private final int[] DISTS = new int[]{100}; // Tunnel length (in mm)
-        private final int[] WIDTHS = new int[]{5, 10}; // Tunnel widths (in mm)
+        private final double[] DISTS = new double[]{100}; // Tunnel length (in mm)
+        private final double[] WIDTHS = new double[]{3, 5}; // Tunnel widths (in mm)
+        private static final int[] AXISES = new int[]{0, 1}; // Axises ordinals
 
-        public final double LINES_W_mm = 1; // Targets width
+        public final double LINES_W_mm = 0.5; // Tunnel lines' width
         public final double TEXT_W_mm = 8; // Width of the start text rectangle
 
         public static final double DRAG_THRSH_mm = 5; // Movement > threshold => Dragging starts
-
-        public static final double NT_DIST_mm = 100;
 
         public TunnelTask(int nBlocks) {
             super(nBlocks);
@@ -186,11 +183,11 @@ public class Experiment {
             List<Integer> config = new ArrayList<>();
             final int linesW = Utils.mm2px(LINES_W_mm);
             final int textW = Utils.mm2px(TEXT_W_mm);
-            for (int vi : DIRS) {
-                for (int vj : DISTS) {
-                    for (int vk : WIDTHS) {
-                        config.add(vi);
-                        config.add(vj);
+            for (double vi : DISTS) {
+                for (double vj : WIDTHS) {
+                    for (int vk : AXISES) {
+                        config.add(Utils.mm2px(vi));
+                        config.add(Utils.mm2px(vj));
                         config.add(vk);
 
                         // Create trials based on the combination
@@ -200,6 +197,7 @@ public class Experiment {
                     }
                 }
             }
+
 
             // Shuffle trials
             Collections.shuffle(result.mTrials);

@@ -22,11 +22,12 @@ public class TunnelTrial extends Trial implements Cloneable {
     public Line2D.Double endLine = new Line2D.Double();
 
     // Variables
-    private DIRECTION dir;
     private int tunnelD; // px
     private int tunnelW; // px
+    private AXIS axis;
 
     // Constants and randoms
+    private DIRECTION dir;
     private int linesW, textW; // px
 
     public TunnelTrial(List<Integer> conf, int... params) {
@@ -38,36 +39,32 @@ public class TunnelTrial extends Trial implements Cloneable {
         }
 
         // Set the dist and width
-        tunnelD = Utils.mm2px(conf.get(1));
-        tunnelW = Utils.mm2px(conf.get(2));
+        tunnelD = conf.get(0);
+        tunnelW = conf.get(1);
+        axis = AXIS.get(conf.get(2));
 
-        // Set the direction (random based on the axis) and circumRect's size
-        dir = DIRECTION.get(conf.get(0));
-        if (dir.getAxis().equals(AXIS.VERTICAL)) {
-            boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
-        } else { // Horizontal
-            boundRect.setSize(tunnelW + 2 * linesW + textW, tunnelD);
-        }
+        dir = axis.randDir(); // Random direction based on the AXIS
 
         // Set sizes
         if (params != null && params.length > 0) {
             this.linesW = params[0];
             this.textW = params[1];
 
-            if (dir == DIRECTION.W || dir == DIRECTION.E) {
-                line1Rect.setSize(tunnelD, linesW);
-                line2Rect.setSize(line1Rect.getSize());
-                inRect.setSize(tunnelD, tunnelW);
-                startTextRect.setSize(textW, textW);
-
-                boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
-            } else { // Horizontal
+            if (axis.equals(AXIS.VERTICAL)) {
                 line1Rect.setSize(linesW, tunnelD);
                 line2Rect.setSize(line1Rect.getSize());
                 inRect.setSize(tunnelW, tunnelD);
                 startTextRect.setSize(textW, textW);
 
                 boundRect.setSize(tunnelW + 2 * linesW + textW, tunnelD);
+
+            } else { // Horizontal
+                line1Rect.setSize(tunnelD, linesW);
+                line2Rect.setSize(line1Rect.getSize());
+                inRect.setSize(tunnelD, tunnelW);
+                startTextRect.setSize(textW, textW);
+
+                boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
             }
 
         }

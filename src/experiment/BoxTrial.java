@@ -42,7 +42,7 @@ public class BoxTrial extends Trial {
         targetRect.setSize(conf.get(1), conf.get(1));
         axis = AXIS.get(conf.get(2));
 
-        dir = axis.randDir();
+        dir = axis.randDir(); // Random direction based on AXIS
 
         // Set the bound box size based on the axis
         Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetRect.width,
