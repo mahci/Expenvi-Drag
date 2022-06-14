@@ -12,6 +12,13 @@ public class Experiment {
     //--- Participant's things!
     private int mPId;
 
+    // Technique ---------------------------------------------------------------------------------------------
+    public enum TECHNIQUE {
+        TAP_PRESS_HOLD, TWO_FINGER_SWIPE, MOUSE; // TAP-PRESS-HOLD, TWO-FINGER-SWIPE-DOWN
+        private static final TECHNIQUE[] values = values();
+    }
+
+
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {
         private static final double[] OBJECT_WIDTHS = new double[] {28, 40}; // Object widths

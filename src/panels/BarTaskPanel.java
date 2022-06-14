@@ -30,7 +30,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final boolean mHighlightObj = true;
 
     // Flags
-    private boolean mGrabbed = false;
     private boolean mIsCursorNearObj = false;
 
     // Shapes
@@ -112,6 +111,11 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
+    protected void revert() {
+        miss();
+    }
+
+    @Override
     public boolean checkHit() {
         return mTrial.targetRect.contains(mTrial.objectRect);
     }
@@ -168,15 +172,19 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            grab();
+        if (mMouseEnabled) {
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                grab();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            release();
+        if (mMouseEnabled) {
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                release();
+            }
         }
     }
 
@@ -192,15 +200,17 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (mGrabbed) {
-            final int dX = e.getX() - mGrabPos.x;
-            final int dY = e.getY() - mGrabPos.y;
+        if (mMouseEnabled) {
+            if (mGrabbed) {
+                final int dX = e.getX() - mGrabPos.x;
+                final int dY = e.getY() - mGrabPos.y;
 
-            mTrial.objectRect.translate(dX, dY);
+                mTrial.objectRect.translate(dX, dY);
 
-            mGrabPos = e.getPoint();
+                mGrabPos = e.getPoint();
 
-            repaint();
+                repaint();
+            }
         }
     }
 
@@ -209,7 +219,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         if (!firstMove) t0 = Utils.nowMillis();
 
-        // When the cursor gets near the bar TODO
+        // When the cursor gets near the bar
 //        mIsCursorNearObj = mGroup.barPath.contains(e.getPoint());
 //        if (mIsCursorNearObj) {
 //            if (mChangeCursor) setCursor(new Cursor(Cursor.HAND_CURSOR));

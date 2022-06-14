@@ -243,23 +243,27 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
-            grab();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+                grab();
 
-            mGrabTime = Utils.nowMillis();
+                mGrabTime = Utils.nowMillis();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
-            release();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+                release();
 
-            Out.d(NAME, "Drag time | n(drag event)", Utils.nowMillis() - mGrabTime, mPointSet.size());
+                Out.d(NAME, "Drag time | n(drag event)", Utils.nowMillis() - mGrabTime, mPointSet.size());
 //            Out.d(NAME, mPointSet);
-            mGrabTime = 0;
-            mEventCounter = 0;
-            mPointSet.clear();
+                mGrabTime = 0;
+                mEventCounter = 0;
+                mPointSet.clear();
+            }
         }
     }
 

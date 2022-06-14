@@ -44,6 +44,8 @@ public class TaskPanel extends JLayeredPane {
 
     // Flags
     protected boolean mTrialActive = false;
+    protected boolean mMouseEnabled = false;
+    protected boolean mGrabbed = false;
 
     // Counters
     protected int mPosCount = 0;
@@ -113,13 +115,18 @@ public class TaskPanel extends JLayeredPane {
         Consts.SOUNDS.playHit();
 
         mTrialActive = false;
+        mGrabbed = false;
 
         // Wait a certain delay, then show the next trial (or next block)
         Out.d(TAG, mTrialNum, mBlock.getNumTrials());
         if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> showTrial(
+                    ++mTrialNum),
+                    mTask.NT_DELAY_ms,
+                    TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
-            MainFrame.get().showDialog(new BreakDialog());
+//            MainFrame.get().showDialog(new BreakDialog());
+            MainFrame.get().showMessage("Block finished!");
             mBlockNum++;
             mTrialNum = 1;
             startBlock(mBlockNum);
@@ -134,6 +141,7 @@ public class TaskPanel extends JLayeredPane {
         Consts.SOUNDS.playMiss();
 
         mTrialActive = false;
+        mGrabbed = false;
 
         // Shuffle back and reposition the next ones
         final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
@@ -189,8 +197,8 @@ public class TaskPanel extends JLayeredPane {
                 getHeight() - 2 * hMargin);
     }
 
-    protected boolean contains(MoRectangle moRect) {
-        return getPanelRect().contains(moRect);
+    protected void setMouseEnabled(boolean enabled) {
+        mMouseEnabled = enabled;
     }
 
     protected Point findPosition(MoRectangle rect) {

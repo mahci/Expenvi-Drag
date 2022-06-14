@@ -8,6 +8,7 @@ public class Out {
     private static final List<String> toLogList = new ArrayList<>();
 
     static {
+        toLogList.add("MainFrame");
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
         toLogList.add("TaskPanel");
@@ -17,10 +18,10 @@ public class Out {
         toLogList.add("Enter");
         toLogList.add("MoCircle");
         toLogList.add("Server");
-        toLogList.add("Block");
+//        toLogList.add("Block");
 //        toLogList.add("BoxTrial");
-        toLogList.add("TunnelTrial");
-        toLogList.add("PeekTrial");
+//        toLogList.add("TunnelTrial");
+//        toLogList.add("PeekTrial");
     }
 
     /**

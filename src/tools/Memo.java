@@ -7,8 +7,8 @@ public class Memo {
 
     private String action;
     private String mode;
-    private String value1;
-    private String value2;
+    private String value1 = "-";
+    private String value2 = "-";
 
     /**
      * Constructor
@@ -43,19 +43,6 @@ public class Memo {
      * @param act Action (e.g. SCROLL)
      * @param md Mode (e.g. DRAG)
      * @param v1 Int value 1
-     */
-    public Memo(String act, String md, Object v1) {
-        action = act;
-        mode = md;
-        value1 = String.valueOf(v1);
-        value2 = "-";
-    }
-
-    /**
-     * Constructor
-     * @param act Action (e.g. SCROLL)
-     * @param md Mode (e.g. DRAG)
-     * @param v1 Int value 1
      * @param v2 Int value 2
      */
     public Memo(String act, String md, int v1, int v2) {
@@ -66,17 +53,16 @@ public class Memo {
     }
 
     /**
-     * Constructor
-     * @param act Action (e.g. SCROLL)
-     * @param md Mode (e.g. DRAG)
-     * @param v1 Int value 1
-     * @param v2 Int value 2
+     * More general constructor
+     * @param act Action
+     * @param md Mode
+     * @param values list of values (currently up to two is supported)
      */
-    public Memo(String act, String md, Object v1, Object v2) {
+    public Memo(String act, String md, Object... values) {
         action = act;
         mode = md;
-        value1 = String.valueOf(v1);
-        value2 = String.valueOf(v2);
+        if (values.length > 0) value1 = String.valueOf(values[0]);
+        if (values.length > 1) value2 = String.valueOf(values[1]);
     }
 
     /**

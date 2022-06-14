@@ -3,10 +3,15 @@ package panels;
 import control.Server;
 import experiment.Experiment;
 import tools.Consts;
+import tools.Memo;
+import tools.Out;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+
+import static experiment.Experiment.*;
+import static tools.Consts.*;
 
 public class MainFrame extends JFrame implements MouseListener {
     private final static String NAME = "MainFrame/";
@@ -18,6 +23,8 @@ public class MainFrame extends JFrame implements MouseListener {
     private int frW, frH;
 
     private TaskPanel mActivePanel;
+
+    private TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.TWO_FINGER_SWIPE;
 
     /**
      * Constructor
@@ -58,6 +65,9 @@ public class MainFrame extends JFrame implements MouseListener {
         IntroPanel stPanel = new IntroPanel("M", "Window", showTaskAA);
         add(stPanel);
         setVisible(true);
+
+        // Send the active technique to Moose
+        Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, ACTIVE_TECHNIQUE));
     }
 
     private void showTaskPanel() {
@@ -66,12 +76,13 @@ public class MainFrame extends JFrame implements MouseListener {
         getContentPane().removeAll();
 
 //        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
-//        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
+        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
 //        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(1));
-        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
+//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);
+        if (ACTIVE_TECHNIQUE.equals(TECHNIQUE.MOUSE)) mActivePanel.setMouseEnabled(true);
 
         getContentPane().add(mActivePanel);
         mActivePanel.requestFocusInWindow();
@@ -80,6 +91,7 @@ public class MainFrame extends JFrame implements MouseListener {
 
 
     public void showDialog(JDialog dialog) {
+        Out.d(NAME, "Showing dialog");
         dialog.pack();
         dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
 

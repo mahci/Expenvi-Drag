@@ -42,7 +42,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     // Flags
     private boolean mTrialActive = false;
     private boolean mDragOpen = true;
-    private boolean mGrabbed = false;
     private boolean isInsideObj = false;
     private boolean highlightObj = false;
     private boolean mEntered = false;
@@ -217,6 +216,11 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         mGrabbed = false;
         mDragOpen = true;
+    }
+
+    @Override
+    protected void revert() {
+        miss();
     }
 
     @Override
@@ -480,15 +484,19 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) { // Do nothing on the other button press
-            grab();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) { // Do nothing on the other button press
+                grab();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
-            release();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+                release();
+            }
         }
     }
 

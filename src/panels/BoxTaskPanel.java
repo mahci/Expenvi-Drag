@@ -31,7 +31,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private BoxTrial mTrial;
 
     // Flags
-    private boolean mGrabbed = false;
 
     // Other
     private Point mGrabPos = new Point();
@@ -132,6 +131,12 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         }
 
         mGrabbed = false;
+    }
+
+    @Override
+    protected void revert() {
+
+        miss();
     }
 
     @Override
@@ -240,6 +245,27 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     // -------------------------------------------------------------------------------------------
     @Override
     public void mouseDragged(MouseEvent e) {
+        if (mMouseEnabled) {
+            if (mTrialActive && mGrabbed) {
+                final int dX = e.getX() - mGrabPos.x;
+                final int dY = e.getY() - mGrabPos.y;
+
+                mTrial.objectRect.translate(dX, dY);
+
+                mGrabPos = e.getPoint();
+
+                repaint();
+            }
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (!firstMove) {
+            t0 = Utils.nowMillis();
+            t1 = System.currentTimeMillis();
+            firstMove = true;
+        }
 
         if (mTrialActive && mGrabbed) {
             final int dX = e.getX() - mGrabPos.x;
@@ -254,32 +280,25 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public void mouseMoved(MouseEvent e) {
-        if (!firstMove) {
-            t0 = Utils.nowMillis();
-            t1 = System.currentTimeMillis();
-            firstMove = true;
-        }
-
-        mouseDragged(e);
-    }
-
-    @Override
     public void mouseClicked(MouseEvent e) {
 
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
-            grab();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+                grab();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
-            release();
+        if (mMouseEnabled) {
+            if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
+                release();
+            }
         }
     }
 
