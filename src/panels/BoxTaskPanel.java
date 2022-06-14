@@ -88,8 +88,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 //        firstMove = false;
 
         mTrial = (BoxTrial) mBlock.getTrial(trNum);
-        Out.d(TAG, mTrialNum);
-        Out.e(TAG, mTrial);
 
 //        removeAll();
 //
@@ -119,11 +117,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void release() {
         final String TAG = NAME + "release";
-        Out.d(TAG, mGrabbed);
+
         if (mGrabbed) {
-            Out.d(TAG, checkHit());
             if (checkHit()) {
-//                moveObjInside();
                 hit();
             } else {
                 miss();
@@ -135,7 +131,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     protected void revert() {
-
         miss();
     }
 
@@ -143,7 +138,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     protected void hit() {
         final String TAG = NAME + "hit";
 
-//        mTrialActive = false;
         moveObjInside();
 
         super.hit();

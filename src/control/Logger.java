@@ -197,11 +197,17 @@ public class Logger {
                     Trial.getLogHeader();
         }
 
+//        @Override
+//        public String toString() {
+//            return blockNum + SP +
+//                    trialNum + SP +
+//                    trial.toLogString();
+//        }
+
         @Override
         public String toString() {
             return blockNum + SP +
-                    trialNum + SP +
-                    trial.toLogString();
+                    trialNum;
         }
     }
 
@@ -282,10 +288,10 @@ public class Logger {
     public static class TimeInfo {
         public long trialTime; // In millisec
         public long blockTime; // In millisec
-        public int techTaskTime; // Each tech|task (In sec)
-        public long homingTime; // In millisec
-        public int techTime; // In sec
-        public int experimentTime; // In sec
+//        public int techTaskTime; // Each tech|task (In sec)
+//        public long homingTime; // In millisec
+//        public int techTime; // In sec
+//        public int experimentTime; // In sec
 
         public static String getLogHeader() {
             return "trial_time" + SP +
@@ -296,14 +302,20 @@ public class Logger {
                     "experiment_time";
         }
 
+//        @Override
+//        public String toString() {
+//            return trialTime + SP +
+//                    blockTime+ SP +
+//                    techTaskTime + SP +
+//                    homingTime + SP +
+//                    techTime + SP +
+//                    experimentTime;
+//        }
+
         @Override
         public String toString() {
             return trialTime + SP +
-                    blockTime+ SP +
-                    techTaskTime + SP +
-                    homingTime + SP +
-                    techTime + SP +
-                    experimentTime;
+                    blockTime;
         }
     }
 

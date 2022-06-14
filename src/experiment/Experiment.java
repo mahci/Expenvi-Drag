@@ -68,8 +68,8 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class BarTask extends Task {
-        private static final double[] OBJECT_WIDTHS = new double[] {1, 2}; // Object widths (mm)
-        private static final double[] TARGET_WIDTHS = new double[] {3, 4}; // Tunnel widths (mm)
+        private static final double[] OBJECT_WIDTHS = new double[] {2, 4}; // Object widths (mm)
+        private static final double[] TARGET_WIDTHS = new double[] {5, 8}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int DIST_mm = 50; // mm
@@ -118,13 +118,13 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class PeekTask extends Task {
-        private static final double[] OBJECT_WIDTHS = new double[] {2, 3}; // Object widths (mm)
-        private static final double[] TARGET_WIDTHS = new double[] {5, 8}; // Target widths (mm)
+        private static final double[] OBJECT_WIDTHS = new double[] {6}; // Object widths (mm)
+        private static final double[] TARGET_WIDTHS = new double[] {18, 36}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int LEN_mm = 100; // mm
-        public static final int DIST_mm = 50; // mm
-        public static final int TEMP_W_mm = 10; // mm
+        public static final int DIST_mm = 100; // mm
+        public static final int TEMP_W_mm = 18; // mm
 
         public PeekTask(int nBlocks) {
             super(nBlocks);
@@ -168,7 +168,7 @@ public class Experiment {
     public static class TunnelTask extends Task {
         //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
         private final double[] DISTS = new double[]{100}; // Tunnel length (in mm)
-        private final double[] WIDTHS = new double[]{3, 5}; // Tunnel widths (in mm)
+        private final double[] WIDTHS = new double[]{5}; // Tunnel widths (in mm)
         private static final int[] AXISES = new int[]{0, 1}; // Axises ordinals
 
         public final double LINES_W_mm = 0.5; // Tunnel lines' width

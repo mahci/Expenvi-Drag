@@ -31,6 +31,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     // Things to show
     private Trace mVisualTrace;
     private Trace mTrace;
+    private Trace mTrialTrace;
     private Trace mInTunnelTrace;
 
     private MoCircle showCirc = new MoCircle();
@@ -60,7 +61,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private long t0;
     private boolean firstMove;
 
-    private int mPosCount = 0;
+    // Variables
+    private double mAccuracy = 0;
 
     private MoGraphics mGraphics;
 
@@ -116,6 +118,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         // Init
         mVisualTrace = new Trace();
         mTrace = new Trace();
+        mTrialTrace = new Trace();
         mInTunnelTrace = new Trace();
     }
 
@@ -144,6 +147,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         // Reset traces
         mVisualTrace.reset();
         mTrace.reset();
+        mTrialTrace.reset();
         mInTunnelTrace.reset();
 
         mPosCount = 0;
@@ -194,6 +198,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
             if (!mTrialStarted) {
                 checkTrialStart();
+
             } else { // Trial started
                 filterPoints();
                 if (checkMiss()) miss();
@@ -312,9 +317,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     private boolean checkExit() {
         final Point lastP = mTrace.getLastPoint();
-        if (!mTrial.inRect.contains(lastP) && mTrace.intersects(mTrial.endLine)) {
+        if (!mTrial.inRect.contains(lastP) && mTrace.intersects(mTrial.endLine)) { // Exited
+            mAccuracy = mInTunnelTrace.getNumPoints() * 100.0 / mTrialTrace.getNumPoints();
             return true;
-        } else {
+        } else { // Still inside tunnel
             return false;
         }
     }
@@ -323,10 +329,11 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         final String TAG = NAME + "filterPoints";
         Point p = getCursorPos();
 
+        // All dragging points
+        mTrialTrace.addPoint(p);
+
+        // Points inside the tunnel
         if (mTrial.inRect.contains(p)) {
-//            Out.d(TAG, p);
-//            tunnelXs.remove((Integer) p.x);
-//            tunnelYs.remove((Integer) p.y);
             mInTunnelTrace.addPoint(p);
         }
     }
@@ -334,10 +341,11 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
     private void analyzeTrace() {
         final String TAG = NAME + "analyzeTrace";
 //        HashMap<Integer, List<Point>> map = new HashMap<>();
-        int inPointsCount = mInTunnelTrace.getNumPoints();
-        int totalNumInPoints = mTrace.getNumPoints();
+//        int inPointsCount = mInTunnelTrace.getNumPoints();
+//        int totalPointsCount = mTrialTrace.getNumPoints();
 
-
+        // Ratio of inside/total points
+        Out.d(TAG,"Accuracy (%) = ", mAccuracy);
 
 //        if (mTrial.getDir().getAxis().equals(AXIS.VERTICAL)) {
 //            totalNumInPoints = mTrial.inRect.height;
@@ -370,8 +378,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 //            }
 //        }
 
-        // Ratio of inside/total points
-        Out.d(TAG,"Accuracy", inPointsCount, totalNumInPoints, inPointsCount * 100.0 / totalNumInPoints);
+
     }
 
     private boolean isValidDrag() {

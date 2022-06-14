@@ -161,7 +161,6 @@ public class Utils {
     }
 
 
-
     public static <T> T last(List<T> list) {
         return list != null && !list.isEmpty() ? list.get(list.size() - 1) : null;
     }

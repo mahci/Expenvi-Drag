@@ -1,11 +1,13 @@
 package panels;
 
+import control.Logger;
 import experiment.Block;
 import experiment.Experiment;
 import experiment.Task;
 import dialogs.BreakDialog;
 import graphic.MoGraphics;
 import graphic.MoRectangle;
+import jdk.jshell.execution.Util;
 import tools.Consts;
 import tools.MinMax;
 import tools.Out;
@@ -52,8 +54,12 @@ public class TaskPanel extends JLayeredPane {
 
     // Helpers
     protected MoGraphics mMoGraphics;
-
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    // Logging
+    protected Logger.GeneralInfo mGenInfo = new Logger.GeneralInfo();
+    protected Logger.TimeInfo mTimeInfo = new Logger.TimeInfo();
+    protected long mBlockStartTime, mTrialStartTime;
 
     // Actions ------------------------------------------------------------------------------------
     protected final Action NEXT_TRIAL = new AbstractAction() {
@@ -67,6 +73,10 @@ public class TaskPanel extends JLayeredPane {
     protected void start() {
         mBlockNum = 1;
         mTrialNum = 1;
+
+        mGenInfo.blockNum = mBlockNum;
+        mGenInfo.trialNum = mTrialNum;
+
         startBlock(mBlockNum);
 
         mapKeys();
@@ -74,15 +84,16 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void startBlock(int blkNum) {
-        final String TAG = NAME + "showBlock";
+        final String TAG = NAME + "startBlock";
 
         mBlock = mTask.getBlock(blkNum);
-        Out.d(TAG, mTask.getNumBlocks(), mBlock);
 
         // Try to find positions for all the trials in the block
         if (findAllTrialsPosition(1) == 0) {
             mBlock.positionAllTrialsElements();
             Out.d(TAG, "Showing the trials");
+            mBlockStartTime = Utils.nowMillis();
+            mTrialStartTime = Utils.nowMillis();
             showTrial(1);
         } else {
             Out.e(TAG, "Couldn't find positions for the trials in the block!");
@@ -101,7 +112,9 @@ public class TaskPanel extends JLayeredPane {
 
     protected void release() { }
 
-    protected void revert() { }
+    protected void revert() {
+
+    }
 
     protected void startError() {
         final String TAG = NAME + "startError";
@@ -118,20 +131,43 @@ public class TaskPanel extends JLayeredPane {
         mGrabbed = false;
 
         // Wait a certain delay, then show the next trial (or next block)
-        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
         if (mTrialNum < mBlock.getNumTrials()) {
-            executorService.schedule(() -> showTrial(
-                    ++mTrialNum),
+            // Log trial time
+            mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
+
+            // Print times
+            Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trialTime);
+
+            executorService.schedule(() ->
+                    {showTrial(
+                            ++mTrialNum);
+                        mTrialStartTime = Utils.nowMillis();
+                        },
                     mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
         } else if (mBlockNum < mTask.getNumBlocks()) {
-//            MainFrame.get().showDialog(new BreakDialog());
-            MainFrame.get().showMessage("Block finished!");
+            MainFrame.get().showDialog(new BreakDialog());
+//            MainFrame.get().showMessage("Block finished!");
+
+            // Log trial + block time
+            mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
+            mTimeInfo.blockTime = Utils.nowMillis() - mBlockStartTime;
+            Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
+
+            // Print times
+            Out.d(TAG, "Block time (s) = ", mTimeInfo.blockTime / 1000.0);
+
+            // Next block
             mBlockNum++;
             mTrialNum = 1;
+
+            mBlockStartTime = Utils.nowMillis();
             startBlock(mBlockNum);
-        } else {
-            // Task is finished
+        } else { // Task is finished
+            MainFrame.get().showMessage("Task finished!");
+
+            // Print times
+            Out.d(TAG, "Block time (s) = ", mTimeInfo.blockTime / 1000.0);
         }
     }
 
@@ -143,13 +179,23 @@ public class TaskPanel extends JLayeredPane {
         mTrialActive = false;
         mGrabbed = false;
 
+        // Log times
+        mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
+
+        // Print times
+        Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trialTime);
+
         // Shuffle back and reposition the next ones
         final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
         Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
         if (findAllTrialsPosition(trNewInd) == 1) {
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
         } else {
-            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
+            executorService.schedule(() -> {
+                showTrial(++mTrialNum);
+                mTrialStartTime = Utils.nowMillis();
+                    }, mTask.NT_DELAY_ms,
+                    TimeUnit.MILLISECONDS);
         }
 
     }

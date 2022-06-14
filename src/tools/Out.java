@@ -15,8 +15,7 @@ public class Out {
         toLogList.add("TunnelTaskPanel");
         toLogList.add("BoxTaskPanel");
         toLogList.add("PeekTaskPanel");
-        toLogList.add("Enter");
-        toLogList.add("MoCircle");
+//        toLogList.add("MoCircle");
         toLogList.add("Server");
 //        toLogList.add("Block");
 //        toLogList.add("BoxTrial");

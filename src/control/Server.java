@@ -49,6 +49,12 @@ public class Server {
                 // Start receiving
                 executor.execute(new InRunnable());
 
+                // Set the active technique
+                send(new Memo(
+                        STRINGS.CONFIG,
+                        STRINGS.TECH,
+                        MainFrame.get().ACTIVE_TECHNIQUE));
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -87,7 +93,15 @@ public class Server {
                     if (message != null) {
                         Memo memo = Memo.valueOf(message);
 
-                        // Check the action...
+                        // On Moose connection, send the active technique
+                        if (memo.getAction().equals(STRINGS.INTRO)) {
+                            send(new Memo(
+                                    STRINGS.CONFIG,
+                                    STRINGS.TECH,
+                                    MainFrame.get().ACTIVE_TECHNIQUE));
+                        }
+
+                        // Dragging...
                         if (memo.getAction().equals("DRAG")) {
 
                             switch (memo.getMode()) {

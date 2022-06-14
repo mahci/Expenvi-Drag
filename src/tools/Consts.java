@@ -243,6 +243,8 @@ public class Consts {
     //-- Strings and related
     public static class STRINGS {
         public final static String SP = ";";
+        public static final String INTRO = "INTRO";
+        public static final String MOOSE = "MOOSE";
         public final static String TECH = "TECH";
         public final static String CONFIG = "CONFIG";
         public final static String LOG = "LOG";

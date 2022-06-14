@@ -24,7 +24,7 @@ public class MainFrame extends JFrame implements MouseListener {
 
     private TaskPanel mActivePanel;
 
-    private TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.TWO_FINGER_SWIPE;
+    public TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.TWO_FINGER_SWIPE;
 
     /**
      * Constructor
@@ -75,9 +75,9 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
-        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(8));
-//        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(1));
+//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(5));
+//        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(5));
+        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(5));
 //        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
