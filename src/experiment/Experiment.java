@@ -40,7 +40,7 @@ public class Experiment {
         private Block genBlock() {
             Block result = new Block();
 
-            final int dist = Utils.mm2px(DIST_mm);
+//            final int dist = Utils.mm2px(DIST_mm);
 
             List<Integer> config = new ArrayList<>();
             for (double vi : OBJECT_WIDTHS) {
@@ -51,7 +51,7 @@ public class Experiment {
                         config.add(vk);
 
                         // Create trials based on the combination
-                        result.mTrials.add(new BoxTrial(config, dist));
+                        result.mTrials.add(new BoxTrial(config, DIST_mm));
 
                         config.clear();
                     }
@@ -64,6 +64,10 @@ public class Experiment {
             return result;
         }
 
+        @Override
+        public String toString() {
+            return "BoxTask";
+        }
     }
 
     // -------------------------------------------------------------------------------------
@@ -114,6 +118,11 @@ public class Experiment {
 
             return result;
         }
+
+        @Override
+        public String toString() {
+            return "BarTask";
+        }
     }
 
     // -------------------------------------------------------------------------------------
@@ -161,6 +170,11 @@ public class Experiment {
             Collections.shuffle(result.mTrials);
 
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "PeekTask";
         }
     }
 
@@ -212,6 +226,10 @@ public class Experiment {
             return result;
         }
 
+        @Override
+        public String toString() {
+            return "TunnelTask";
+        }
     }
 
 

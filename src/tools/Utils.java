@@ -1,15 +1,14 @@
 package tools;
 
 import experiment.Experiment;
+import panels.MainFrame;
 
 import java.awt.*;
 import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -143,6 +142,11 @@ public class Utils {
         return format.format(Calendar.getInstance().getTime());
     }
 
+    public static String nowDate() {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+        return format.format(Calendar.getInstance().getTime());
+    }
+
     public static String str(Line2D.Double line) {
         return line.x1 + "," + line.y1 + "--" + line.x2 + "," + line.y2;
     }
@@ -250,5 +254,42 @@ public class Utils {
 
     public static Point intPoint(double x, double y) {
         return new Point((int) x, (int) y);
+    }
+
+    /**
+     * Create a dir if it doesn't exist
+     * @param dirPath Path to the dir
+     * @return 0 if success, 1 if failed
+     */
+    public static int createDirIfNotExisted(Path dirPath) {
+
+        if (!Files.isDirectory(dirPath)) {
+            try {
+                Files.createDirectory(dirPath);
+                return 0;
+            } catch (IOException ioe) {
+                MainFrame.get().showMessage("Problem in creating directory: \n" +
+                        dirPath);
+                ioe.printStackTrace();
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * Check if a file is empty
+     * @param file File
+     * @return True (empty), False (not empty)
+     */
+    public static boolean isFileEmpty(File file) {
+        try {
+            final BufferedReader br = new BufferedReader(new FileReader(file));
+            return br.readLine() == null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

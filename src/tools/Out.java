@@ -21,6 +21,7 @@ public class Out {
 //        toLogList.add("BoxTrial");
 //        toLogList.add("TunnelTrial");
 //        toLogList.add("PeekTrial");
+        toLogList.add("Logger");
     }
 
     /**

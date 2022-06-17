@@ -102,7 +102,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         final String TAG = NAME + "showTrial";
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
-        Out.d(TAG, mTrial);
 
         // Set flags
         mTempEntered = false;
@@ -158,7 +157,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     protected void revert() {
         final String TAG = NAME + "revert";
-        Out.d(TAG, "Revert!");
 
         if (mDragging) {
             mDragging = false;
@@ -166,7 +164,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             enableObjHint(false);
 
             if (mTrial.tempRect.contains(mTrial.objectRect)) {
-                Out.d(TAG, "Should revert!");
                 mTrial.revertObject();
                 repaint();
                 hit();

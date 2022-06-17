@@ -1,35 +1,38 @@
 package control;
 
+import experiment.Task;
 import experiment.Trial;
 import panels.MainFrame;
 import tools.Utils;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static tools.Consts.STRINGS.*;
+import static experiment.Experiment.*;
 
 public class Logger {
     private final static String NAME = "Logger/";
 
-    private static final String LOG_DIR = "Proto-Expenvi-Out";
-
     private static Logger self;
 
+    private final String TOP_LOGS_DIR = "/Users/mahmoud/Documents/Academics/PhD/MIDE/Logs";
+    private static final String DRAG_LOG_DIR_NAME = "Drag";
+
+    private String mPcLogId = "";
     private static Path mLogDirectory; // Main folder for logs
     private static Path mPcLogDirectory; // Folder log path of the participant
 
     // Different log files
-    private Path mTrialsFilePath;
+//    private Path mTrialsFilePath;
     private PrintWriter mTrialsFilePW;
 
-    private Path mInstantsLogPath;
+//    private Path mInstantsLogPath;
     private PrintWriter mInstantFilePW;
 
-    private Path mTimesFilePath;
+//    private Path mTimesFilePath;
     private PrintWriter mTimesFilePW;
 
     // -------------------------------------------------------------------------------------------
@@ -48,17 +51,12 @@ public class Logger {
      */
     private Logger() {
         // Create log directory
-        final Path parentPatn = Paths.get("").toAbsolutePath().getParent();
-        mLogDirectory = parentPatn.resolve(LOG_DIR);
+//        final Path parentPath = Paths.get("").toAbsolutePath().getParent();
+        final Path parentPath = Paths.get(TOP_LOGS_DIR);
+        mLogDirectory = parentPath.resolve(DRAG_LOG_DIR_NAME);
 
-        if (!Files.isDirectory(mLogDirectory)) {
-            try {
-                Files.createDirectory(mLogDirectory);
-            } catch (IOException ioe) {
-                MainFrame.get().showMessage("Problem in creating main log directory!");
-                ioe.printStackTrace();
-            }
-        }
+        // Create the folder if doesn't exist
+        Utils.createDirIfNotExisted(mLogDirectory);
     }
 
     /**
@@ -68,43 +66,15 @@ public class Logger {
     public void logParticipant(int pId) {
         final String TAG = NAME + "logParticipant";
 
-        final String pcLogId = P_INIT + pId;
-        final String pcExpLogId = pcLogId + "_" + Utils.nowDateTime(); // Experiment Id
+        mPcLogId = P_INIT + pId;
+//        final String pcExpLogId = pcLogId + "_" + Utils.nowDate(); // Experiment Id
 
         // Create a folder for the participant (if not already created)
-        mPcLogDirectory = mLogDirectory.resolve(pcLogId);
-        if (!Files.isDirectory(mPcLogDirectory)) {
-            try {
-                Files.createDirectory(mPcLogDirectory);
-            } catch (IOException ioe) {
-                MainFrame.get().showMessage("Problem in creating log directory for participant: " + pId);
-                ioe.printStackTrace();
-            }
-        }
+        mPcLogDirectory = mLogDirectory.resolve(mPcLogId);
+        Utils.createDirIfNotExisted(mPcLogDirectory);
 
-        // Create log files for the participant
-        mTrialsFilePath = mPcLogDirectory.resolve(pcExpLogId + "_" + "TRIALS.txt");
-        mInstantsLogPath = mPcLogDirectory.resolve(pcExpLogId + "_" + "INSTANTS.txt");
-        mTimesFilePath = mPcLogDirectory.resolve(pcExpLogId + "_" + "TIMES.txt");
-
-        // Write columns in log files
-        try {
-            mTrialsFilePW = new PrintWriter(mTrialsFilePath.toFile());
-            mTrialsFilePW.println(GeneralInfo.getLogHeader() + SP + TrialInfo.getLogHeader());
-            mTrialsFilePW.flush();
-
-            mInstantFilePW = new PrintWriter(mInstantsLogPath.toFile());
-            mInstantFilePW.println(GeneralInfo.getLogHeader() + SP + InstantInfo.getLogHeader());
-            mInstantFilePW.flush();
-
-            mTimesFilePW = new PrintWriter(mTimesFilePath.toFile());
-            mTimesFilePW.println(GeneralInfo.getLogHeader() + SP + TimeInfo.getLogHeader());
-            mTimesFilePW.flush();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-//            Main.showDialog("Problem in logging the participant!");
-        }
+        // Create/open log files
+        openLogFilesToWrite();
 
     }
 
@@ -117,14 +87,13 @@ public class Logger {
         final String TAG = NAME + "logTrialInfo";
 
         try {
-            if (mTrialsFilePW == null) { // Open only if not opened before
-                mTrialsFilePW = new PrintWriter(mTrialsFilePath.toFile());
-            }
+            // Open logs if not opened
+            if (mTrialsFilePW == null) openLogFilesToWrite();
 
             mTrialsFilePW.println(genInfo + SP + trialInfo);
-            mTrialsFilePW.flush();
+//            mTrialsFilePW.flush();
 
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException e) {
 //            Main.showDialog("Problem in logging trial!");
             e.printStackTrace();
         }
@@ -139,14 +108,13 @@ public class Logger {
         final String TAG = NAME + "logInstant";
 
         try {
-            if (mInstantFilePW == null) { // Open only if not opened before
-                mInstantFilePW = new PrintWriter(mInstantsLogPath.toFile());
-            }
+            // Open logs if not opened
+            if (mInstantFilePW == null) openLogFilesToWrite();
 
             mInstantFilePW.println(genInfo + SP + instInfo);
-            mInstantFilePW.flush();
+//            mInstantFilePW.flush();
 
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException e) {
 //            Main.showDialog("Problem in logging instant!");
         }
     }
@@ -160,14 +128,13 @@ public class Logger {
         final String TAG = NAME + "logInstant";
 
         try {
-            if (mTimesFilePW == null) { // Open only if not opened before
-                mTimesFilePW = new PrintWriter(mTimesFilePath.toFile());
-            }
+            // Open logs if not opened
+            if (mTimesFilePW == null) openLogFilesToWrite();
 
             mTimesFilePW.println(genInfo + SP + timeInfo);
-            mTimesFilePW.flush();
+//            mTimesFilePW.flush();
 
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException e) {
 //            Main.showDialog("Problem in logging time!");
         }
     }
@@ -181,20 +148,71 @@ public class Logger {
         if (mTimesFilePW != null) mTimesFilePW.close();
     }
 
+    private void openLogFilesToWrite() {
+
+        final String pcDateId = mPcLogId + "_" + Utils.nowDate();
+
+        // Log files for the participant
+        final File trialsLogFile = mPcLogDirectory.resolve(pcDateId + "_" + "TRIALS.txt").toFile();
+        final File instantsLogFile = mPcLogDirectory.resolve(pcDateId + "_" + "INSTANTS.txt").toFile();
+        final File timesLogFile = mPcLogDirectory.resolve(pcDateId + "_" + "TIMES.txt").toFile();
+
+        // Create files (w/ autoflash) and if not existed, write headers. Append is for later writings
+        try {
+            mTrialsFilePW = new PrintWriter(
+                    new FileOutputStream(trialsLogFile, true),
+                    true);
+
+            mInstantFilePW = new PrintWriter(
+                    new FileOutputStream(instantsLogFile, true),
+                    true);
+
+            mTimesFilePW = new PrintWriter(
+                    new FileOutputStream(timesLogFile, true),
+                    true);
+
+            // Write headers first time
+            if (Utils.isFileEmpty(trialsLogFile)) {
+                mTrialsFilePW.println(GeneralInfo.getLogHeader() + SP + TrialInfo.getLogHeader());
+            }
+
+            if (Utils.isFileEmpty(instantsLogFile)) {
+                mInstantFilePW.println(GeneralInfo.getLogHeader() + SP + InstantInfo.getLogHeader());
+            }
+
+            if (Utils.isFileEmpty(timesLogFile)) {
+                mTimesFilePW.println(GeneralInfo.getLogHeader() + SP + TimeInfo.getLogHeader());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+//            Main.showDialog("Problem in logging the participant!");
+        }
+    }
+
 
     // Log infos (each row = one trial) --------------------------------------------------------------------
 
     // General info regarding every trial
     public static class GeneralInfo {
+        public Task task;
+        public TECHNIQUE technique;
         public int blockNum;
         public int trialNum;
         public Trial trial;
 
+//        public static String getLogHeader() {
+//            return "technique" + SP +
+//                    "block_num" + SP +
+//                    "trial_num" + SP +
+//                    Trial.getLogHeader();
+//        }
+
         public static String getLogHeader() {
-            return "technique" + SP +
+            return "task" + SP +
+                    "technique" + SP +
                     "block_num" + SP +
-                    "trial_num" + SP +
-                    Trial.getLogHeader();
+                    "trial_num";
         }
 
 //        @Override
@@ -206,7 +224,9 @@ public class Logger {
 
         @Override
         public String toString() {
-            return blockNum + SP +
+            return task + SP +
+                    technique + SP +
+                    blockNum + SP +
                     trialNum;
         }
     }

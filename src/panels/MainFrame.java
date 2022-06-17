@@ -1,5 +1,6 @@
 package panels;
 
+import control.Logger;
 import control.Server;
 import experiment.Experiment;
 import tools.Consts;
@@ -24,7 +25,8 @@ public class MainFrame extends JFrame implements MouseListener {
 
     private TaskPanel mActivePanel;
 
-    public TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.TWO_FINGER_SWIPE;
+    public TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.MOUSE;
+    public int PID = 100;
 
     /**
      * Constructor
@@ -53,7 +55,11 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void start() {
-        Server.get().start();
+        if (!ACTIVE_TECHNIQUE.equals(TECHNIQUE.MOUSE)) {
+            Server.get().start();
+            // Send the active technique to Moose
+            Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, ACTIVE_TECHNIQUE));
+        }
 
         // Show the Intro panel
         final AbstractAction showTaskAA = new AbstractAction() {
@@ -66,8 +72,10 @@ public class MainFrame extends JFrame implements MouseListener {
         add(stPanel);
         setVisible(true);
 
-        // Send the active technique to Moose
-        Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, ACTIVE_TECHNIQUE));
+
+
+        // Start logging
+        Logger.get().logParticipant(PID);
     }
 
     private void showTaskPanel() {
@@ -75,10 +83,10 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(5));
+//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(8));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(5));
-        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(5));
-//        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
+//        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(5));
+        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
 
         mActivePanel.setOpaque(true);
         mActivePanel.setBackground(Color.WHITE);

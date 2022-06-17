@@ -42,7 +42,7 @@ public class Trial {
         return "";
     }
 
-    public static String getLogHeader() {
+    public String getLogHeader() {
         return "";
     }
 

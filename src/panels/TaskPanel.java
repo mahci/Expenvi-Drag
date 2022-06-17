@@ -74,6 +74,8 @@ public class TaskPanel extends JLayeredPane {
         mBlockNum = 1;
         mTrialNum = 1;
 
+        mGenInfo.task = mTask;
+        mGenInfo.technique = MainFrame.get().ACTIVE_TECHNIQUE;
         mGenInfo.blockNum = mBlockNum;
         mGenInfo.trialNum = mTrialNum;
 
@@ -92,6 +94,7 @@ public class TaskPanel extends JLayeredPane {
         if (findAllTrialsPosition(1) == 0) {
             mBlock.positionAllTrialsElements();
             Out.d(TAG, "Showing the trials");
+            mTimeInfo.blockTime = 0;
             mBlockStartTime = Utils.nowMillis();
             mTrialStartTime = Utils.nowMillis();
             showTrial(1);
@@ -130,17 +133,21 @@ public class TaskPanel extends JLayeredPane {
         mTrialActive = false;
         mGrabbed = false;
 
+        mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
+
         // Wait a certain delay, then show the next trial (or next block)
         if (mTrialNum < mBlock.getNumTrials()) {
             // Log trial time
-            mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
+            Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
 
             // Print times
             Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trialTime);
 
+            mTrialNum++;
+            mGenInfo.trialNum = mTrialNum;
             executorService.schedule(() ->
                     {showTrial(
-                            ++mTrialNum);
+                            mTrialNum);
                         mTrialStartTime = Utils.nowMillis();
                         },
                     mTask.NT_DELAY_ms,
@@ -150,7 +157,6 @@ public class TaskPanel extends JLayeredPane {
 //            MainFrame.get().showMessage("Block finished!");
 
             // Log trial + block time
-            mTimeInfo.trialTime = Utils.nowMillis() - mTrialStartTime;
             mTimeInfo.blockTime = Utils.nowMillis() - mBlockStartTime;
             Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
 
@@ -161,9 +167,15 @@ public class TaskPanel extends JLayeredPane {
             mBlockNum++;
             mTrialNum = 1;
 
-            mBlockStartTime = Utils.nowMillis();
+            mGenInfo.blockNum = mBlockNum;
+            mGenInfo.trialNum = mTrialNum;
+
             startBlock(mBlockNum);
         } else { // Task is finished
+            // Log trial + block time
+            mTimeInfo.blockTime = Utils.nowMillis() - mBlockStartTime;
+            Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
+
             MainFrame.get().showMessage("Task finished!");
 
             // Print times

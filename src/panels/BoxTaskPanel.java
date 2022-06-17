@@ -89,6 +89,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         mTrial = (BoxTrial) mBlock.getTrial(trNum);
 
+        // Set trial for logging
+
 //        removeAll();
 //
 //        // Add the target panel (+ effect) to the panel
@@ -178,7 +180,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public boolean checkHit() {
         return mTrial.targetRect.contains(getCursorPos());
-//        return mTrial.targetPanel.getBounds().contains(getCursorPos());
     }
 
 //    @Override

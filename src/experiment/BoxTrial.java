@@ -21,7 +21,7 @@ public class BoxTrial extends Trial {
 
     // Cosntants and randoms
     private DIRECTION dir;
-    private int dist; // Corner-to-corner (diag) or edge-to-edge (straight)
+    private int dist; // Corner-to-corner (diag) or edge-to-edge (straight) (mm)
 
     public BoxTrial(List<Integer> conf, int... params) {
         super(conf, params);
@@ -173,6 +173,27 @@ public class BoxTrial extends Trial {
             }
             
         }
+    }
+
+    @Override
+    public String getLogHeader() {
+        return "trial_pos" +
+                "object_w" +
+                "target_w" +
+                "direction" +
+                "distance";
+    }
+
+    @Override
+    public String toLogString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(boundRect.getLocation())
+                .append(objectRect.width)
+                .append(dir)
+                .append(dist);
+
+        return sb.toString();
+
     }
 
     @Override
