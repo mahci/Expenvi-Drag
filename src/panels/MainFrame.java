@@ -83,7 +83,7 @@ public class MainFrame extends JFrame implements MouseListener {
 
         getContentPane().removeAll();
 
-//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(8));
+//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
 //        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(5));
 //        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(5));
         mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));

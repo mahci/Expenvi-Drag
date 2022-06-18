@@ -1,12 +1,15 @@
 package experiment;
 
 import graphic.MoRectangle;
+import jdk.jshell.execution.Util;
 import tools.Out;
+import tools.Utils;
 
 import java.awt.*;
 import java.util.List;
 
 import static tools.Consts.*;
+import static tools.Consts.STRINGS.SP;
 
 public class PeekTrial extends Trial {
     private final String NAME = "PeekTrial/";
@@ -16,12 +19,13 @@ public class PeekTrial extends Trial {
     public MoRectangle tempRect = new MoRectangle();
     public MoRectangle targetRect = new MoRectangle();
 
+    // Factors
+    private int fObjectWidth, fTargettWidth;
+    private AXIS fAxis;
+
     // Init positions for reverting
     private Point initObjPosition = new Point();
     private MoRectangle initCurtainRect = new MoRectangle();
-
-    // Vraiables
-    public AXIS axis;
 
     // Cosntants and randoms
     private DIRECTION dir;
@@ -43,22 +47,28 @@ public class PeekTrial extends Trial {
             return;
         }
 
-        //-- Set constants
+        // Set factors
+        fObjectWidth = conf.get(0);
+        fTargettWidth = conf.get(1);
+        fAxis = AXIS.get(conf.get(2));
+
+        // Set params
         if (params != null && params.length == 3) {
-            len = params[0];
-            dist = params[1];
-            tempW = params[2];
+            len = Utils.mm2px(params[0]);
+            dist = Utils.mm2px(params[1]);
+            tempW = Utils.mm2px(params[2]);
         } else {
             Out.e(NAME, "Params not passed correctly!");
         }
 
-        //-- Set variables
-        axis = AXIS.get(conf.get(2));
+        // Random direction
+        dir = fAxis.randDir();
 
-        switch (axis) {
+        //-- Set sizes
+        switch (fAxis) {
             case VERTICAL -> { // N-S
-                objectRect.setSize(len, conf.get(0));
-                targetRect.setSize(len, conf.get(1));
+                objectRect.setSize(len, Utils.mm2px(fObjectWidth));
+                targetRect.setSize(len, Utils.mm2px(fTargettWidth));
                 tempRect.setSize(len, tempW);
 
                 boundRect.setSize(
@@ -70,8 +80,8 @@ public class PeekTrial extends Trial {
             }
 
             case HORIZONTAL -> { // E-W
-                objectRect.setSize(conf.get(0), len);
-                targetRect.setSize(conf.get(1), len);
+                objectRect.setSize(Utils.mm2px(fObjectWidth), len);
+                targetRect.setSize(Utils.mm2px(fTargettWidth), len);
                 tempRect.setSize(tempW, len);
 
                 boundRect.setSize(
@@ -83,9 +93,10 @@ public class PeekTrial extends Trial {
             }
         }
 
-        // Random direction
-        dir = axis.randDir();
+    }
 
+    public AXIS getAxis() {
+        return fAxis;
     }
 
     @Override
@@ -159,56 +170,6 @@ public class PeekTrial extends Trial {
     }
 
     /**
-     * Move the object while holding the curtain constraints
-     * @param dX Movement in X
-     * @param dY Movement in Y
-     */
-//    public void moveObject(int dX, int dY) {
-//
-//        switch (dir) {
-//            case N -> {
-//                final int yTopLimit = boundRect.y;
-//                final int newY = objectRect.y + dY;
-//
-//                if (newY > yTopLimit) {
-//                    objectRect.y = newY;
-//                    curtainRect.resize(DIRECTION.S, dY, dX);
-//                }
-//            }
-//
-//            case S -> {
-//                final int yBottomLimit = boundRect.bottomLeft.y - objectRect.height;
-//                final int newY = objectRect.y + dY;
-//
-//                if (newY < yBottomLimit) {
-//                    objectRect.y = newY;
-//                    curtainRect.resize(DIRECTION.N, dY, dX);
-//                }
-//            }
-//
-//            case E -> {
-//                final int xRightLimit = boundRect.topRight.x - objectRect.width;
-//                final int newX = objectRect.x + dX;
-//
-//                if (newX < xRightLimit) {
-//                    objectRect.x = newX;
-//                    curtainRect.resize(DIRECTION.W, dY, dX);
-//                }
-//            }
-//
-//            case W -> {
-//                final int xLeftLimit = boundRect.x;
-//                final int newX = objectRect.x + dX;
-//
-//                if (newX > xLeftLimit) {
-//                    objectRect.x = newX;
-//                    curtainRect.resize(DIRECTION.E, dY, dX);
-//                }
-//            }
-//        }
-//    }
-
-    /**
      * Move the object to be under the point p (relative to the top-left corner of the object)
      * (with conditions)
      * @param relGrabP Point relative to the top-left corner of the object (= grab point)
@@ -279,15 +240,16 @@ public class PeekTrial extends Trial {
     }
 
     @Override
+    public String toLogString() {
+        return boundRect.x + SP +
+                boundRect.y + SP +
+                fObjectWidth + SP +
+                fTargettWidth + SP +
+                dir.toString();
+    }
+
+    @Override
     public String toString() {
-        return "PeekTrial{" +
-                "targetRect=" + targetRect +
-                ", curtainRect=" + curtainRect +
-                ", objectRect=" + objectRect +
-                ", axis=" + axis +
-                ", dir=" + dir +
-                ", dist=" + dist +
-                ", len=" + len +
-                '}';
+        return toLogString();
     }
 }

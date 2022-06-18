@@ -9,6 +9,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -17,8 +18,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static tools.Consts.DISP.*;
+import static tools.Consts.STRINGS.SP;
 
 public class Utils {
 
@@ -291,5 +294,16 @@ public class Utils {
         }
 
         return false;
+    }
+
+    /**
+     * Get the names of the class properties as a SP-delimeited String
+     * @param clazz Class
+     * @return String
+     */
+    public static String classPropsNames(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .map(Field::getName)
+                .collect(Collectors.joining(SP));
     }
 }

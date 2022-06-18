@@ -111,14 +111,15 @@ public class Block {
 
         final int trInd = trNum - 1;
 
-        final Gson gson = new Gson();
-        final String trialJSON = gson.toJson(mTrials.get(trInd));
-        final Class<? extends Trial> trialType = mTrials.get(trInd).getClass();
+//        final Gson gson = new Gson();
+//        final String trialJSON = gson.toJson(mTrials.get(trInd));
+//        final Class<? extends Trial> trialType = mTrials.get(trInd).getClass();
 
 //        final int lastInd = mTrials.size() - 1;
         final int insertInd = Utils.randInt(trInd + 1, mTrials.size());
-        mTrials.add(insertInd, gson.fromJson(trialJSON, trialType));
         Out.d(TAG, "insertInd | total", insertInd, mTrials.size());
+
+        mTrials.add(insertInd, mTrials.get(trInd).clone());
 
         return insertInd + 1; // Return the number
     }

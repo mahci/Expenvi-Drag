@@ -1,27 +1,31 @@
 package experiment;
 
+import control.Logger;
 import graphic.MoRectangle;
+import jdk.jshell.execution.Util;
 import tools.Out;
+import tools.Utils;
 
 import java.awt.*;
 import java.util.List;
 
 import static java.lang.Math.*;
 import static tools.Consts.*;
+import static tools.Consts.STRINGS.SP;
 
 public class BoxTrial extends Trial {
     private final String NAME = "BoxTrial/";
 
     public MoRectangle objectRect = new MoRectangle();
-//    public MoPanel targetPanel = new MoPanel();
     public MoRectangle targetRect = new MoRectangle();
 
-    // Vraiables
-    private AXIS axis;
+    // Factors
+    private int fObjectWidth, fTargettWidth;
+    private STRAIGHTNESS fStraightness;
 
-    // Cosntants and randoms
+    // Other values
     private DIRECTION dir;
-    private int dist; // Corner-to-corner (diag) or edge-to-edge (straight) (mm)
+    private int dist; // Corner-to-corner (diag) or edge-to-edge (straight)
 
     public BoxTrial(List<Integer> conf, int... params) {
         super(conf, params);
@@ -31,73 +35,48 @@ public class BoxTrial extends Trial {
             return;
         }
 
-        //-- Set constants
+        //Set factors
+        fObjectWidth = conf.get(0);
+        fTargettWidth = conf.get(1);
+        fStraightness = STRAIGHTNESS.get(conf.get(2));
+
+        // Set params
         if (params != null && params.length > 0) {
-            dist = params[0];
+            dist = Utils.mm2px(params[0]);
         }
 
-        //-- Set variables
-        objectRect.setSize(conf.get(0), conf.get(0));
-//        targetPanel.setSize(conf.get(1), conf.get(1));
-        targetRect.setSize(conf.get(1), conf.get(1));
-        axis = AXIS.get(conf.get(2));
+        //-- Set secondary values
+        objectRect.setSize(Utils.mm2px(fObjectWidth), Utils.mm2px(fObjectWidth));
+        targetRect.setSize(Utils.mm2px(fTargettWidth), Utils.mm2px(fTargettWidth));
 
-        dir = axis.randDir(); // Random direction based on AXIS
+        dir = fStraightness.randDir(); // Random direction based on STRIAGHTNESS
 
-        // Set the bound box size based on the axis
-        Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetRect.width,
-                (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width));
-        switch (axis) {
-            case VERTICAL -> {
-                boundRect.setSize(
-                        targetRect.width,
-                        objectRect.width + dist + targetRect.width);
-            }
-            case HORIZONTAL -> {
-                boundRect.setSize(
-                        objectRect.width + dist + targetRect.width,
-                        targetRect.width);
-            }
-            case FOR_DIAG, BACK_DIAG -> {
-                boundRect.setSize(
-                        (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width),
-                        (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width)); // Always square
-            }
+        // Set the bound box size based on the direction
+        switch (dir) {
+            case N, S ->
+                    boundRect.setSize(
+                            targetRect.width,
+                            objectRect.width + dist + targetRect.width);
+            case E, W ->
+                    boundRect.setSize(
+                            objectRect.width + dist + targetRect.width,
+                            targetRect.width);
+            case NE, NW, SE, SW ->
+                    boundRect.setSize(
+                            (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width),
+                            (int) (objectRect.width + (dist / sqrt(2)) + targetRect.width));
+
         }
-
-//        Out.d(NAME, objectRect.width,  (dist / sqrt(2)), targetPanel.getWidth(),
-//                (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()));
-//        switch (axis) {
-//            case VERTICAL -> {
-//                boundRect.setSize(
-//                        targetPanel.getWidth(),
-//                        objectRect.width + dist + targetPanel.getWidth());
-//            }
-//            case HORIZONTAL -> {
-//                boundRect.setSize(
-//                        objectRect.width + dist + targetPanel.getWidth(),
-//                        targetPanel.getWidth());
-//            }
-//            case FOR_DIAG, BACK_DIAG -> {
-//                boundRect.setSize(
-//                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth()),
-//                        (int) (objectRect.width + (dist / sqrt(2)) + targetPanel.getWidth())); // Always square
-//            }
-//        }
-
     }
 
     @Override
     public Point getEndPoint() {
         return targetRect.center;
-//        final Rectangle tgtRect = targetPanel.getBounds();
-//        return new Point((int) tgtRect.getCenterX(), (int) tgtRect.getCenterY());
     }
 
     @Override
     protected void positionElements() {
         final String TAG = NAME + "setElementsLocations";
-//        super.positionElements();
 
         switch (dir) {
             case N -> {
@@ -175,36 +154,19 @@ public class BoxTrial extends Trial {
         }
     }
 
-    @Override
-    public String getLogHeader() {
-        return "trial_pos" +
-                "object_w" +
-                "target_w" +
-                "direction" +
-                "distance";
-    }
 
     @Override
     public String toLogString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(boundRect.getLocation())
-                .append(objectRect.width)
-                .append(dir)
-                .append(dist);
-
-        return sb.toString();
-
+        Out.d(NAME, boundRect.x + SP + boundRect.y);
+        return boundRect.x + SP +
+                boundRect.y + SP +
+                fObjectWidth + SP +
+                fTargettWidth + SP +
+                dir.toString();
     }
 
     @Override
     public String toString() {
-        return "BoxTrial{" +
-                "boundRect=" + boundRect +
-                ", objectRect=" + objectRect +
-                ", targetRect=" + targetRect +
-                ", axis=" + axis +
-                ", dir=" + dir +
-                ", dist=" + dist +
-                '}';
+        return toLogString();
     }
 }

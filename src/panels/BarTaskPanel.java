@@ -1,5 +1,6 @@
 package panels;
 
+import control.Logger;
 import experiment.BarTrial;
 import graphic.MoGraphics;
 import tools.Consts;
@@ -80,14 +81,22 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     protected void showTrial(int trNum) {
         final String TAG = NAME + "showTrial";
-        Out.d(TAG, trNum);
+        super.showTrial(trNum);
+
         mTrial = (BarTrial) mBlock.getTrial(trNum);
+
+        // LOG
+        mTrialInfo = new Logger.TrialInfo();
+        mTrialInfo.trial = mTrial.clone();
+
         repaint();
         mTrialActive = true;
     }
 
     @Override
     public void grab() {
+        super.grab();
+
         if (mTrial.objectRect.contains(getCursorPos())) {
             mGrabbed = true;
             mGrabPos = getCursorPos();
@@ -97,9 +106,31 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
-    public void release() {
-        if (mGrabbed) {
+    protected void drag() {
+        super.drag();
 
+        final Point curP = getCursorPos();
+
+        // LOG
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry();
+
+        final int dX = curP.x - mGrabPos.x;
+        final int dY = curP.y - mGrabPos.y;
+
+        mTrial.objectRect.translate(dX, dY);
+
+        mGrabPos = curP;
+
+        repaint();
+    }
+
+    @Override
+    public void release() {
+        super.release();
+
+        if (mGrabbed) {
             if (checkHit()) {
                 hit();
             } else {
@@ -112,6 +143,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     protected void revert() {
+        super.revert();
         miss();
     }
 
@@ -202,47 +234,22 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void mouseDragged(MouseEvent e) {
         if (mMouseEnabled) {
             if (mGrabbed) {
-                final int dX = e.getX() - mGrabPos.x;
-                final int dY = e.getY() - mGrabPos.y;
-
-                mTrial.objectRect.translate(dX, dY);
-
-                mGrabPos = e.getPoint();
-
-                repaint();
+                drag();
             }
         }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        if (mTrialActive) {
+            // LOG
+            mInstantInfo.logMove();
+            if (mTrial.objectRect.contains(e.getPoint())) mInstantInfo.logCurObjEntry();
 
-        if (!firstMove) t0 = Utils.nowMillis();
-
-        // When the cursor gets near the bar
-//        mIsCursorNearObj = mGroup.barPath.contains(e.getPoint());
-//        if (mIsCursorNearObj) {
-//            if (mChangeCursor) setCursor(new Cursor(Cursor.HAND_CURSOR));
-//        } else {
-//            if (mChangeCursor) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-//        }
-
-        if (mGrabbed) {
-            final int dX = e.getX() - mGrabPos.x;
-            final int dY = e.getY() - mGrabPos.y;
-
-//            AffineTransform transform = new AffineTransform();
-//            transform.translate(dX, dY);
-
-//            mGroup.barPath.transform(transform);
-
-            mTrial.objectRect.translate(dX, dY);
-
-            mGrabPos = e.getPoint();
-//            mouseDragged(e);
+            if (mGrabbed) {
+                drag();
+            }
         }
-
-        repaint();
 
     }
 

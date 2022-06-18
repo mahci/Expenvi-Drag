@@ -2,29 +2,28 @@ package experiment;
 
 import graphic.MoRectangle;
 import tools.Out;
+import tools.Utils;
 
 import java.awt.*;
 import java.util.List;
 
 import static tools.Consts.*;
+import static tools.Consts.STRINGS.SP;
 
 public class BarTrial extends Trial {
     private final String NAME = "BarTrial/";
 
-//    public MoRectangle line1Rect = new MoRectangle();
-//    public MoRectangle line2Rect = new MoRectangle();
-//    public MoRectangle inRect = new MoRectangle();
-
     public MoRectangle targetRect = new MoRectangle();
     public MoRectangle objectRect = new MoRectangle();
 
-    // Vraiables
-    private AXIS axis;
+    // Factors
+    private int fObjectWidth, fTargettWidth;
+    private AXIS fAxis;
 
     // Cosntants and randoms
     private DIRECTION dir;
     private int dist; // Corner-to-corner (diag) or edge-to-edge (straight)
-    private int objLen, tgtLen, tgtLinesThickness;
+    private int objLen, tgtLen;
 
     /**
      * Constructor
@@ -39,47 +38,44 @@ public class BarTrial extends Trial {
             return;
         }
 
-        //-- Set constants
-        if (params != null && params.length == 4) {
-            objLen = params[0];
-            tgtLen = params[1];
-//            tgtLinesThickness = params[2];
-            dist = params[3];
+        // Set factors
+        fObjectWidth = conf.get(0);
+        fTargettWidth = conf.get(1);
+        fAxis = AXIS.get(conf.get(2));
+
+        // Set params
+        if (params != null && params.length > 2) {
+            objLen = Utils.mm2px(params[0]);
+            tgtLen = Utils.mm2px(params[1]);
+            dist = Utils.mm2px(params[2]);
         } else {
             Out.e(NAME, "Params not passed correctly!");
         }
 
+        // Random direction
+        dir = fAxis.randDir();
+
         //-- Set variables
-        axis = AXIS.get(conf.get(2));
-        switch (axis) {
+        switch (fAxis) {
 
             case VERTICAL -> { // N-S
-                objectRect.setSize(objLen, conf.get(0));
-                targetRect.setSize(tgtLen, conf.get(1));
-//                line1Rect.setSize(tgtLen, tgtLinesThickness);
-//                line2Rect.setSize(line1Rect.getSize());
-//                inRect.setSize(tgtLen, conf.get(1));
+                objectRect.setSize(objLen, Utils.mm2px(fObjectWidth));
+                targetRect.setSize(tgtLen, Utils.mm2px(fTargettWidth));
 
                 boundRect.setSize(
-                        tgtLen,
-                        conf.get(0) + dist + conf.get(1));
+                        targetRect.width,
+                        objectRect.height + dist + targetRect.height);
             }
 
             case HORIZONTAL -> { // E-W
-                objectRect.setSize(conf.get(0), objLen);
-                targetRect.setSize(conf.get(1), tgtLen);
-//                line1Rect.setSize(tgtLinesThickness, tgtLen);
-//                line2Rect.setSize(line1Rect.getSize());
-//                inRect.setSize(conf.get(1), tgtLen);
+                objectRect.setSize(Utils.mm2px(fObjectWidth), objLen);
+                targetRect.setSize(Utils.mm2px(fTargettWidth), tgtLen);
 
                 boundRect.setSize(
-                        conf.get(0) + dist + conf.get(1),
-                        tgtLen);
+                        objectRect.height + dist + targetRect.height,
+                        targetRect.height);
             }
         }
-
-        // Random direction
-        dir = axis.randDir();
 
     }
 
@@ -99,9 +95,6 @@ public class BarTrial extends Trial {
                         boundRect.bottomLeft.y - objectRect.height);
 
                 targetRect.setLocation(boundRect.getLocation());
-//                line1Rect.setLocation(boundRect.getLocation());
-//                inRect.setLocation(line1Rect.getbottomLeft);
-//                line2Rect.setLocation(inRect.getbottomLeft);
             }
 
             case S -> {
@@ -112,9 +105,6 @@ public class BarTrial extends Trial {
                 targetRect.setLocation(
                         boundRect.x,
                         boundRect.bottomLeft.y - targetRect.height);
-//                line1Rect.setLocation(boundRect.x, boundRect.getbottomLeft.y - line1Rect.height);
-//                inRect.setLocation(boundRect.x, line1Rect.y - inRect.height);
-//                line2Rect.setLocation(boundRect.x, inRect.y - line2Rect.height);
             }
 
             case E -> {
@@ -125,9 +115,6 @@ public class BarTrial extends Trial {
                 targetRect.setLocation(
                         boundRect.topRight.x - targetRect.width,
                         boundRect.y);
-//                line1Rect.setLocation(boundRect.getUpRight().x - line1Rect.width, boundRect.y);
-//                inRect.setLocation(line1Rect.x - inRect.width, boundRect.y);
-//                line2Rect.setLocation(inRect.x - line2Rect.width, boundRect.y);
             }
 
             case W -> {
@@ -136,24 +123,22 @@ public class BarTrial extends Trial {
                         boundRect.center.y - objectRect.height / 2);
 
                 targetRect.setLocation(boundRect.getLocation());
-//                line1Rect.setLocation(boundRect.getLocation());
-//                inRect.setLocation(line1Rect.getUpRight());
-//                line2Rect.setLocation(inRect.getUpRight());
             }
 
         }
     }
 
     @Override
+    public String toLogString() {
+        return boundRect.x + SP +
+                boundRect.y + SP +
+                fObjectWidth + SP +
+                fTargettWidth + SP +
+                dir.toString();
+    }
+
+    @Override
     public String toString() {
-        return "BarTrial{" +
-                "targetRect=" + targetRect +
-                ", objectRect=" + objectRect +
-                ", axis=" + axis +
-                ", dir=" + dir +
-                ", dist=" + dist +
-                ", objLen=" + objLen +
-                ", tgtLen=" + tgtLen +
-                '}';
+        return toLogString();
     }
 }

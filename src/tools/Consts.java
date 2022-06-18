@@ -240,6 +240,34 @@ public class Consts {
         }
     }
 
+    public enum STRAIGHTNESS {
+        STRAIGHT (0), DIAGONAL (1);
+        private final int n;
+
+        STRAIGHTNESS(int i) {
+            n = i;
+        }
+
+        public static STRAIGHTNESS get(int n) {
+            return STRAIGHTNESS.values()[n];
+        }
+
+        public DIRECTION randDir() {
+            switch (this) {
+                case STRAIGHT -> {
+                    return DIRECTION.get(Utils.randInt(0, 4));
+                }
+                case DIAGONAL -> {
+                    return DIRECTION.get(Utils.randInt(4, 8));
+                }
+            }
+
+            return null;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------
+
     //-- Strings and related
     public static class STRINGS {
         public final static String SP = ";";

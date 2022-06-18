@@ -1,10 +1,9 @@
 package panels;
 
+import control.Logger;
 import experiment.BoxTrial;
 import experiment.Experiment;
 import graphic.MoGraphics;
-import graphic.MoRectangle;
-import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
@@ -40,9 +39,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     private long t0, t1;
-    private boolean firstMove;
-
-//    private MoGraphics mMoGraphics;
 
     // Actions ------------------------------------------------------------------------------------
     private final Action NEXT_TRIAL = new AbstractAction() {
@@ -62,7 +58,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public BoxTaskPanel(Dimension dim) {
         setSize(dim);
         setLayout(null);
-
 
         addMouseMotionListener(this);
         addMouseListener(this);
@@ -85,20 +80,13 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     protected void showTrial(int trNum) {
         String TAG = NAME + "nextTrial";
-//        firstMove = false;
+        super.showTrial(trNum);
 
         mTrial = (BoxTrial) mBlock.getTrial(trNum);
 
-        // Set trial for logging
-
-//        removeAll();
-//
-//        // Add the target panel (+ effect) to the panel
-//        BevelBorder bord = new BevelBorder(BevelBorder.LOWERED);
-//        mTrial.targetPanel.setBorder(bord);
-//        mTrial.targetPanel.setBackground(COLORS.GRAY_200);
-//        add(mTrial.targetPanel);
-
+        // LOG
+        mTrialInfo = new Logger.TrialInfo();
+        mTrialInfo.trial = mTrial.clone();
 
         repaint();
 
@@ -107,6 +95,8 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void grab() {
+        super.grab();
+
         Point curP = getCursorPos();
         if (mTrial.objectRect.contains(curP)) {
             mGrabbed = true;
@@ -117,8 +107,30 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     }
 
     @Override
+    protected void drag() {
+        super.drag();
+
+        final Point curP = getCursorPos();
+
+        // LOG
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry();
+
+        final int dX = curP.x - mGrabPos.x;
+        final int dY = curP.y - mGrabPos.y;
+
+        mTrial.objectRect.translate(dX, dY);
+
+        mGrabPos = curP;
+
+        repaint();
+    }
+
+    @Override
     public void release() {
         final String TAG = NAME + "release";
+        super.release();
 
         if (mGrabbed) {
             if (checkHit()) {
@@ -133,6 +145,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     protected void revert() {
+        super.revert();
         miss();
     }
 
@@ -143,6 +156,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         moveObjInside();
 
         super.hit();
+
         // Wait a certain delay, then show the next trial (or next block)
 //        Out.d(TAG, mTrialNum, mBlock.getNumTrials());
 //        if (mTrialNum < mBlock.getNumTrials()) {
@@ -242,35 +256,25 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void mouseDragged(MouseEvent e) {
         if (mMouseEnabled) {
             if (mTrialActive && mGrabbed) {
-                final int dX = e.getX() - mGrabPos.x;
-                final int dY = e.getY() - mGrabPos.y;
+                if (mTrial.targetRect.contains(e.getPoint())) mInstantInfo.logCurTgtEntry(); // LOG
+                if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry(); // LOG
 
-                mTrial.objectRect.translate(dX, dY);
-
-                mGrabPos = e.getPoint();
-
-                repaint();
+                drag();
             }
         }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (!firstMove) {
-            t0 = Utils.nowMillis();
-            t1 = System.currentTimeMillis();
-            firstMove = true;
-        }
+        if (mTrialActive) {
+            // LOG
+            mInstantInfo.logMove();
+            if (mTrial.objectRect.contains(e.getPoint())) mInstantInfo.logCurObjEntry();
 
-        if (mTrialActive && mGrabbed) {
-            final int dX = e.getX() - mGrabPos.x;
-            final int dY = e.getY() - mGrabPos.y;
+            if (mGrabbed) {
+                drag();
+            }
 
-            mTrial.objectRect.translate(dX, dY);
-
-            mGrabPos = e.getPoint();
-
-            repaint();
         }
     }
 
@@ -306,5 +310,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void mouseExited(MouseEvent e) {
 
     }
+
+
 
 }

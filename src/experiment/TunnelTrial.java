@@ -1,6 +1,7 @@
 package experiment;
 
 import graphic.MoRectangle;
+import jdk.jshell.execution.Util;
 import tools.Out;
 import tools.Utils;
 
@@ -9,6 +10,7 @@ import java.awt.geom.Line2D;
 import java.util.List;
 
 import static tools.Consts.*;
+import static tools.Consts.STRINGS.SP;
 
 public class TunnelTrial extends Trial implements Cloneable {
     private final String NAME = "TunnelTrial/";
@@ -21,16 +23,15 @@ public class TunnelTrial extends Trial implements Cloneable {
     public Line2D.Double startLine = new Line2D.Double();
     public Line2D.Double endLine = new Line2D.Double();
 
-    // Variables
-    private int tunnelD; // px
-    private int tunnelW; // px
-    private AXIS axis;
+    // Factors
+    private int fTunnelLength, fTunnelWidth;
+    private AXIS fAxis;
 
     // Constants and randoms
-    private DIRECTION dir;
+    public DIRECTION dir;
     private int linesW, textW; // px
 
-    public TunnelTrial(List<Integer> conf, int... params) {
+    public TunnelTrial(List<Integer> conf, double... params) {
         super(conf, params);
 
         if (conf == null || conf.size() < 3) {
@@ -38,49 +39,43 @@ public class TunnelTrial extends Trial implements Cloneable {
             return;
         }
 
-        // Set the dist and width
-        tunnelD = conf.get(0);
-        tunnelW = conf.get(1);
-        axis = AXIS.get(conf.get(2));
+        // Set factors
+        fTunnelLength = conf.get(0);
+        fTunnelWidth = conf.get(1);
+        fAxis = AXIS.get(conf.get(2));
 
-        dir = axis.randDir(); // Random direction based on the AXIS
+        dir = fAxis.randDir(); // Random direction based on the AXIS
 
         // Set sizes
         if (params != null && params.length > 0) {
-            this.linesW = params[0];
-            this.textW = params[1];
+            this.linesW = Utils.mm2px(params[0]);
+            this.textW = Utils.mm2px(params[1]);
 
-            if (axis.equals(AXIS.VERTICAL)) {
-                line1Rect.setSize(linesW, tunnelD);
-                line2Rect.setSize(line1Rect.getSize());
-                inRect.setSize(tunnelW, tunnelD);
-                startTextRect.setSize(textW, textW);
+            switch (fAxis) {
+                case VERTICAL -> {
+                    line1Rect.setSize(linesW, Utils.mm2px(fTunnelLength));
+                    line2Rect.setSize(line1Rect.getSize());
+                    inRect.setSize(Utils.mm2px(fTunnelWidth), Utils.mm2px(fTunnelLength));
+                    startTextRect.setSize(textW, textW);
 
-                boundRect.setSize(tunnelW + 2 * linesW + textW, tunnelD);
+                    boundRect.setSize(inRect.width + 2 * linesW + textW, inRect.height);
+                }
 
-            } else { // Horizontal
-                line1Rect.setSize(tunnelD, linesW);
-                line2Rect.setSize(line1Rect.getSize());
-                inRect.setSize(tunnelD, tunnelW);
-                startTextRect.setSize(textW, textW);
+                case HORIZONTAL -> {
+                    line1Rect.setSize(Utils.mm2px(fTunnelLength), linesW);
+                    line2Rect.setSize(line1Rect.getSize());
+                    inRect.setSize(Utils.mm2px(fTunnelLength), Utils.mm2px(fTunnelWidth));
+                    startTextRect.setSize(textW, textW);
 
-                boundRect.setSize(tunnelD, tunnelW + 2 * linesW + textW);
+                    boundRect.setSize(inRect.width, inRect.height + 2 * linesW + textW);
+                }
             }
-
         }
 
     }
 
-    public int getTunnelD() {
-        return tunnelD;
-    }
-
-    public int getTunnelW() {
-        return tunnelW;
-    }
-
-    public DIRECTION getDir() {
-        return dir;
+    public AXIS getAxis() {
+        return fAxis;
     }
 
     @Override
@@ -182,23 +177,16 @@ public class TunnelTrial extends Trial implements Cloneable {
     }
 
     @Override
-    public String toString() {
-        return "TunnelTrial{" +
-                "boundRect=" + boundRect +
-                ", line1Rect=" + line1Rect +
-                ", line2Rect=" + line2Rect +
-                ", inRect=" + inRect +
-                ", startTextRect=" + startTextRect +
-                ", dir=" + dir +
-                ", tunnelD=" + tunnelD +
-                ", tunnelW=" + tunnelW +
-                ", linesW=" + linesW +
-                ", textW=" + textW +
-                '}';
+    public String toLogString() {
+        return boundRect.x + SP +
+                boundRect.y + SP +
+                fTunnelLength + SP +
+                fTunnelWidth + SP +
+                dir.toString();
     }
 
     @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
+    public String toString() {
+        return toLogString();
     }
 }

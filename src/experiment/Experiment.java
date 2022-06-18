@@ -21,12 +21,11 @@ public class Experiment {
 
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {
-        private static final double[] OBJECT_WIDTHS = new double[] {28, 40}; // Object widths
-        private static final double[] TARGET_WIDTHS = new double[] {82, 134}; // Target widths (mm)
-        private static final int[] AXISES = new int[] {0, 1, 2, 3}; // Axises ordinals
+        private static final int[] OBJECT_WIDTHS = new int[] {28, 40}; // Object widths
+        private static final int[] TARGET_WIDTHS = new int[] {82, 134}; // Target widths (mm)
+        private static final int[] STRAIGHT_VALS = new int[] {0, 1}; // Straightness values
 
-        public static final int DIST_mm = 50; // mm
-
+        public static final int DIST_mm = 50;
         public static final double NT_DIST_mm = 30;
 
         public BoxTask(int nBlocks) {
@@ -43,12 +42,12 @@ public class Experiment {
 //            final int dist = Utils.mm2px(DIST_mm);
 
             List<Integer> config = new ArrayList<>();
-            for (double vi : OBJECT_WIDTHS) {
-                for (double vj : TARGET_WIDTHS) {
-                    for (int vk : AXISES) {
-                        config.add(Utils.mm2px(vi));
-                        config.add(Utils.mm2px(vj));
-                        config.add(vk);
+            for (int objW : OBJECT_WIDTHS) {
+                for (int tgtW : TARGET_WIDTHS) {
+                    for (int stV : STRAIGHT_VALS) {
+                        config.add(objW);
+                        config.add(tgtW);
+                        config.add(stV);
 
                         // Create trials based on the combination
                         result.mTrials.add(new BoxTrial(config, DIST_mm));
@@ -72,14 +71,13 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class BarTask extends Task {
-        private static final double[] OBJECT_WIDTHS = new double[] {2, 4}; // Object widths (mm)
-        private static final double[] TARGET_WIDTHS = new double[] {5, 8}; // Target widths (mm)
+        private static final int[] OBJECT_WIDTHS = new int[] {2, 4}; // Object widths (mm)
+        private static final int[] TARGET_WIDTHS = new int[] {5, 8}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int DIST_mm = 50; // mm
         public static final int OBJECT_LEN_mm = 5; // mm
         public static final int TARGET_LEN_mm = 30; // mm
-        public static final int TARGET_LINES_THICKNESS_mm = 1; // mm
 
         public BarTask(int nBlocks) {
             super(nBlocks);
@@ -92,21 +90,18 @@ public class Experiment {
         private Block genBlock() {
             Block result = new Block();
 
-            final int dist = Utils.mm2px(DIST_mm);
-            final int objLen = Utils.mm2px(OBJECT_LEN_mm);
-            final int tgtLen = Utils.mm2px(TARGET_LEN_mm);
-            final int tgtLinesThickness = Utils.mm2px(TARGET_LINES_THICKNESS_mm); // Not using this
-
             List<Integer> config = new ArrayList<>(); // Best to have as int so px values + enums
-            for (double vi : OBJECT_WIDTHS) {
-                for (double vj : TARGET_WIDTHS) {
-                    for (int vk : AXISES) {
-                        config.add(Utils.mm2px(vi));
-                        config.add(Utils.mm2px(vj));
-                        config.add(vk);
+            for (int objW : OBJECT_WIDTHS) {
+                for (int tgtW : TARGET_WIDTHS) {
+                    for (int axis : AXISES) {
+                        config.add(objW);
+                        config.add(tgtW);
+                        config.add(axis);
 
                         // Create trials based on the combination
-                        result.mTrials.add(new BarTrial(config, objLen, tgtLen, tgtLinesThickness, dist));
+                        result.mTrials.add(new BarTrial(config,
+                                OBJECT_LEN_mm, TARGET_LEN_mm,
+                                DIST_mm));
 
                         config.clear();
                     }
@@ -127,8 +122,8 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class PeekTask extends Task {
-        private static final double[] OBJECT_WIDTHS = new double[] {6}; // Object widths (mm)
-        private static final double[] TARGET_WIDTHS = new double[] {18, 36}; // Target widths (mm)
+        private static final int[] OBJECT_WIDTHS = new int[] {6}; // Object widths (mm)
+        private static final int[] TARGET_WIDTHS = new int[] {18, 36}; // Target widths (mm)
         private static final int[] AXISES = new int[] {0, 1}; // Axises ordinals
 
         public static final int LEN_mm = 100; // mm
@@ -147,19 +142,15 @@ public class Experiment {
             Block result = new Block();
 
             List<Integer> config = new ArrayList<>();
-            final int len = Utils.mm2px(LEN_mm);
-            final int dist = Utils.mm2px(DIST_mm);
-            final int tempW = Utils.mm2px(TEMP_W_mm);
-
-            for (double vi : OBJECT_WIDTHS) {
-                for (double vj : TARGET_WIDTHS) {
-                    for (int vk : AXISES) {
-                        config.add(Utils.mm2px(vi));
-                        config.add(Utils.mm2px(vj));
-                        config.add(vk);
+            for (int objW : OBJECT_WIDTHS) {
+                for (int tgtW : TARGET_WIDTHS) {
+                    for (int axis : AXISES) {
+                        config.add(objW);
+                        config.add(tgtW);
+                        config.add(axis);
 
                         // Create trials based on the combination
-                        result.mTrials.add(new PeekTrial(config, len, dist, tempW));
+                        result.mTrials.add(new PeekTrial(config, LEN_mm, DIST_mm, TEMP_W_mm));
 
                         config.clear();
                     }
@@ -180,9 +171,8 @@ public class Experiment {
 
     // -------------------------------------------------------------------------------------
     public static class TunnelTask extends Task {
-        //        private final int[] AXISES = new int[] {0, 1}; // Axises ordinals
-        private final double[] DISTS = new double[]{100}; // Tunnel length (in mm)
-        private final double[] WIDTHS = new double[]{5}; // Tunnel widths (in mm)
+        private final int[] TUNNEL_LENS = new int[]{100}; // Tunnel length (in mm)
+        private final int[] TUNNEL_WIDTHS = new int[]{5, 8}; // Tunnel widths (in mm)
         private static final int[] AXISES = new int[]{0, 1}; // Axises ordinals
 
         public final double LINES_W_mm = 0.5; // Tunnel lines' width
@@ -202,17 +192,15 @@ public class Experiment {
             Block result = new Block();
 
             List<Integer> config = new ArrayList<>();
-            final int linesW = Utils.mm2px(LINES_W_mm);
-            final int textW = Utils.mm2px(TEXT_W_mm);
-            for (double vi : DISTS) {
-                for (double vj : WIDTHS) {
-                    for (int vk : AXISES) {
-                        config.add(Utils.mm2px(vi));
-                        config.add(Utils.mm2px(vj));
-                        config.add(vk);
+            for (int tunnL : TUNNEL_LENS) {
+                for (int tunnW : TUNNEL_WIDTHS) {
+                    for (int axis : AXISES) {
+                        config.add(tunnL);
+                        config.add(tunnW);
+                        config.add(axis);
 
                         // Create trials based on the combination
-                        result.mTrials.add(new TunnelTrial(config, linesW, textW));
+                        result.mTrials.add(new TunnelTrial(config, LINES_W_mm, TEXT_W_mm));
 
                         config.clear();
                     }

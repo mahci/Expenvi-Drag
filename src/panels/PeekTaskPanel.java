@@ -2,6 +2,7 @@ package panels;
 
 import experiment.PeekTrial;
 import graphic.MoGraphics;
+import jdk.jshell.execution.Util;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
@@ -100,6 +101,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     protected void showTrial(int trNum) {
         final String TAG = NAME + "showTrial";
+        super.showTrial(trNum);
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
 
@@ -112,6 +114,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void grab() {
+        super.grab();
+
         if (mTrial.objectRect.contains(getCursorPos())) {
             mDragging = true;
 
@@ -123,22 +127,35 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     }
 
     protected void drag() {
-        mEventCounter++;
-        mPointSet.add(getCursorPos());
+        super.drag();
 
-        mTrial.moveObject(mRelGrabPos, getCursorPos());
+        final Point curP = getCursorPos();
+
+        // LOG
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry();
+
+        mEventCounter++;
+        mPointSet.add(curP);
+
+        mTrial.moveObject(mRelGrabPos, curP);
 
         repaint();
 
         // Only set it once per trial
         if (!mTempEntered) {
-            if (mTrial.tempRect.contains(mTrial.objectRect)) mTempEntered = true;
+            if (mTrial.tempRect.contains(mTrial.objectRect)) {
+                mTempEntered = true;
+                mInstantInfo.temp_entry = Utils.nowMillis(); // LOG
+            }
         }
     }
 
     @Override
     public void release() {
         final String TAG = NAME + "release";
+        super.release();
 
         if (mDragging) {
             mDragging = false;
@@ -157,6 +174,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     protected void revert() {
         final String TAG = NAME + "revert";
+        super.revert();
 
         if (mDragging) {
             mDragging = false;
@@ -182,7 +200,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         if (enable) {
             if (mHightlightObj) COLOR_OBJECT = COLOR_OBJ_HIGHLIGHT;
             if (mChangeCursor) {
-                if (mTrial.axis.equals(AXIS.VERTICAL)) setCursor(CURSORS.RESIZE_NS);
+                if (mTrial.getAxis().equals(AXIS.VERTICAL)) setCursor(CURSORS.RESIZE_NS);
                 else setCursor(CURSORS.RESIZE_EW);
             }
         } else {
@@ -276,30 +294,27 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     public void mouseDragged(MouseEvent e) {
-//        drag();
-//        if (mTrialActive) {
-//            final int dX = e.getX() - mLastCurPos.x;
-//            final int dY = e.getY() - mLastCurPos.y;
-//
-//            mLastCurPos = e.getPoint();
-//
-//            drag(dX, dY);
-//
-//            repaint();
-//        }
+
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
         if (mTrialActive) {
-            if (mTrial.objectRect.contains(e.getPoint())) enableObjHint(true);
-            else enableObjHint(false);
+            mInstantInfo.logMove(); // LOG
+
+            if (mTrial.objectRect.contains(e.getPoint())) {
+                enableObjHint(true);
+                mInstantInfo.logCurObjEntry(); // LOG
+            } else {
+                enableObjHint(false);
+            }
 
             repaint();
+
+            if (mDragging) {
+                drag();
+            }
         }
 
-        if (mDragging) {
-            drag();
-        }
     }
 }

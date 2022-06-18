@@ -1,10 +1,13 @@
 package experiment;
 
+import com.google.gson.Gson;
 import graphic.MoRectangle;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static tools.Consts.STRINGS.*;
 
 public class Trial {
 
@@ -12,6 +15,11 @@ public class Trial {
     protected MoRectangle boundRect = new MoRectangle();
 
     public Trial(List<Integer> conf, int... params) {
+        config.addAll(conf);
+        // params in managed in subclasses
+    }
+
+    public Trial(List<Integer> conf, double... params) {
         config.addAll(conf);
         // params in managed in subclasses
     }
@@ -42,12 +50,20 @@ public class Trial {
         return "";
     }
 
-    public String getLogHeader() {
-        return "";
+    public static String getLogHeader() {
+        return "trial_x" + SP +
+                "trial_y" + SP +
+                "object_w" + SP +
+                "target_w" + SP +
+                "direction";
     }
 
     @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
+    public Trial clone() {
+        final Gson gson = new Gson();
+        final String trialJSON = gson.toJson(this);
+        final Class<? extends Trial> trialType = this.getClass();
+
+        return gson.fromJson(trialJSON, trialType);
     }
 }
