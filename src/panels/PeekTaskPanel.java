@@ -392,6 +392,5 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             if (mDragging) drag();
             else move();
         }
-
     }
 }

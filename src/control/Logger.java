@@ -267,6 +267,7 @@ public class Logger {
         public int total_time;          // From first move to last RELEASE/REVERT
 
         public int result;              //1 (Hit) or 0 (Miss)
+        public double accuracy;         // {Tunnel}
 
         @Override
         public String toString() {

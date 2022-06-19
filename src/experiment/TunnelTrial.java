@@ -116,8 +116,8 @@ public class TunnelTrial extends Trial implements Cloneable {
      * @param p Point
      * @return Point in the tunnel OR on the lines => TRUE
      */
-    public boolean isPointInside(Point p) {
-        return inRect.contains(p) || line1Rect.contains(p) || line2Rect.contains(p);
+    public boolean isPointOutside(Point p) {
+        return !inRect.contains(p) && !line1Rect.contains(p) && !line2Rect.contains(p);
     }
 
     @Override
