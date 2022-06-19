@@ -1,8 +1,8 @@
 package panels;
 
+import control.Logger;
 import experiment.PeekTrial;
 import graphic.MoGraphics;
-import jdk.jshell.execution.Util;
 import tools.Consts;
 import tools.Out;
 import tools.Utils;
@@ -10,7 +10,6 @@ import tools.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Point2D;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -33,7 +32,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private PeekTrial mTrial;
 
     // Trial
-    private boolean mTempEntered = false;
+//    private boolean mTempEntered = false;
     private boolean mDragging = false;
     private boolean mCurtainClosed = false;
     private boolean mPastTempRect = false;
@@ -53,15 +52,17 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     // Threading
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private Timer mDragTimer;
+    private Timer mMoveSampler;
 
     private int mEventCounter = 0;
     private long mGrabTime;
     private Set<Point> mPointSet = new HashSet<>();
 
+    // Entry
+    private boolean mCursorInObject, mCursorInTemp, mCursorInTarget, mObjInTemp, mObjInTarget;
 
     // Actions ------------------------------------------------------------------------------------
-    private ActionListener mDrageListener = new ActionListener() {
+    private ActionListener mMoveListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (mDragging) {
@@ -92,8 +93,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
      */
     public PeekTaskPanel setTask(PeekTask peekTrial) {
         mTask = peekTrial;
-        mDragTimer = new Timer(0, mDrageListener);
-        mDragTimer.setDelay(DRAG_TICK);
+        mMoveSampler = new Timer(0, mMoveListener);
+        mMoveSampler.setDelay(DRAG_TICK);
         Out.d(NAME, "1 mm to px = ", Utils.mm2px(1));
         return this;
     }
@@ -105,83 +106,176 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
 
-        // Set flags
-        mTempEntered = false;
+        //region LOG
+        mTrialInfo = new Logger.TrialInfo();
+        mTrialInfo.trial = mTrial.clone();
+        //endregion
 
         repaint();
+
         mTrialActive = true;
     }
 
     @Override
+    protected void move() {
+        final String TAG = NAME + "move";
+        super.move();
+
+        Point curP = getCursorPos();
+
+        if (mTrial.objectRect.contains(curP)) {
+
+            if (!mCursorInObject) { // Entry (only after exit)
+                //region LOG
+                mInstantInfo.logCurObjEntry();
+                mTrialInfo.point_time = mInstantInfo.getPointTime(mTrial.getClass().getSimpleName());
+                //endregion
+
+                mCursorInObject = true;
+            }
+        } else {
+            mCursorInObject = false;
+        }
+
+        enableObjHint(mCursorInObject);
+    }
+
+    @Override
     public void grab() {
+        final String TAG = NAME + "grab";
         super.grab();
 
-        if (mTrial.objectRect.contains(getCursorPos())) {
+        Point curP = getCursorPos();
+        if (mCursorInObject) {
             mDragging = true;
 
             mLastGrabPos = getCursorPos();
             mRelGrabPos = Utils.subPoints(mLastGrabPos, mTrial.objectRect.getLocation());
 
-            mDragTimer.start();
+            mMoveSampler.start();
+
+            //region LOG
+            mTrialInfo.grab_time = mInstantInfo.getGrabTime(mTrial.getClass().getSimpleName());
+            mTrialInfo.grab_x = curP.x;
+            mTrialInfo.grab_y = curP.y;
+            //endregion
+
+        } else { // Grab outside the object
+            startError();
         }
     }
 
     protected void drag() {
+        final String TAG = NAME + "drag";
         super.drag();
 
         final Point curP = getCursorPos();
-
-        // LOG
-        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
-        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
-        if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry();
 
         mEventCounter++;
         mPointSet.add(curP);
 
         mTrial.moveObject(mRelGrabPos, curP);
 
-        repaint();
+        enableObjHint(mCursorInObject);
 
-        // Only set it once per trial
-        if (!mTempEntered) {
-            if (mTrial.tempRect.contains(mTrial.objectRect)) {
-                mTempEntered = true;
-                mInstantInfo.temp_entry = Utils.nowMillis(); // LOG
+        // Cursor in Temp
+        if (mTrial.tempRect.contains(curP)) {
+            if (!mCursorInTemp) { // Entry
+                mInstantInfo.logCurTempEntry(); // LOG
+                mCursorInTemp = true;
+            }
+        } else {
+            mCursorInTemp = false;
+        }
+
+        // Obj in Temp
+        if (mTrial.tempRect.contains(mTrial.objectRect)) {
+            if (!mObjInTemp) { // Object entry
+                Out.d(TAG, "Obj entered temp");
+                mInstantInfo.logObjTempEntry(); // LOG
+                mTrialInfo.temp_entry_time = mInstantInfo.getTempEntryTime(); // LOG
+
+                mObjInTemp = true;
+            }
+        } else {
+            if (mObjInTemp) { // Object exit (only after entry)
+                Out.d(TAG, "Obj exited temp");
+                mInstantInfo.logObjTempExit();
+                mObjInTemp = false;
             }
         }
+
+        // Obj in Target
+        if (mTrial.targetRect.contains(mTrial.objectRect)) {
+            if (!mObjInTarget) { // Entry
+                Out.d(TAG, "Obj in Target entry");
+                //region LOG
+                mInstantInfo.logObjTgtEntry();
+                mTrialInfo.temp_to_tgt_time = mInstantInfo.getTempToTgtTime();
+                mTrialInfo.drag_time = mInstantInfo.getDragTime(mTrial.getClass().getSimpleName());
+                //endregion LOG
+
+                mObjInTarget = true;
+            }
+        } else {
+            mObjInTarget = false;
+        }
+
+        repaint();
     }
 
     @Override
     public void release() {
         final String TAG = NAME + "release";
-        super.release();
+        super.release(); // always logs release
 
         if (mDragging) {
             mDragging = false;
-            mDragTimer.stop();
-            enableObjHint(false);
+            mMoveSampler.stop();
 
-            if (checkHit()) {
-                hit();
-            } else {
-                miss();
-            }
+            //region LOG
+            mTrialInfo.release_time = mInstantInfo.getReleaseTime(mTrial.getClass().getSimpleName());
 
+            mTrialInfo.release_x = getCursorPos().x;
+            mTrialInfo.release_y = getCursorPos().y;
+
+            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
+            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            //endregion
+
+            final boolean trialResult = checkHit();
+            mTrialInfo.result = Utils.bool2Int(trialResult); // LOG
+
+            if (trialResult) hit();
+            else miss();
         }
+
+        mEventCounter = 0;
+        mPointSet.clear();
+        enableObjHint(false);
     }
 
     @Override
     protected void revert() {
         final String TAG = NAME + "revert";
-        super.revert();
+        super.revert(); // always logs revert
 
         if (mDragging) {
             mDragging = false;
-            mDragTimer.stop();
+            mMoveSampler.stop();
             enableObjHint(false);
 
-            if (mTrial.tempRect.contains(mTrial.objectRect)) {
+            //region LOG
+            mTrialInfo.revert_time = mInstantInfo.getRevertTime();
+
+            mTrialInfo.release_x = getCursorPos().x;
+            mTrialInfo.release_y = getCursorPos().y;
+
+            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
+            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            //endregion
+
+            if (mObjInTemp) {
                 mTrial.revertObject();
                 repaint();
                 hit();
@@ -193,7 +287,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
     @Override
     protected boolean checkHit() {
-        return mTempEntered && mTrial.targetRect.contains(mTrial.objectRect);
+        // If exited the temp and is in target
+        return mInstantInfo.last_obj_temp_exit > 0 && mObjInTarget;
     }
 
     private void enableObjHint(boolean enable) {
@@ -272,12 +367,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         if (mMouseEnabled) {
             if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
                 release();
-
-                Out.d(NAME, "Drag time | n(drag event)", Utils.nowMillis() - mGrabTime, mPointSet.size());
-//            Out.d(NAME, mPointSet);
-                mGrabTime = 0;
-                mEventCounter = 0;
-                mPointSet.clear();
             }
         }
     }
@@ -300,20 +389,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     public void mouseMoved(MouseEvent e) {
         if (mTrialActive) {
-            mInstantInfo.logMove(); // LOG
-
-            if (mTrial.objectRect.contains(e.getPoint())) {
-                enableObjHint(true);
-                mInstantInfo.logCurObjEntry(); // LOG
-            } else {
-                enableObjHint(false);
-            }
-
-            repaint();
-
-            if (mDragging) {
-                drag();
-            }
+            if (mDragging) drag();
+            else move();
         }
 
     }

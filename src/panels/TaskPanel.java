@@ -119,6 +119,10 @@ public class TaskPanel extends JLayeredPane {
         return false;
     }
 
+    protected void move() {
+        mInstantInfo.logMove(); // LOG
+    }
+
     protected void grab() {
         mInstantInfo.logGrab(); // LOG
     }
@@ -133,7 +137,7 @@ public class TaskPanel extends JLayeredPane {
 
     protected void revert() {
         // LOG
-        mInstantInfo.revert = Utils.nowMillis();
+        mInstantInfo.logRevert();
     }
 
     protected void startError() {

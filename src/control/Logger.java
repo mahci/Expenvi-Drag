@@ -240,10 +240,13 @@ public class Logger {
         public Trial trial;
 
         public int point_time;          // From first movement to last entry ({Tunnel} 0)
-        public int grab_time;           // From last entry to grab ({Tunnel} move > last grab)
 
+        public int grab_time;           // From last entry to grab ({Tunnel} move > last grab)
         public int grab_x;              // Last GRAB X coordinate
         public int grab_y;              // Last GRAB Y coordinate
+
+        public int temp_entry_time;     // {Peek} last grab > temp entry
+        public int temp_to_tgt_time;    // {Peek} last temp exit > last target entry
 
         public int tunnel_entry_time;   // {Tunnel} last grab > tunnel entry
 
@@ -252,12 +255,16 @@ public class Logger {
 
         // From last target entry to release ({Tunnel} tunnel exit > release) ({Bar, Peek} obj in target entry)
         public int release_time;
-
         public int release_x;           // RELEASE X coordinate
         public int release_y;           // RELEASE Y coordinate
 
-        public int trial_time;          // From last GRAB to last RELEASE
-        public int total_time;          // From first move to last RELEASE
+        // {Peek} From last obj into temp entry to revert
+        public int revert_time;
+        public int revert_x;           // {Peek} REVERT X coordinate
+        public int revert_y;           // {Peek} REVERT Y coordinate
+
+        public int trial_time;          // From last GRAB to last RELEASE/REVERT
+        public int total_time;          // From first move to last RELEASE/REVERT
 
         public int result;              //1 (Hit) or 0 (Miss)
 
@@ -294,8 +301,20 @@ public class Logger {
         // the moment of DRAG start (no first/last <= always hit/miss after first)
         public long drag_start;
 
-        public long temp_entry;             // entry moment to the Temp area {Peek}
-        public long tunnel_entry;           // entry moment to the tunnel
+        // {Peek} first/last time the cursor (while dragging) enters temp
+        public long first_cur_temp_entry;
+        public long last_cur_temp_entry;
+
+        // {Peek} first/last time the object enters temp
+        public long first_obj_temp_entry;
+        public long last_obj_temp_entry;
+
+        // {Peek} first/last time the object exits temp
+        public long first_obj_temp_exit;
+        public long last_obj_temp_exit;
+
+        // entry moment to the tunnel (while dragging)
+        public long tunnel_entry;
 
         // first/las time the cursor enters the target (or exit Tunnel) while dragging
         public long first_cur_tgt_entry;
@@ -309,10 +328,21 @@ public class Logger {
         public long first_release;
         public long last_release;
 
-        public long revert;                 // The moment of REVERT
+        // first/last revert moment (last only different if start_error)
+        public long first_revert;
+        public long last_revert;
 
         public void logMove() {
             if (first_move == 0) first_move = Utils.nowMillis();
+        }
+
+        public void logCurObjEntry() {
+            if (first_cur_obj_entry == 0) {
+                first_cur_obj_entry = Utils.nowMillis();
+                last_cur_obj_entry = Utils.nowMillis();
+            } else {
+                last_cur_obj_entry = Utils.nowMillis();
+            }
         }
 
         public void logGrab() {
@@ -324,12 +354,30 @@ public class Logger {
             }
         }
 
-        public void logCurObjEntry() {
-            if (first_cur_obj_entry == 0) {
-                first_cur_obj_entry = Utils.nowMillis();
-                last_cur_obj_entry = Utils.nowMillis();
+        public void logCurTempEntry() {
+            if (first_cur_temp_entry == 0) {
+                first_cur_temp_entry = Utils.nowMillis();
+                last_cur_temp_entry = Utils.nowMillis();
             } else {
-                last_cur_obj_entry = Utils.nowMillis();
+                last_cur_temp_entry = Utils.nowMillis();
+            }
+        }
+
+        public void logObjTempEntry() {
+            if (first_obj_temp_entry == 0) {
+                first_obj_temp_entry = Utils.nowMillis();
+                last_obj_temp_entry = Utils.nowMillis();
+            } else {
+                last_obj_temp_entry = Utils.nowMillis();
+            }
+        }
+
+        public void logObjTempExit() {
+            if (first_obj_temp_exit == 0) {
+                first_obj_temp_exit = Utils.nowMillis();
+                last_obj_temp_exit = Utils.nowMillis();
+            } else {
+                last_obj_temp_exit = Utils.nowMillis();
             }
         }
 
@@ -349,6 +397,7 @@ public class Logger {
             } else {
                 last_objt_tgt_entry = Utils.nowMillis();
             }
+            Out.d(NAME, last_objt_tgt_entry);
         }
 
         public void logRelease() {
@@ -360,8 +409,17 @@ public class Logger {
             }
         }
 
+        public void logRevert() {
+            if (first_revert == 0) {
+                first_revert = Utils.nowMillis();
+                last_revert = Utils.nowMillis();
+            } else {
+                last_revert = Utils.nowMillis();
+            }
+        }
+
         public int getPointTime(String taskType) {
-            if (taskType.equals("TunnelTrial")) return 0;
+            if (taskType.equals("TunnelTrial")) return -1;
             else return (int) (last_cur_obj_entry - first_move);
         }
 
@@ -384,6 +442,16 @@ public class Logger {
             return result;
         }
 
+        public int getTempEntryTime() {
+            if (last_obj_temp_entry > 0) return (int) (last_obj_temp_entry - last_grab);
+            else return -1;
+        }
+
+        public int getTempToTgtTime() {
+            if (last_objt_tgt_entry > 0) return (int) (last_objt_tgt_entry - last_obj_temp_exit);
+            else return -1;
+        }
+
         public int getReleaseTime(String taskType) {
             int result = -1;
             switch (taskType) {
@@ -391,6 +459,7 @@ public class Logger {
                     if (last_cur_tgt_entry > 0) result = (int) (last_release - last_cur_tgt_entry);
                 }
                 case "BarTrial", "PeekTrial" -> {
+                    Out.d(NAME, last_release, last_objt_tgt_entry);
                     if (last_objt_tgt_entry > 0) result = (int) (last_release - last_objt_tgt_entry);
                 }
             }
@@ -398,12 +467,19 @@ public class Logger {
             return result;
         }
 
+        public int getRevertTime() {
+            if (last_obj_temp_entry > 0) return (int) (last_revert - last_obj_temp_entry);
+            else return -1;
+        }
+
         public int getTrialTime() {
-            return (int) (last_release - last_grab);
+            if (last_release > 0) return (int) (last_release - last_grab);
+            else return (int) (last_revert - last_grab);
         }
 
         public int getTotalTime() {
-            return (int) (last_release - first_move);
+            if (last_release > 0) return (int) (last_release - first_move);
+            else return (int) (last_revert - first_move);
         }
 
         @Override
