@@ -1,7 +1,12 @@
 package control;
 
+import com.sun.tools.javac.Main;
+import experiment.BarTrial;
+import experiment.BoxTrial;
 import experiment.Task;
 import experiment.Trial;
+import panels.MainFrame;
+import tools.Out;
 import tools.Utils;
 
 import java.io.*;
@@ -170,12 +175,13 @@ public class Logger {
                     new FileOutputStream(timesLogFile, true),
                     true);
 
-            // Write headers first time
+            //-- Write headers (only the first time)
             if (Utils.isFileEmpty(trialsLogFile)) {
+                // Custom header because of the Trial part
                 mTrialsFilePW.println(
                         Utils.classPropsNames(GeneralInfo.class) + SP +
                         Trial.getLogHeader() + SP +
-                        Utils.classPropsNames(TrialInfo.class));
+                        Utils.classPropsNames(TrialInfo.class).replace("trial;", ""));
             }
 
             if (Utils.isFileEmpty(instantsLogFile)) {
@@ -188,7 +194,7 @@ public class Logger {
 
         } catch (IOException e) {
             e.printStackTrace();
-//            Main.showDialog("Problem in logging the participant!");
+            MainFrame.get().showMessage("Problem in opening log files");
         }
     }
 
@@ -233,23 +239,27 @@ public class Logger {
     public static class TrialInfo {
         public Trial trial;
 
-        public int point_time;      // From first movement to last entry ({Tunnel} 0)
-        public int grab_time;       // From last entry to grab ({Tunnel} move > last grab)
+        public int point_time;          // From first movement to last entry ({Tunnel} 0)
+        public int grab_time;           // From last entry to grab ({Tunnel} move > last grab)
 
-        public int grab_x;          // Last GRAB X coordinate
-        public int grab_y;          // Last RELEASE Y coordinate
+        public int grab_x;              // Last GRAB X coordinate
+        public int grab_y;              // Last GRAB Y coordinate
 
-        public int entry_time;      // {Tunnel} last grab > tunnel entry
-        public int drag_time;       // From grab to last target entry ({Tunnel} tunnel entry > tunnel exit)
-        public int release_time;    // From last target entry to release ({Tunnel} tunnel exit > release)
+        public int tunnel_entry_time;   // {Tunnel} last grab > tunnel entry
 
-        public int release_x;       // RELEASE X coordinate
-        public int release_y;       // RELEASE Y coordinate
+        // From last GRAB to last target entry ({Tunnel} tunnel entry > tunnel exit) ({Bar, Peek} obj in target entry)
+        public int drag_time;
 
-        public int trial_time;      // From last GRAB to last RELEASE
-        public int total_time;      // From first move to last RELEASE
+        // From last target entry to release ({Tunnel} tunnel exit > release) ({Bar, Peek} obj in target entry)
+        public int release_time;
 
-        public int result;          //1 (Hit) or 0 (Miss)
+        public int release_x;           // RELEASE X coordinate
+        public int release_y;           // RELEASE Y coordinate
+
+        public int trial_time;          // From last GRAB to last RELEASE
+        public int total_time;          // From first move to last RELEASE
+
+        public int result;              //1 (Hit) or 0 (Miss)
 
         @Override
         public String toString() {
@@ -273,23 +283,29 @@ public class Logger {
         public long trial_show;             // the moment trial is shown on the screen
         public long first_move;             // first movement of the cursor
 
-        public long first_cur_obj_entry;    // first entry to the object
-        public long last_cur_obj_entry;     // last entry to the object
+        // first/last entry of the cursor into the object
+        public long first_cur_obj_entry;
+        public long last_cur_obj_entry;
 
-        public long first_grab;             // the moment of the first grab
-        public long last_grab;              // the moment of the last grab
+        // first/last grab moments (last only different if start_error)
+        public long first_grab;
+        public long last_grab;
 
-        public long drag_start;             // the moment of DRAG start (no first/last <= always hit/miss after first)
+        // the moment of DRAG start (no first/last <= always hit/miss after first)
+        public long drag_start;
 
         public long temp_entry;             // entry moment to the Temp area {Peek}
         public long tunnel_entry;           // entry moment to the tunnel
 
-        public long first_cur_tgt_entry;    // first time the cursor enters the target (or exit Tunnel) while dragging
-        public long last_cur_tgt_entry;     // last time the cursor enters the target (or exit Tunnel) while dragging
+        // first/las time the cursor enters the target (or exit Tunnel) while dragging
+        public long first_cur_tgt_entry;
+        public long last_cur_tgt_entry;
 
+        // first/last time the object fully enters the target, or zero if never {Box}
         public long first_obj_tgt_entry;
         public long last_objt_tgt_entry;
 
+        // first/last release moment (last only different if start_error)
         public long first_release;
         public long last_release;
 
@@ -342,6 +358,52 @@ public class Logger {
             } else {
                 last_release = Utils.nowMillis();
             }
+        }
+
+        public int getPointTime(String taskType) {
+            if (taskType.equals("TunnelTrial")) return 0;
+            else return (int) (last_cur_obj_entry - first_move);
+        }
+
+        public int getGrabTime(String taskType) {
+            if (taskType.equals("TunnelTrial")) return (int) (last_grab - first_move);
+            else return (int) (last_grab - last_cur_obj_entry);
+        }
+
+        public int getDragTime(String taskType) {
+            int result = -1;
+            switch (taskType) {
+                case "BoxTrial", "TunnelTrial" -> { // For Tunnel, cur_tgt_entry is exit
+                    if (last_cur_tgt_entry > 0) result = (int) (last_cur_tgt_entry - last_grab);
+                }
+                case "BarTrial", "PeekTrial" -> {
+                    if (last_objt_tgt_entry > 0) result = (int) (last_objt_tgt_entry - last_grab);
+                }
+            }
+
+            return result;
+        }
+
+        public int getReleaseTime(String taskType) {
+            int result = -1;
+            switch (taskType) {
+                case "BoxTrial", "TunnelTrial" -> { // For Tunnel, cur_tgt_entry is exit
+                    if (last_cur_tgt_entry > 0) result = (int) (last_release - last_cur_tgt_entry);
+                }
+                case "BarTrial", "PeekTrial" -> {
+                    if (last_objt_tgt_entry > 0) result = (int) (last_release - last_objt_tgt_entry);
+                }
+            }
+
+            return result;
+        }
+
+        public int getTrialTime() {
+            return (int) (last_release - last_grab);
+        }
+
+        public int getTotalTime() {
+            return (int) (last_release - first_move);
         }
 
         @Override

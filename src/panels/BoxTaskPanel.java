@@ -95,12 +95,19 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
     @Override
     public void grab() {
-        super.grab();
+        super.grab();   // grab Instant logging done in the superclass
 
         Point curP = getCursorPos();
         if (mTrial.objectRect.contains(curP)) {
             mGrabbed = true;
             mGrabPos = curP;
+
+            //region LOG
+            mTrialInfo.grab_time = mInstantInfo.getGrabTime(mTrial.getClass().getSimpleName());
+            mTrialInfo.grab_x = curP.x;
+            mTrialInfo.grab_y = curP.y;
+            //endregion
+
         } else { // Grab outside the object
             startError();
         }
@@ -112,10 +119,12 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         final Point curP = getCursorPos();
 
-        // LOG
-        if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
+        //region LOG
         if (mTrial.targetRect.contains(curP)) mInstantInfo.logCurTgtEntry();
         if (mTrial.targetRect.contains(mTrial.objectRect)) mInstantInfo.logObjTgtEntry();
+
+        mTrialInfo.drag_time = mInstantInfo.getDragTime(mTrial.getClass().getSimpleName());
+        //endregion
 
         final int dX = curP.x - mGrabPos.x;
         final int dY = curP.y - mGrabPos.y;
@@ -133,11 +142,21 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         super.release();
 
         if (mGrabbed) {
-            if (checkHit()) {
-                hit();
-            } else {
-                miss();
-            }
+            //region LOG
+            mTrialInfo.release_time = mInstantInfo.getReleaseTime(mTrial.getClass().getSimpleName());
+
+            mTrialInfo.release_x = getCursorPos().x;
+            mTrialInfo.release_y = getCursorPos().y;
+
+            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
+            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            //endregion
+
+            final boolean trialResult = checkHit();
+            mTrialInfo.result = Utils.bool2Int(trialResult); // LOG
+
+            if (trialResult) hit();
+            else miss();
         }
 
         mGrabbed = false;
@@ -196,22 +215,6 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         return mTrial.targetRect.contains(getCursorPos());
     }
 
-//    @Override
-//    protected void miss() {
-//        Consts.SOUNDS.playMiss();
-//
-//        mTrialActive = false;
-//
-//        // Shuffle back and reposition the next ones
-//        final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
-////        Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
-//        if (findAllTrialsPosition(trNewInd) == 1) {
-//            MainFrame.get().showMessage("No positions for trial at " + trNewInd);
-//        } else {
-//            executorService.schedule(() -> showTrial(++mTrialNum), mTask.NT_DELAY_ms, TimeUnit.MILLISECONDS);
-//        }
-//    }
-
     // -------------------------------------------------------------------------------------------
 
     @Override
@@ -267,9 +270,13 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     @Override
     public void mouseMoved(MouseEvent e) {
         if (mTrialActive) {
-            // LOG
+            //region LOG
             mInstantInfo.logMove();
-            if (mTrial.objectRect.contains(e.getPoint())) mInstantInfo.logCurObjEntry();
+            if (mTrial.objectRect.contains(e.getPoint())) {
+                mInstantInfo.logCurObjEntry();
+                mTrialInfo.point_time = mInstantInfo.getPointTime(mTrial.getClass().getSimpleName());
+            }
+            //endregion
 
             if (mGrabbed) {
                 drag();
