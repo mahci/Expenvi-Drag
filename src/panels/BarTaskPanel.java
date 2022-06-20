@@ -3,8 +3,6 @@ package panels;
 import control.Logger;
 import experiment.BarTrial;
 import graphic.MoGraphics;
-import tools.Consts;
-import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
@@ -245,12 +243,18 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             // Draw the object
             mMoGraphics.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
 
-            // Draw block-trial num
-            String stateText =
-                    Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                            Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mMoGraphics.drawString(COLORS.GRAY_900, Consts.FONTS.STATUS, stateText,
-                    getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+            // Draw block-trial num (on practice -> technique)
+            if (!mPracticeMode) {
+                String stateText =
+                        STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
+                                STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+            } else {
+                String stateText = MainFrame.get().mActiveTechnique.getTitle();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(60), Utils.mm2px(12));
+            }
 
             // TEMP: draw bounding box
 //            mMoGraphics.drawRectangle(COLORS.GRAY_400, mTrial.getBoundRect());

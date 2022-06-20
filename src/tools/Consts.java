@@ -36,11 +36,19 @@ public class Consts {
         public final static Color BLUE_900 = Color.decode("#0D47A1");
         public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 170);
 
+        public final static Color PURPLE_100 = Color.decode("#E1BEE7");
+        public final static Color PURPLE_900 = Color.decode("#4A148C");
+
         public final static Color INDIGO_900 = Color.decode("#1A237E");
 
+        public final static Color GREEN_100 = Color.decode("#C8E6C9");
+        public final static Color GREEN_200 = Color.decode("#A5D6A7");
+        public final static Color GREEN_400 = Color.decode("#66BB6A");
         public final static Color GREEN_700 = Color.decode("#388E3C");
+        public final static Color GREEN_900 = Color.decode("#1B5E20");
         public final static Color GREEN_A400 = Color.decode("#00E676");
 
+        public final static Color YELLOW_100 = Color.decode("#FFF9C4");
         public final static Color YELLOW_800 = Color.decode("#F9A825");
         public final static Color YELLOW_900 = Color.decode("#F57F17");
 

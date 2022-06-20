@@ -1,10 +1,11 @@
 package experiment;
 
-import tools.Utils;
-
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static tools.Consts.*;
 
 public class Experiment {
     private final static String NAME = "Experiment/";
@@ -16,6 +17,61 @@ public class Experiment {
     public enum TECHNIQUE {
         TAP_PRESS_HOLD, TWO_FINGER_SWIPE, MOUSE; // TAP-PRESS-HOLD, TWO-FINGER-SWIPE-DOWN
         private static final TECHNIQUE[] values = values();
+        public String getTitle() {
+            switch (this) {
+                case MOUSE -> {
+                    return "Mouse";
+                }
+                case TAP_PRESS_HOLD -> {
+                    return "Tap-Press-Hold";
+                }
+                case TWO_FINGER_SWIPE -> {
+                    return "Two-Finger-Swipe";
+                }
+            }
+
+            return "";
+        }
+    }
+
+    public enum TASK {
+        BOX, BAR, PEEK, TUNNEL;
+
+        public String getTitle() {
+            String result = "";
+            switch (this) {
+                case BOX -> result = "Box Task";
+                case BAR -> result = "Bar Task";
+                case PEEK -> result = "Peek Task";
+                case TUNNEL -> result = "Tunnel Tsak";
+            }
+
+            return result;
+        }
+
+        public Color getBgColor() {
+            Color result = Color.WHITE;
+            switch (this) {
+                case BOX -> result = COLORS.GREEN_100;
+                case BAR -> result = COLORS.BLUE_100;
+                case PEEK -> result = COLORS.YELLOW_100;
+                case TUNNEL -> result = COLORS.PURPLE_100;
+            }
+
+            return result;
+        }
+
+        public Color getFgColor() {
+            Color result = COLORS.GRAY_900;
+            switch (this) {
+                case BOX -> result = COLORS.GREEN_900;
+                case BAR -> result = COLORS.BLUE_900;
+                case PEEK -> result = COLORS.YELLOW_900;
+                case TUNNEL -> result = COLORS.PURPLE_900;
+            }
+
+            return result;
+        }
     }
 
 

@@ -410,12 +410,18 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
                     mTrial.startTextRect.x,
                     mTrial.startTextRect.y + mTrial.startTextRect.height / 2);
 
-            // Draw block-trial num
-            String stateText =
-                    STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                    STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
-                    getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+            // Draw block-trial num (on practice -> technique)
+            if (!mPracticeMode) {
+                String stateText =
+                        STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
+                                STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+            } else {
+                String stateText = MainFrame.get().mActiveTechnique.getTitle();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(60), Utils.mm2px(12));
+            }
 
             // Draw trace
             final int rad = Trace.TRACE_R;

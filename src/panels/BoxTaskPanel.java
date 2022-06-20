@@ -4,7 +4,6 @@ import control.Logger;
 import experiment.BoxTrial;
 import experiment.Experiment;
 import graphic.MoGraphics;
-import tools.Out;
 import tools.Utils;
 
 import javax.swing.*;
@@ -66,7 +65,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         // Key maps
         mapKeys();
-        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
+//        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
     }
 
     /**
@@ -277,12 +276,18 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         // Draw the object
         mMoGraphics.fillRectangle(COLORS.BLUE_900_ALPHA, mTrial.objectRect);
 
-        // Draw block-trial num
-        String stateText =
-                STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                        STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-        mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
-                getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+        // Draw block-trial num (on practice show active technique)
+        if (!mPracticeMode) {
+            String stateText =
+                    STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
+                            STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+            mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                    getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+        } else {
+            String stateText = MainFrame.get().mActiveTechnique.getTitle();
+            mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                    getWidth() - Utils.mm2px(60), Utils.mm2px(12));
+        }
 
         // TEMP: draw bound rect
 //        mMoGraphics.drawRectangle(COLORS.GRAY_500, mTrial.getBoundRect());

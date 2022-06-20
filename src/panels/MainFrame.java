@@ -3,7 +3,6 @@ package panels;
 import control.Logger;
 import control.Server;
 import experiment.Experiment;
-import tools.Consts;
 import tools.Memo;
 import tools.Out;
 
@@ -19,14 +18,27 @@ public class MainFrame extends JFrame implements MouseListener {
 
     private static MainFrame self; // Singelton instance
 
+    // Keys
+    private KeyStroke KS_1, KS_2, KS_3, KS_4;
+    private KeyStroke KS_SLASH;
+
     private Rectangle scrBound;
     private int scrW, scrH;
     private int frW, frH;
 
     private TaskPanel mActivePanel;
+    private TaskPanel mPracticePanel;
 
-    public TECHNIQUE ACTIVE_TECHNIQUE = TECHNIQUE.MOUSE;
-    public int PID = 100;
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    public final int PID = 100;
+
+    public final boolean DEMO_MODE = false;
+    public final boolean PRACTICE_MODE = true;
+
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.MOUSE;
+    public TASK mActiveTask = TASK.BOX;
+    public final int NUM_BLOCKS = 5;
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     /**
      * Constructor
@@ -35,7 +47,7 @@ public class MainFrame extends JFrame implements MouseListener {
         setDisplayConfig();
         setBackground(Color.WHITE);
 
-        addMouseListener(this);
+//        addMouseListener(this);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -47,6 +59,8 @@ public class MainFrame extends JFrame implements MouseListener {
                 Server.get().close();
             }
         });
+
+        mapKeys();
     }
 
     public static MainFrame get() {
@@ -55,48 +69,91 @@ public class MainFrame extends JFrame implements MouseListener {
     }
 
     public void start() {
-        if (!ACTIVE_TECHNIQUE.equals(TECHNIQUE.MOUSE)) {
+
+        if (DEMO_MODE) {
+            // Create log files
+            Logger.get().logParticipant(123);
+
+            startDemo();
+
+        } else if (PRACTICE_MODE) {
+            // Create log files
+            Logger.get().logParticipant(-PID);
+
+            startPractice();
+        } else { // Experiment mode
+            // Create log files
+            Logger.get().logParticipant(PID);
+
+            startTask();
+        }
+
+    }
+
+    private void startDemo() {
+        Server.get().start();
+        Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
+
+        // Map actions
+        getRootPane().getActionMap().put(KeyEvent.VK_1, new TaskSwitchAction(1));
+        getRootPane().getActionMap().put(KeyEvent.VK_2, new TaskSwitchAction(2));
+        getRootPane().getActionMap().put(KeyEvent.VK_3, new TaskSwitchAction(3));
+        getRootPane().getActionMap().put(KeyEvent.VK_4, new TaskSwitchAction(4));
+
+        getRootPane().getActionMap().put(KeyEvent.VK_SLASH, new TechSwitchAction());
+
+        // Show the Intro panel
+        IntroPanel stPanel = new IntroPanel(
+                "Welcome to DRAG experiment!",
+                mActiveTechnique,
+                mActiveTask,
+                showPracticeAction,
+                true);
+        add(stPanel);
+        setVisible(true);
+    }
+
+    private void startPractice() {
+        Server.get().start();
+        Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
+
+        // Map actions
+//        getRootPane().getActionMap().put(KeyEvent.VK_1, new TaskSwitchAction(1));
+//        getRootPane().getActionMap().put(KeyEvent.VK_2, new TaskSwitchAction(2));
+//        getRootPane().getActionMap().put(KeyEvent.VK_3, new TaskSwitchAction(3));
+//        getRootPane().getActionMap().put(KeyEvent.VK_4, new TaskSwitchAction(4));
+//
+//        getRootPane().getActionMap().put(KeyEvent.VK_SLASH, new TechSwitchAction());
+//
+//        // Show the Intro panel
+        IntroPanel stPanel = new IntroPanel(
+                "Press SPACE to start the practice",
+                mActiveTechnique,
+                mActiveTask,
+                showPracticeAction,
+                false);
+        add(stPanel);
+        setVisible(true);
+    }
+
+    private void startTask() {
+        // Start the Server if working with MOOSE
+        if (!mActiveTechnique.equals(TECHNIQUE.MOUSE)) {
             Server.get().start();
             // Send the active technique to Moose
-            Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, ACTIVE_TECHNIQUE));
+            Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
         }
 
         // Show the Intro panel
-        final AbstractAction showTaskAA = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showTaskPanel();
-            }
-        };
-        IntroPanel stPanel = new IntroPanel("M", "Window", showTaskAA);
+        IntroPanel stPanel = new IntroPanel(
+                "When ready, press SPACE to start the task",
+                mActiveTechnique,
+                mActiveTask,
+                showTaskAction,
+                false);
         add(stPanel);
         setVisible(true);
-
-
-
-        // Start logging
-        Logger.get().logParticipant(PID);
     }
-
-    private void showTaskPanel() {
-        final Dimension panelDim = getContentPane().getSize();
-
-        getContentPane().removeAll();
-
-//        mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(1));
-//        mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(5));
-//        mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(5));
-        mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(5));
-
-        mActivePanel.setOpaque(true);
-        mActivePanel.setBackground(Color.WHITE);
-        if (ACTIVE_TECHNIQUE.equals(TECHNIQUE.MOUSE)) mActivePanel.setMouseEnabled(true);
-
-        getContentPane().add(mActivePanel);
-        mActivePanel.requestFocusInWindow();
-        mActivePanel.start();
-    }
-
 
     public void showDialog(JDialog dialog) {
         Out.d(NAME, "Showing dialog");
@@ -115,6 +172,17 @@ public class MainFrame extends JFrame implements MouseListener {
 
     public void showMessage(String mssg) {
         JOptionPane.showMessageDialog(this, mssg);
+    }
+
+    public void showEndPanel() {
+        getContentPane().removeAll();
+
+        EndPanel endPanel = new EndPanel(
+                mActiveTask,
+                mActiveTechnique,
+                PRACTICE_MODE);
+        add(endPanel);
+        setVisible(true);
     }
 
     /**
@@ -152,6 +220,21 @@ public class MainFrame extends JFrame implements MouseListener {
         if (mActivePanel != null) mActivePanel.revert();
     }
 
+    private void mapKeys() {
+        KS_1 = KeyStroke.getKeyStroke(KeyEvent.VK_1, 0, true);
+        KS_2 = KeyStroke.getKeyStroke(KeyEvent.VK_2, 0, true);
+        KS_3 = KeyStroke.getKeyStroke(KeyEvent.VK_3, 0, true);
+        KS_4 = KeyStroke.getKeyStroke(KeyEvent.VK_4, 0, true);
+        KS_SLASH = KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, 0, true);
+
+        final InputMap framInputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        framInputMap.put(KS_1, KeyEvent.VK_1);
+        framInputMap.put(KS_2, KeyEvent.VK_2);
+        framInputMap.put(KS_3, KeyEvent.VK_3);
+        framInputMap.put(KS_4, KeyEvent.VK_4);
+        framInputMap.put(KS_SLASH, KeyEvent.VK_SLASH);
+    }
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -176,67 +259,140 @@ public class MainFrame extends JFrame implements MouseListener {
 
     }
 
-    // Panels --------------------------------------------------------------------------------------------
-    private static class IntroPanel extends JPanel {
-        private KeyStroke KS_SPACE;
+    // Actions --------------------------------------------------------------------------------------------
+    final AbstractAction showTaskAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Dimension panelDim = getContentPane().getSize();
 
-        public IntroPanel(String device, String task, AbstractAction spaceAction) {
-            KS_SPACE = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true);
+            getContentPane().removeAll();
 
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setOpaque(true);
-            setBackground(Color.WHITE);
+            switch (mActiveTask) {
+                case BOX -> {
+                    mActivePanel = new BoxTaskPanel(panelDim).setTask(new Experiment.BoxTask(NUM_BLOCKS));
+                }
+                case BAR -> {
+                    mActivePanel = new BarTaskPanel(panelDim).setTask(new Experiment.BarTask(NUM_BLOCKS));
+                }
+                case PEEK -> {
+                    mActivePanel = new PeekTaskPanel(panelDim).setTask(new Experiment.PeekTask(NUM_BLOCKS));
+                }
+                case TUNNEL -> {
+                    mActivePanel = new TunnelTaskPanel(panelDim).setTask(new Experiment.TunnelTask(NUM_BLOCKS));
+                }
+            }
 
-            add(Box.createRigidArea(new Dimension(0, 600)));
+            mActivePanel.setOpaque(true);
+            mActivePanel.setBackground(Color.WHITE);
+            if (mActiveTechnique.equals(TECHNIQUE.MOUSE)) mActivePanel.setMouseEnabled(true);
 
-            // Instruction label
-            JLabel instructLabel = new JLabel("When ready, press SPACE to start", JLabel.CENTER);
-            instructLabel.setAlignmentX(CENTER_ALIGNMENT);
-            instructLabel.setFont(new Font("Sans", Font.BOLD, 50));
-            instructLabel.setForeground(Consts.COLORS.GRAY_900);
-            add(instructLabel);
+            getContentPane().add(mActivePanel);
+            mActivePanel.requestFocusInWindow();
+            mActivePanel.start();
+        }
+    };
 
-            add(Box.createRigidArea(new Dimension(0, 200)));
+    final AbstractAction showPracticeAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Dimension panelDim = getContentPane().getSize();
+            final int nPrBlocks = 20;
 
-            // Device-task panel
-            JPanel deviceTaskPnl = new JPanel();
-            deviceTaskPnl.setLayout(new BoxLayout(deviceTaskPnl, BoxLayout.X_AXIS));
-            deviceTaskPnl.setAlignmentX(CENTER_ALIGNMENT);
-            deviceTaskPnl.setMaximumSize(new Dimension(500, 60));
-            deviceTaskPnl.setOpaque(true);
-            deviceTaskPnl.setBackground(Color.WHITE);
-            deviceTaskPnl.add(Box.createHorizontalGlue());
+            switch (mActiveTask) {
+                case BOX -> {
+                    mPracticePanel = new BoxTaskPanel(panelDim)
+                                    .setTask(new Experiment.BoxTask(nPrBlocks));
+                }
+                case BAR -> {
+                    mPracticePanel = new BarTaskPanel(panelDim)
+                                    .setTask(new Experiment.BarTask(nPrBlocks));
+                }
+                case PEEK -> {
+                    mPracticePanel = new PeekTaskPanel(panelDim)
+                                    .setTask(new Experiment.PeekTask(nPrBlocks));
+                }
+                case TUNNEL -> {
+                    mPracticePanel = new TunnelTaskPanel(panelDim)
+                                    .setTask(new Experiment.TunnelTask(nPrBlocks));
+                }
 
-            JLabel deviceLbl = new JLabel(device, SwingConstants.CENTER);
-            deviceLbl.setFont(new Font("Sans", Font.BOLD, 30));
-            deviceLbl.setPreferredSize(new Dimension(200, 0));
-            deviceLbl.setForeground(Consts.COLORS.BLUE_900);
-            deviceTaskPnl.add(deviceLbl);
+            }
 
-            deviceTaskPnl.add(Box.createRigidArea(new Dimension(20, 0)));
+            mPracticePanel.setOpaque(true);
+            mPracticePanel.setBackground(Color.WHITE);
+            mPracticePanel.setMouseEnabled(true);
+            mPracticePanel.setPracticeMode(true);
 
-            JLabel dashLbl = new JLabel("-", SwingConstants.CENTER);
-            dashLbl.setFont(new Font("Sans", Font.BOLD, 50));
-            dashLbl.setForeground(Consts.COLORS.GRAY_900);
-            dashLbl.setPreferredSize(new Dimension(50, 0));
-            deviceTaskPnl.add(dashLbl);
+            getContentPane().add(mPracticePanel);
+            mPracticePanel.requestFocusInWindow();
+            mPracticePanel.start();
+        }
+    };
 
-            deviceTaskPnl.add(Box.createRigidArea(new Dimension(20, 0)));
+    private class TaskSwitchAction extends AbstractAction {
+        private int taskNum;
 
-            JLabel taskLbl = new JLabel(task, SwingConstants.CENTER);
-            taskLbl.setFont(new Font("Sans", Font.BOLD, 30));
-            taskLbl.setForeground(Consts.COLORS.GRAY_900);
-            taskLbl.setPreferredSize(new Dimension(200, 0));
-            deviceTaskPnl.add(taskLbl);
+        public TaskSwitchAction(int taskNum) {
+            this.taskNum = taskNum;
+        }
 
-            deviceTaskPnl.add(Box.createHorizontalGlue());
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final Dimension panelDim = getContentPane().getSize();
+            final int nPrBlocks = 20;
 
-            add(deviceTaskPnl);
+            getContentPane().removeAll();
 
-            // Set action
-            getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
-            getActionMap().put(KeyEvent.VK_SPACE, spaceAction);
+            switch (taskNum) {
+                case 1 -> {
+                    mPracticePanel =
+                            new BoxTaskPanel(panelDim)
+                                    .setTask(new Experiment.BoxTask(nPrBlocks));
+                }
+                case 2 -> {
+                    mPracticePanel =
+                            new BarTaskPanel(panelDim)
+                                    .setTask(new Experiment.BarTask(nPrBlocks));
+                }
+                case 3 -> {
+                    mPracticePanel =
+                            new PeekTaskPanel(panelDim)
+                                    .setTask(new Experiment.PeekTask(nPrBlocks));
+                }
+                case 4 -> {
+                    mPracticePanel =
+                            new TunnelTaskPanel(panelDim)
+                                    .setTask(new Experiment.TunnelTask(nPrBlocks));
+                }
+            }
 
+            mPracticePanel.setOpaque(true);
+            mPracticePanel.setBackground(Color.WHITE);
+            mPracticePanel.setMouseEnabled(true);
+            mPracticePanel.setPracticeMode(true);
+
+            getContentPane().add(mPracticePanel);
+            mPracticePanel.requestFocusInWindow();
+            mPracticePanel.start();
+        }
+    }
+
+    private class TechSwitchAction extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            switch (mActiveTechnique) {
+                case TAP_PRESS_HOLD -> mActiveTechnique = TECHNIQUE.TWO_FINGER_SWIPE;
+                case TWO_FINGER_SWIPE -> mActiveTechnique = TECHNIQUE.MOUSE;
+                case MOUSE -> mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
+            }
+
+            // Send the active technique to Moose
+            Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
+
+            // Refresh the practice panel
+            if (mPracticePanel != null) mPracticePanel.repaint();
         }
     }
 }

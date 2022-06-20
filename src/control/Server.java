@@ -53,7 +53,7 @@ public class Server {
                 send(new Memo(
                         STRINGS.CONFIG,
                         STRINGS.TECH,
-                        MainFrame.get().ACTIVE_TECHNIQUE));
+                        MainFrame.get().mActiveTechnique));
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -98,7 +98,7 @@ public class Server {
                             send(new Memo(
                                     STRINGS.CONFIG,
                                     STRINGS.TECH,
-                                    MainFrame.get().ACTIVE_TECHNIQUE));
+                                    MainFrame.get().mActiveTechnique));
                         }
 
                         // Dragging...

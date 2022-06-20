@@ -42,6 +42,7 @@ public class TaskPanel extends JLayeredPane {
     protected Task mTask;
     protected Block mBlock;
     protected int mBlockNum, mTrialNum;
+    protected boolean mPracticeMode = false;
 
     // Flags
     protected boolean mTrialActive = false;
@@ -82,7 +83,7 @@ public class TaskPanel extends JLayeredPane {
 
         // LOG
         mGenInfo.task = mTask;
-        mGenInfo.technique = MainFrame.get().ACTIVE_TECHNIQUE;
+        mGenInfo.technique = MainFrame.get().mActiveTechnique;
         mGenInfo.block_num = mBlockNum;
         mGenInfo.trial_num = mTrialNum;
         mTaskStartTime = Utils.nowMillis();
@@ -110,9 +111,10 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void showTrial(int trNum) {
-        // LOG
+        //region LOG
         mInstantInfo = new Logger.InstantInfo();
         mInstantInfo.trial_show = Utils.nowMillis();
+        //endregion
     }
 
     protected boolean checkHit() {
@@ -156,20 +158,23 @@ public class TaskPanel extends JLayeredPane {
 
         logTrialEnd(); // LOG
 
-        // Wait a certain delay, then show the next trial (or next block)
-        if (mTrialNum < mBlock.getNumTrials()) {
+        // Next...
+        if (mTrialNum < mBlock.getNumTrials()) { // Trial
             // Print times
             Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trial_time);
 
             mTrialNum++;
-            mGenInfo.trial_num = mTrialNum;
+            mGenInfo.trial_num = mTrialNum; // LOG
+
             executorService.schedule(() ->
                             showTrial(mTrialNum),
                     mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks()) {
-            MainFrame.get().showDialog(new BreakDialog());
-//            MainFrame.get().showMessage("Block finished!");
+        } else if (mBlockNum < mTask.getNumBlocks()) { // Block
+
+            if (!mPracticeMode && mBlockNum == 3) { // Show finger break after 3 blocks
+                MainFrame.get().showDialog(new BreakDialog());
+            }
 
             logBlockEnd(); // LOG
 
@@ -180,19 +185,22 @@ public class TaskPanel extends JLayeredPane {
             mBlockNum++;
             mTrialNum = 1;
 
+            // LOG
             mGenInfo.block_num = mBlockNum;
             mGenInfo.trial_num = mTrialNum;
+            //---
 
-            startBlock(mBlockNum);
+            executorService.schedule(() ->
+                            startBlock(mBlockNum),
+                    mTask.NT_DELAY_ms,
+                    TimeUnit.MILLISECONDS);
         } else { // Task is finished
             // LOG
             logBlockEnd();
             logTaskEnd();
+            //---
 
-            MainFrame.get().showMessage("Task finished!");
-
-            // Print times
-            Out.d(TAG, "Block time (s) = ", mTimeInfo.block_time / 1000.0);
+            MainFrame.get().showEndPanel();
         }
     }
 
@@ -205,9 +213,6 @@ public class TaskPanel extends JLayeredPane {
         mGrabbed = false;
 
         logTrialEnd(); // LOG
-
-        // Print times
-        Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trial_time);
 
         // Shuffle back and reposition the next ones
         final  int trNewInd = mBlock.dupeShuffleTrial(mTrialNum);
@@ -284,6 +289,10 @@ public class TaskPanel extends JLayeredPane {
 
     protected void setMouseEnabled(boolean enabled) {
         mMouseEnabled = enabled;
+    }
+
+    protected void setPracticeMode(boolean prMode) {
+        mPracticeMode = prMode;
     }
 
     protected Point findPosition(MoRectangle rect) {

@@ -3,7 +3,6 @@ package panels;
 import control.Logger;
 import experiment.PeekTrial;
 import graphic.MoGraphics;
-import tools.Consts;
 import tools.Out;
 import tools.Utils;
 
@@ -332,12 +331,18 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             // Draw the object
             mMoGraphics.fillRectangle(COLOR_OBJECT, mTrial.objectRect);
 
-            // Draw block-trial num
-            String stateText =
-                    Consts.STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " --- " +
-                            Consts.STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
-            mMoGraphics.drawString(COLOR_TEXT, Consts.FONTS.STATUS, stateText,
-                    getWidth() - Utils.mm2px(70), Utils.mm2px(10));
+            // Draw block-trial num (on practice -> technique)
+            if (!mPracticeMode) {
+                String stateText =
+                        STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
+                                STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+            } else {
+                String stateText = MainFrame.get().mActiveTechnique.getTitle();
+                mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
+                        getWidth() - Utils.mm2px(60), Utils.mm2px(12));
+            }
 
             // TEMP: Draw boundRect
 //            mMoGraphics.drawRectangle(COLORS.GRAY_200, mTrial.getBoundRect());
