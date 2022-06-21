@@ -3,6 +3,8 @@ package panels;
 import control.Logger;
 import experiment.PeekTrial;
 import graphic.MoGraphics;
+import log.ActionLog;
+import log.TrialLog;
 import tools.Out;
 import tools.Utils;
 
@@ -53,9 +55,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private Timer mMoveSampler;
 
-    private int mEventCounter = 0;
-    private long mGrabTime;
-    private Set<Point> mPointSet = new HashSet<>();
+//    private int mEventCounter = 0;
+//    private long mGrabTime;
+//    private Set<Point> mPointSet = new HashSet<>();
 
     // Entry
     private boolean mCursorInObject, mCursorInTemp, mCursorInTarget, mObjInTemp, mObjInTarget;
@@ -72,7 +74,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     };
 
     // Methods ------------------------------------------------------------------------------------
-
     /**
      * Constructor
      * @param dim Desired dimension of the panel
@@ -83,6 +84,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         addMouseMotionListener(this);
         addMouseListener(this);
+
+        mTaskType = TASK.PEEK;
     }
 
     /**
@@ -103,15 +106,18 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         final String TAG = NAME + "showTrial";
         super.showTrial(trNum);
 
+        // Reset flags
+        mObjInTarget = false;
+        mObjInTemp = false;
+        mCursorInObject = false;
+        mCursorInTemp = false;
+        mCursorInTarget = false;
+
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
 
-        //region LOG
-        mTrialInfo = new Logger.TrialInfo();
-        mTrialInfo.trial = mTrial.clone();
-        //endregion
+        mTrialLog.trial = mTrial.clone(); // LOG
 
         repaint();
-
         mTrialActive = true;
     }
 
@@ -122,12 +128,17 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         Point curP = getCursorPos();
 
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.MOVE, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mTrial.objectRect.contains(curP)) {
 
             if (!mCursorInObject) { // Entry (only after exit)
                 //region LOG
-                mInstantInfo.logCurObjEntry();
-                mTrialInfo.point_time = mInstantInfo.getPointTime(mTrial.getClass().getSimpleName());
+                mInstantLog.logCurObjEntry();
+                mTrialLog.point_time = mInstantLog.getPointTime();
                 //endregion
 
                 mCursorInObject = true;
@@ -145,6 +156,12 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         super.grab();
 
         Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.GRAB, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mCursorInObject) {
             mDragging = true;
 
@@ -154,9 +171,8 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             mMoveSampler.start();
 
             //region LOG
-            mTrialInfo.grab_time = mInstantInfo.getGrabTime(mTrial.getClass().getSimpleName());
-            mTrialInfo.grab_x = curP.x;
-            mTrialInfo.grab_y = curP.y;
+            mTrialLog.grab_time = mInstantLog.getGrabTime();
+            mTrialLog.logGrabPoint(curP);
             //endregion
 
         } else { // Grab outside the object
@@ -170,8 +186,13 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         final Point curP = getCursorPos();
 
-        mEventCounter++;
-        mPointSet.add(curP);
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.DRAG, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
+//        mEventCounter++;
+//        mPointSet.add(curP);
 
         mTrial.moveObject(mRelGrabPos, curP);
 
@@ -180,7 +201,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         // Cursor in Temp
         if (mTrial.tempRect.contains(curP)) {
             if (!mCursorInTemp) { // Entry
-                mInstantInfo.logCurTempEntry(); // LOG
+                mInstantLog.logCurTempEntry(); // LOG
                 mCursorInTemp = true;
             }
         } else {
@@ -190,16 +211,17 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         // Obj in Temp
         if (mTrial.tempRect.contains(mTrial.objectRect)) {
             if (!mObjInTemp) { // Object entry
-                Out.d(TAG, "Obj entered temp");
-                mInstantInfo.logObjTempEntry(); // LOG
-                mTrialInfo.temp_entry_time = mInstantInfo.getTempEntryTime(); // LOG
+                Out.d(TAG, "Entered Temp");
+                mInstantLog.logObjTempEntry(); // LOG
+                mTrialLog.temp_entry_time = mInstantLog.getTempEntryTime(); // LOG
 
                 mObjInTemp = true;
             }
         } else {
             if (mObjInTemp) { // Object exit (only after entry)
-                Out.d(TAG, "Obj exited temp");
-                mInstantInfo.logObjTempExit();
+                Out.d(TAG, "Exited Temp");
+                mInstantLog.logObjTempExit();
+
                 mObjInTemp = false;
             }
         }
@@ -207,11 +229,10 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         // Obj in Target
         if (mTrial.targetRect.contains(mTrial.objectRect)) {
             if (!mObjInTarget) { // Entry
-                Out.d(TAG, "Obj in Target entry");
                 //region LOG
-                mInstantInfo.logObjTgtEntry();
-                mTrialInfo.temp_to_tgt_time = mInstantInfo.getTempToTgtTime();
-                mTrialInfo.drag_time = mInstantInfo.getDragTime(mTrial.getClass().getSimpleName());
+                mInstantLog.logObjTgtEntry();
+                mTrialLog.temp_to_tgt_time = mInstantLog.getTempToTgtTime();
+                mTrialLog.drag_time = mInstantLog.getDragTime(mTaskType);
                 //endregion LOG
 
                 mObjInTarget = true;
@@ -228,29 +249,35 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         final String TAG = NAME + "release";
         super.release(); // always logs release
 
+        final Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.RELEASE, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mDragging) {
             mDragging = false;
             mMoveSampler.stop();
 
             //region LOG
-            mTrialInfo.release_time = mInstantInfo.getReleaseTime(mTrial.getClass().getSimpleName());
+            mTrialLog.logReleasePoint(curP);
 
-            mTrialInfo.release_x = getCursorPos().x;
-            mTrialInfo.release_y = getCursorPos().y;
-
-            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
-            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
+            mTrialLog.revert_time = mInstantLog.getRevertTime();
+            mTrialLog.trial_time = mInstantLog.getTrialTime();
+            mTrialLog.total_time = mInstantLog.getTotalTime();
             //endregion
 
             final boolean trialResult = checkHit();
-            mTrialInfo.result = Utils.bool2Int(trialResult); // LOG
+            mTrialLog.result = Utils.bool2Int(trialResult); // LOG
 
             if (trialResult) hit();
             else miss();
         }
 
-        mEventCounter = 0;
-        mPointSet.clear();
+//        mEventCounter = 0;
+//        mPointSet.clear();
         enableObjHint(false);
     }
 
@@ -259,19 +286,25 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         final String TAG = NAME + "revert";
         super.revert(); // always logs revert
 
+        final Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.REVERT, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mDragging) {
             mDragging = false;
             mMoveSampler.stop();
             enableObjHint(false);
 
             //region LOG
-            mTrialInfo.revert_time = mInstantInfo.getRevertTime();
+            mTrialLog.logRevertPoint(curP);
 
-            mTrialInfo.release_x = getCursorPos().x;
-            mTrialInfo.release_y = getCursorPos().y;
-
-            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
-            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
+            mTrialLog.revert_time = mInstantLog.getRevertTime();
+            mTrialLog.trial_time = mInstantLog.getTrialTime();
+            mTrialLog.total_time = mInstantLog.getTotalTime();
             //endregion
 
             if (mObjInTemp) {
@@ -287,7 +320,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     @Override
     protected boolean checkHit() {
         // If exited the temp and is in target
-        return mInstantInfo.last_obj_temp_exit > 0 && mObjInTarget;
+        return mInstantLog.last_obj_temp_exit > 0 && mObjInTarget;
     }
 
     private void enableObjHint(boolean enable) {
@@ -337,7 +370,7 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
                         STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
                                 STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
                 mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
-                        getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+                        getWidth() - Utils.mm2px(60), Utils.mm2px(12));
             } else {
                 String stateText = MainFrame.get().mActiveTechnique.getTitle();
                 mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
@@ -361,8 +394,6 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
         if (mMouseEnabled) {
             if (mTrialActive && e.getButton() == MouseEvent.BUTTON1) {
                 grab();
-
-                mGrabTime = Utils.nowMillis();
             }
         }
     }

@@ -74,6 +74,14 @@ public class Experiment {
         }
     }
 
+    public enum ACTION {
+        MOVE, GRAB, DRAG, RELEASE, REVERT;
+    }
+
+    public enum MODE {
+        DEMO, PRACTICE, TEST;
+    }
+
 
     // Tasks -------------------------------------------------------------------------------------------------
     public static class BoxTask extends Task {

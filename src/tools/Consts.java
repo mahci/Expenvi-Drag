@@ -285,9 +285,11 @@ public class Consts {
         public final static String CONFIG = "CONFIG";
         public final static String LOG = "LOG";
         public final static String EXP_ID = "EXPID"; // Id for an experiment
+        public final static String GENLOG = "GENLOG";
         public final static String BLOCK = "BLOCK";
         public final static String TRIAL = "TRIAL";
-        public final static String TSK = "TSK";
+        public final static String TSK = "TASK"; // TSK to not confuse with TASK
+        public final static String END = "END";
         public final static String P_INIT = "P";
 
         public final static String GRAB = "GRAB";

@@ -1,5 +1,7 @@
 package control;
 
+import com.sun.tools.javac.Main;
+import experiment.Experiment;
 import panels.MainFrame;
 import tools.Out;
 import tools.Memo;
@@ -22,6 +24,8 @@ public class Server {
     private Socket socket;
     private PrintWriter outPW;
     private BufferedReader inBR;
+
+    private String mPcDateId;
 
     private ExecutorService executor;
 
@@ -49,11 +53,22 @@ public class Server {
                 // Start receiving
                 executor.execute(new InRunnable());
 
-                // Set the active technique
+                // Set the active technique/pId
                 send(new Memo(
                         STRINGS.CONFIG,
                         STRINGS.TECH,
                         MainFrame.get().mActiveTechnique));
+                if (MainFrame.get().mMode.equals(Experiment.MODE.TEST)) {
+                    send(new Memo(
+                            STRINGS.LOG,
+                            STRINGS.EXP_ID,
+                            Logger.get().getPId()));
+                } else if (MainFrame.get().mMode.equals(Experiment.MODE.PRACTICE)) {
+                    send(new Memo(
+                            STRINGS.LOG,
+                            STRINGS.EXP_ID,
+                            Logger.get().getPracticePId()));
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -161,7 +176,8 @@ public class Server {
      * @param mssg Memo message
      */
     public void send(Memo mssg) {
-        executor.execute(new OutRunnable(mssg));
+        Out.d(NAME, mssg);
+        if (executor != null) executor.execute(new OutRunnable(mssg));
     }
 
     public void close() {

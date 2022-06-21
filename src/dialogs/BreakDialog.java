@@ -1,6 +1,8 @@
 package dialogs;
 
 
+import panels.MainFrame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -43,6 +45,9 @@ public class BreakDialog extends JDialog implements KeyListener {
         // Close on Shift + \
         if (e.isShiftDown() && e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
             setVisible(false);
+
+            // Set time
+            MainFrame.get().setHomeingStartTime();
         }
 
     }

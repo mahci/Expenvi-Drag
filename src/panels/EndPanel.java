@@ -9,29 +9,29 @@ import static tools.Consts.*;
 
 public class EndPanel extends JPanel {
 
-    boolean mPracticeMode = false;
+    MODE mMode;
 
     /**
      * Constructor
      */
-    public EndPanel(TASK task, TECHNIQUE technique, boolean prMode) {
+    public EndPanel(TASK task, TECHNIQUE technique, MODE mode) {
 
-        mPracticeMode = prMode;
+        mMode = mode;
 
-        if (!mPracticeMode) setBackground(task.getBgColor());
+        if (mode.equals(MODE.TEST)) setBackground(task.getBgColor());
         else setBackground(Color.WHITE);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JLabel textLabel = new JLabel();
-        if (!mPracticeMode) textLabel.setText("Thank You!");
-        else textLabel.setText("You have got it now!");
+        if (mode.equals(MODE.PRACTICE)) textLabel.setText("You have got it now!");
+        else textLabel.setText("Thank You!");
         textLabel.setAlignmentX(CENTER_ALIGNMENT);
         textLabel.setFont(new Font("Sans", Font.PLAIN, 70));
 
         String text = "";
-        if (!mPracticeMode) text = task.getTitle() + " with " + technique.getTitle() + " is finished";
-        else text = task.getTitle() + " with " + technique.getTitle();
+        if (mode.equals(MODE.PRACTICE)) text = task.getTitle() + " with " + technique.getTitle();
+        else text = task.getTitle() + " with " + technique.getTitle() + " is finished";
         JLabel explanLabel = new JLabel(text, JLabel.CENTER);
         explanLabel.setForeground(task.getFgColor());
         explanLabel.setAlignmentX(CENTER_ALIGNMENT);

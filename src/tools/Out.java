@@ -16,12 +16,13 @@ public class Out {
         toLogList.add("BoxTaskPanel");
         toLogList.add("PeekTaskPanel");
 //        toLogList.add("MoCircle");
-        toLogList.add("Server");
+//        toLogList.add("Server");
 //        toLogList.add("Block");
         toLogList.add("BoxTrial");
 //        toLogList.add("TunnelTrial");
 //        toLogList.add("PeekTrial");
         toLogList.add("Logger");
+        toLogList.add("InstantLog");
     }
 
     /**

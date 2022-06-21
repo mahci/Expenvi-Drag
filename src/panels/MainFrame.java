@@ -5,6 +5,7 @@ import control.Server;
 import experiment.Experiment;
 import tools.Memo;
 import tools.Out;
+import tools.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,16 +28,16 @@ public class MainFrame extends JFrame implements MouseListener {
     private int frW, frH;
 
     private TaskPanel mActivePanel;
-    private TaskPanel mPracticePanel;
+
+    private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     public final int PID = 100;
 
-    public final boolean DEMO_MODE = false;
-    public final boolean PRACTICE_MODE = true;
+    public MODE mMode = MODE.TEST;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
+    public TASK mActiveTask = TASK.PEEK;
 
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.MOUSE;
-    public TASK mActiveTask = TASK.BOX;
     public final int NUM_BLOCKS = 5;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -63,33 +64,48 @@ public class MainFrame extends JFrame implements MouseListener {
         mapKeys();
     }
 
+    /**
+     * Get the instance
+     * @return MainFram instance
+     */
     public static MainFrame get() {
         if (self == null) self = new MainFrame();
         return self;
     }
 
+    /**
+     * Start the frame
+     */
     public void start() {
 
-        if (DEMO_MODE) {
-            // Create log files
-            Logger.get().logParticipant(123);
+        switch (mMode) {
+            case DEMO -> {
+                // Create log files
+                Logger.get().logParticipant(123);
 
-            startDemo();
+                startDemo();
+            }
 
-        } else if (PRACTICE_MODE) {
-            // Create log files
-            Logger.get().logParticipant(-PID);
+            case PRACTICE -> {
+                // Create log files
+                Logger.get().logParticipant(-PID);
 
-            startPractice();
-        } else { // Experiment mode
-            // Create log files
-            Logger.get().logParticipant(PID);
+                startPractice();
+            }
 
-            startTask();
+            case TEST -> {
+                // Create log files
+                Logger.get().logParticipant(PID);
+
+                startTask();
+            }
         }
 
     }
 
+    /**
+     * Start the demo
+     */
     private void startDemo() {
         Server.get().start();
         Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
@@ -113,19 +129,15 @@ public class MainFrame extends JFrame implements MouseListener {
         setVisible(true);
     }
 
+    /**
+     * Start the practice
+     */
     private void startPractice() {
         Server.get().start();
         Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
 
-        // Map actions
-//        getRootPane().getActionMap().put(KeyEvent.VK_1, new TaskSwitchAction(1));
-//        getRootPane().getActionMap().put(KeyEvent.VK_2, new TaskSwitchAction(2));
-//        getRootPane().getActionMap().put(KeyEvent.VK_3, new TaskSwitchAction(3));
-//        getRootPane().getActionMap().put(KeyEvent.VK_4, new TaskSwitchAction(4));
-//
-//        getRootPane().getActionMap().put(KeyEvent.VK_SLASH, new TechSwitchAction());
-//
-//        // Show the Intro panel
+
+        // Show the practice Intro panel
         IntroPanel stPanel = new IntroPanel(
                 "Press SPACE to start the practice",
                 mActiveTechnique,
@@ -136,11 +148,15 @@ public class MainFrame extends JFrame implements MouseListener {
         setVisible(true);
     }
 
+    /**
+     * Start the main task
+     */
     private void startTask() {
         // Start the Server if working with MOOSE
         if (!mActiveTechnique.equals(TECHNIQUE.MOUSE)) {
             Server.get().start();
-            // Send the active technique to Moose
+
+            // Sync the active technique and pcId to the Moose
             Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
         }
 
@@ -155,6 +171,18 @@ public class MainFrame extends JFrame implements MouseListener {
         setVisible(true);
     }
 
+    public void setHomeingStartTime() {
+        mHomingStartTime = Utils.nowMillis();
+    }
+
+    public long getmHomingStartTime() {
+        return mHomingStartTime;
+    }
+
+    /**
+     * Show a dialog
+     * @param dialog JDialog
+     */
     public void showDialog(JDialog dialog) {
         Out.d(NAME, "Showing dialog");
         dialog.pack();
@@ -170,17 +198,24 @@ public class MainFrame extends JFrame implements MouseListener {
         dialog.setVisible(true);
     }
 
+    /**
+     * Show a message (in the form of a dialog box)
+     * @param mssg String message
+     */
     public void showMessage(String mssg) {
         JOptionPane.showMessageDialog(this, mssg);
     }
 
+    /**
+     * Show the end panel (dependant on task, ...)
+     */
     public void showEndPanel() {
         getContentPane().removeAll();
 
         EndPanel endPanel = new EndPanel(
                 mActiveTask,
                 mActiveTechnique,
-                PRACTICE_MODE);
+                mMode);
         add(endPanel);
         setVisible(true);
     }
@@ -208,6 +243,7 @@ public class MainFrame extends JFrame implements MouseListener {
         );
     }
 
+    // Moose actions (called from outside) ----------------------------------------------------------------
     public void grab() {
         if (mActivePanel != null) mActivePanel.grab();
     }
@@ -220,22 +256,8 @@ public class MainFrame extends JFrame implements MouseListener {
         if (mActivePanel != null) mActivePanel.revert();
     }
 
-    private void mapKeys() {
-        KS_1 = KeyStroke.getKeyStroke(KeyEvent.VK_1, 0, true);
-        KS_2 = KeyStroke.getKeyStroke(KeyEvent.VK_2, 0, true);
-        KS_3 = KeyStroke.getKeyStroke(KeyEvent.VK_3, 0, true);
-        KS_4 = KeyStroke.getKeyStroke(KeyEvent.VK_4, 0, true);
-        KS_SLASH = KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, 0, true);
 
-        final InputMap framInputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        framInputMap.put(KS_1, KeyEvent.VK_1);
-        framInputMap.put(KS_2, KeyEvent.VK_2);
-        framInputMap.put(KS_3, KeyEvent.VK_3);
-        framInputMap.put(KS_4, KeyEvent.VK_4);
-        framInputMap.put(KS_SLASH, KeyEvent.VK_SLASH);
-    }
-
-
+    // Listeners ------------------------------------------------------------------------------------------
     @Override
     public void mouseClicked(MouseEvent e) {
 
@@ -300,32 +322,32 @@ public class MainFrame extends JFrame implements MouseListener {
 
             switch (mActiveTask) {
                 case BOX -> {
-                    mPracticePanel = new BoxTaskPanel(panelDim)
+                    mActivePanel = new BoxTaskPanel(panelDim)
                                     .setTask(new Experiment.BoxTask(nPrBlocks));
                 }
                 case BAR -> {
-                    mPracticePanel = new BarTaskPanel(panelDim)
+                    mActivePanel = new BarTaskPanel(panelDim)
                                     .setTask(new Experiment.BarTask(nPrBlocks));
                 }
                 case PEEK -> {
-                    mPracticePanel = new PeekTaskPanel(panelDim)
+                    mActivePanel = new PeekTaskPanel(panelDim)
                                     .setTask(new Experiment.PeekTask(nPrBlocks));
                 }
                 case TUNNEL -> {
-                    mPracticePanel = new TunnelTaskPanel(panelDim)
+                    mActivePanel = new TunnelTaskPanel(panelDim)
                                     .setTask(new Experiment.TunnelTask(nPrBlocks));
                 }
 
             }
 
-            mPracticePanel.setOpaque(true);
-            mPracticePanel.setBackground(Color.WHITE);
-            mPracticePanel.setMouseEnabled(true);
-            mPracticePanel.setPracticeMode(true);
+            mActivePanel.setOpaque(true);
+            mActivePanel.setBackground(Color.WHITE);
+            mActivePanel.setMouseEnabled(true);
+            mActivePanel.setPracticeMode(true);
 
-            getContentPane().add(mPracticePanel);
-            mPracticePanel.requestFocusInWindow();
-            mPracticePanel.start();
+            getContentPane().add(mActivePanel);
+            mActivePanel.requestFocusInWindow();
+            mActivePanel.start();
         }
     };
 
@@ -345,35 +367,35 @@ public class MainFrame extends JFrame implements MouseListener {
 
             switch (taskNum) {
                 case 1 -> {
-                    mPracticePanel =
+                    mActivePanel =
                             new BoxTaskPanel(panelDim)
                                     .setTask(new Experiment.BoxTask(nPrBlocks));
                 }
                 case 2 -> {
-                    mPracticePanel =
+                    mActivePanel =
                             new BarTaskPanel(panelDim)
                                     .setTask(new Experiment.BarTask(nPrBlocks));
                 }
                 case 3 -> {
-                    mPracticePanel =
+                    mActivePanel =
                             new PeekTaskPanel(panelDim)
                                     .setTask(new Experiment.PeekTask(nPrBlocks));
                 }
                 case 4 -> {
-                    mPracticePanel =
+                    mActivePanel =
                             new TunnelTaskPanel(panelDim)
                                     .setTask(new Experiment.TunnelTask(nPrBlocks));
                 }
             }
 
-            mPracticePanel.setOpaque(true);
-            mPracticePanel.setBackground(Color.WHITE);
-            mPracticePanel.setMouseEnabled(true);
-            mPracticePanel.setPracticeMode(true);
+            mActivePanel.setOpaque(true);
+            mActivePanel.setBackground(Color.WHITE);
+            mActivePanel.setMouseEnabled(true);
+            mActivePanel.setPracticeMode(true);
 
-            getContentPane().add(mPracticePanel);
-            mPracticePanel.requestFocusInWindow();
-            mPracticePanel.start();
+            getContentPane().add(mActivePanel);
+            mActivePanel.requestFocusInWindow();
+            mActivePanel.start();
         }
     }
 
@@ -392,7 +414,24 @@ public class MainFrame extends JFrame implements MouseListener {
             Server.get().send(new Memo(STRINGS.CONFIG, STRINGS.TECH, mActiveTechnique));
 
             // Refresh the practice panel
-            if (mPracticePanel != null) mPracticePanel.repaint();
+            if (mActivePanel != null) mActivePanel.repaint();
         }
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+
+    private void mapKeys() {
+        KS_1 = KeyStroke.getKeyStroke(KeyEvent.VK_1, 0, true);
+        KS_2 = KeyStroke.getKeyStroke(KeyEvent.VK_2, 0, true);
+        KS_3 = KeyStroke.getKeyStroke(KeyEvent.VK_3, 0, true);
+        KS_4 = KeyStroke.getKeyStroke(KeyEvent.VK_4, 0, true);
+        KS_SLASH = KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, 0, true);
+
+        final InputMap framInputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        framInputMap.put(KS_1, KeyEvent.VK_1);
+        framInputMap.put(KS_2, KeyEvent.VK_2);
+        framInputMap.put(KS_3, KeyEvent.VK_3);
+        framInputMap.put(KS_4, KeyEvent.VK_4);
+        framInputMap.put(KS_SLASH, KeyEvent.VK_SLASH);
     }
 }

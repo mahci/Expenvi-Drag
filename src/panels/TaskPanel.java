@@ -1,16 +1,18 @@
 package panels;
 
+import com.google.gson.Gson;
+import com.sun.tools.javac.Main;
 import control.Logger;
+import control.Server;
+import dialogs.PracticeBreakDialog;
 import experiment.Block;
 import experiment.Experiment;
 import experiment.Task;
 import dialogs.BreakDialog;
 import graphic.MoGraphics;
 import graphic.MoRectangle;
-import tools.Consts;
-import tools.MinMax;
-import tools.Out;
-import tools.Utils;
+import log.*;
+import tools.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +44,11 @@ public class TaskPanel extends JLayeredPane {
     protected Task mTask;
     protected Block mBlock;
     protected int mBlockNum, mTrialNum;
+
+    protected Experiment.TASK mTaskType;
+
     protected boolean mPracticeMode = false;
+    protected boolean mDemoMode = false;
 
     // Flags
     protected boolean mTrialActive = false;
@@ -57,12 +63,15 @@ public class TaskPanel extends JLayeredPane {
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Logging
-    protected Logger.GeneralInfo mGenInfo;
-    protected Logger.TrialInfo mTrialInfo;
-    protected Logger.InstantInfo mInstantInfo;
-    protected Logger.TimeInfo mTimeInfo;
+    protected GeneralLog mGenLog;
+    protected TrialLog mTrialLog;
+    protected InstantLog mInstantLog;
+    protected TimeLog mTimeLog;
+
     protected long mBlockStartTime;
     protected long mTaskStartTime;
+
+    protected Gson mGson = new Gson();
 
     // Actions ------------------------------------------------------------------------------------
     protected final Action NEXT_TRIAL = new AbstractAction() {
@@ -75,23 +84,27 @@ public class TaskPanel extends JLayeredPane {
     // Methods ------------------------------------------------------------------------------------
     protected void start() {
 
-        mGenInfo = new Logger.GeneralInfo();
-        mTimeInfo = new Logger.TimeInfo();
+        mGenLog = new GeneralLog();
+        mTimeLog = new TimeLog();
 
         mBlockNum = 1;
         mTrialNum = 1;
 
-        // LOG
-        mGenInfo.task = mTask;
-        mGenInfo.technique = MainFrame.get().mActiveTechnique;
-        mGenInfo.block_num = mBlockNum;
-        mGenInfo.trial_num = mTrialNum;
+        //region LOG
+        mGenLog.task = mTaskType;
+        mGenLog.technique = MainFrame.get().mActiveTechnique;
+        mGenLog.block_num = mBlockNum;
+        mGenLog.trial_num = mTrialNum;
+        Out.d(NAME, mGson.toJson(mGenLog));
+        if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
+                STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
         mTaskStartTime = Utils.nowMillis();
+        //endregion
 
         startBlock(mBlockNum);
 
         mapKeys();
-        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
+//        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
     }
 
     protected void startBlock(int blkNum) {
@@ -112,8 +125,10 @@ public class TaskPanel extends JLayeredPane {
 
     protected void showTrial(int trNum) {
         //region LOG
-        mInstantInfo = new Logger.InstantInfo();
-        mInstantInfo.trial_show = Utils.nowMillis();
+        mInstantLog = new InstantLog();
+        mTrialLog = new TrialLog();
+
+        mInstantLog.logTrialShow();
         //endregion
     }
 
@@ -122,24 +137,30 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void move() {
-        mInstantInfo.logMove(); // LOG
+        mInstantLog.logMove(); // LOG
+
+        if (MainFrame.get().getmHomingStartTime() != 0) {
+            mTimeLog.logHomingTime((int) (Utils.nowMillis() - MainFrame.get().getmHomingStartTime()));
+        }
     }
 
     protected void grab() {
-        mInstantInfo.logGrab(); // LOG
+        mInstantLog.logGrab(); // LOG
     }
 
     protected void drag() {
-        mInstantInfo.drag_start = Utils.nowMillis(); // LOG
+        //region LOG
+        mInstantLog.logDragStart();
+        mTrialLog.grab_to_drag_time = mInstantLog.getGrabToDragTime();
+        //endregion
     }
 
     protected void release() {
-        mInstantInfo.logRelease(); // LOG
+        mInstantLog.logRelease(); // LOG
     }
 
     protected void revert() {
-        // LOG
-        mInstantInfo.logRevert();
+        mInstantLog.logRevert(); // LOG
     }
 
     protected void startError() {
@@ -159,45 +180,57 @@ public class TaskPanel extends JLayeredPane {
         logTrialEnd(); // LOG
 
         // Next...
-        if (mTrialNum < mBlock.getNumTrials()) { // Trial
-            // Print times
-            Out.d(TAG, "Trial time (ms) = ", mTimeInfo.trial_time);
-
+        if (mTrialNum < mBlock.getNumTrials()) { // Trial -------------------------------------
             mTrialNum++;
-            mGenInfo.trial_num = mTrialNum; // LOG
+
+            //region LOG
+            mGenLog.trial_num = mTrialNum;
+            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
+                    STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
+            //endregion
 
             executorService.schedule(() ->
                             showTrial(mTrialNum),
                     mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
-        } else if (mBlockNum < mTask.getNumBlocks()) { // Block
 
-            if (!mPracticeMode && mBlockNum == 3) { // Show finger break after 3 blocks
-                MainFrame.get().showDialog(new BreakDialog());
+        } else if (mBlockNum < mTask.getNumBlocks()) { // Block -------------------------------
+
+            // Break dialog
+            if (mPracticeMode) {
+                // Show dialog after each break
+                MainFrame.get().showDialog(new PracticeBreakDialog());
+            } else if (mDemoMode) {
+                // Just continue with the blocks
+            } else { // Real experiment -> show break dialog
+                if (mBlockNum == 3) {
+                    MainFrame.get().showDialog(new BreakDialog());
+                }
             }
 
             logBlockEnd(); // LOG
-
-            // Print times
-            Out.d(TAG, "Block time (s) = ", mTimeInfo.block_time / 1000.0);
 
             // Next block
             mBlockNum++;
             mTrialNum = 1;
 
             // LOG
-            mGenInfo.block_num = mBlockNum;
-            mGenInfo.trial_num = mTrialNum;
+            mGenLog.block_num = mBlockNum;
+            mGenLog.trial_num = mTrialNum;
+            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
+                    STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
             //---
 
             executorService.schedule(() ->
                             startBlock(mBlockNum),
                     mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
-        } else { // Task is finished
+        } else { // Task is finished -----------------------------------------------------------
             // LOG
             logBlockEnd();
             logTaskEnd();
+            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
+                    STRINGS.LOG, STRINGS.END, mGson.toJson(mGenLog)));
             //---
 
             MainFrame.get().showEndPanel();
@@ -228,20 +261,20 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void logTrialEnd() {
-        mTimeInfo.trial_time = (int) (Utils.nowMillis() - mInstantInfo.trial_show);
-        Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
-        Logger.get().logInstantInfo(mGenInfo, mInstantInfo);
-        Logger.get().logTrialInfo(mGenInfo, mTrialInfo);
+        mTimeLog.trial_time = (int) (Utils.nowMillis() - mInstantLog.trial_show);
+        Logger.get().logTime(mGenLog, mTimeLog);
+        Logger.get().logInstant(mGenLog, mInstantLog);
+        Logger.get().logTrial(mGenLog, mTrialLog);
     }
 
     protected void logBlockEnd() {
-        mTimeInfo.block_time = (int) (Utils.nowMillis() - mBlockStartTime);
-        Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
+        mTimeLog.block_time = (int) (Utils.nowMillis() - mBlockStartTime);
+        Logger.get().logTime(mGenLog, mTimeLog);
     }
 
     protected void logTaskEnd() {
-        mTimeInfo.task_time = (int) (Utils.nowMillis() - mTaskStartTime);
-        Logger.get().logTimeInfo(mGenInfo, mTimeInfo);
+        mTimeLog.task_time = (int) (Utils.nowMillis() - mTaskStartTime);
+        Logger.get().logTime(mGenLog, mTimeLog);
     }
 
     protected Dimension getDispDim() {
@@ -293,6 +326,10 @@ public class TaskPanel extends JLayeredPane {
 
     protected void setPracticeMode(boolean prMode) {
         mPracticeMode = prMode;
+    }
+
+    protected void setDemoMode(boolean dmMode) {
+        mDemoMode = dmMode;
     }
 
     protected Point findPosition(MoRectangle rect) {

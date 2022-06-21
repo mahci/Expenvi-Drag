@@ -3,6 +3,8 @@ package panels;
 import control.Logger;
 import experiment.BarTrial;
 import graphic.MoGraphics;
+import log.ActionLog;
+import log.TrialLog;
 import tools.Utils;
 
 import javax.swing.*;
@@ -60,10 +62,11 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         addMouseMotionListener(this);
         addMouseListener(this);
+        
+        mTaskType = TASK.BAR;
 
         // Key maps
-        mapKeys();
-        getActionMap().put(KeyEvent.VK_SPACE, NEXT_TRIAL);
+//        mapKeys();
     }
 
     /**
@@ -81,11 +84,14 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         final String TAG = NAME + "showTrial";
         super.showTrial(trNum);
 
+        // Reset flags
+        mCursorInObject = false;
+        mCursorInTarget = false;
+        mObjInTarget = false;
+
         mTrial = (BarTrial) mBlock.getTrial(trNum);
 
-        // LOG
-        mTrialInfo = new Logger.TrialInfo();
-        mTrialInfo.trial = mTrial.clone();
+        mTrialLog.trial = mTrial.clone(); // LOG
 
         repaint();
         mTrialActive = true;
@@ -98,12 +104,17 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         Point curP = getCursorPos();
 
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.MOVE, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mTrial.objectRect.contains(curP)) {
 
             if (!mCursorInObject) { // Entry (only after exit)
                 //region LOG
-                mInstantInfo.logCurObjEntry();
-                mTrialInfo.point_time = mInstantInfo.getPointTime(mTrial.getClass().getSimpleName());
+                mInstantLog.logCurObjEntry();
+                mTrialLog.point_time = mInstantLog.getPointTime();
                 //endregion
 
                 mCursorInObject = true;
@@ -119,14 +130,19 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         super.grab();
 
         Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.GRAB, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mTrial.objectRect.contains(curP)) {
             mGrabbed = true;
             mGrabPos = curP;
 
             //region LOG
-            mTrialInfo.grab_time = mInstantInfo.getGrabTime(mTrial.getClass().getSimpleName());
-            mTrialInfo.grab_x = curP.x;
-            mTrialInfo.grab_y = curP.y;
+            mTrialLog.grab_time = mInstantLog.getGrabTime();
+            mTrialLog.logGrabPoint(curP);
             //endregion
 
         } else {
@@ -140,9 +156,15 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         final Point curP = getCursorPos();
 
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.DRAG, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mTrial.targetRect.contains(curP)) {
             if (!mCursorInTarget) { // Entry
-                mInstantInfo.logCurTgtEntry(); // LOG
+                mInstantLog.logCurTgtEntry(); // LOG
+
                 mCursorInTarget = true;
             }
         } else {
@@ -151,8 +173,10 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         if (mTrial.targetRect.contains(mTrial.objectRect)) {
             if (!mObjInTarget) { // Object entry
-                mInstantInfo.logObjTgtEntry(); // LOG
-                mTrialInfo.drag_time = mInstantInfo.getDragTime(mTrial.getClass().getSimpleName()); // LOG
+                //region LOG
+                mInstantLog.logObjTgtEntry();
+                mTrialLog.drag_time = mInstantLog.getDragTime(mTaskType);
+                //endregion
 
                 mObjInTarget = true;
             }
@@ -174,19 +198,25 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     public void release() {
         super.release();
 
+        final Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.RELEASE, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
+
         if (mGrabbed) {
             //region LOG
-            mTrialInfo.release_time = mInstantInfo.getReleaseTime(mTrial.getClass().getSimpleName());
+            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
 
-            mTrialInfo.release_x = getCursorPos().x;
-            mTrialInfo.release_y = getCursorPos().y;
+            mTrialLog.logReleasePoint(curP);
 
-            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
-            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            mTrialLog.trial_time = mInstantLog.getTrialTime();
+            mTrialLog.total_time = mInstantLog.getTotalTime();
             //endregion
 
             final boolean trialResult = checkHit();
-            mTrialInfo.result = Utils.bool2Int(trialResult); // LOG
+            mTrialLog.result = Utils.bool2Int(trialResult); // LOG
 
             if (trialResult) hit();
             else miss();
@@ -199,18 +229,26 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     protected void revert() {
         super.revert();
 
-        if (mCursorInObject) startError();
+        final Point curP = getCursorPos();
+
+        //region LOG
+        final ActionLog actionLog = new ActionLog(ACTION.REVERT, curP);
+        Logger.get().logAction(mGenLog, actionLog);
+        //endregion
 
         if (mGrabbed) {
             //region LOG
-            mTrialInfo.revert_x = getCursorPos().x;
-            mTrialInfo.revert_y = getCursorPos().y;
+            mTrialLog.logRevertPoint(curP);
 
-            mTrialInfo.trial_time = mInstantInfo.getTrialTime();
-            mTrialInfo.total_time = mInstantInfo.getTotalTime();
+            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
+            mTrialLog.revert_time = mInstantLog.getRevertTime();
+            mTrialLog.trial_time = mInstantLog.getTrialTime();
+            mTrialLog.total_time = mInstantLog.getTotalTime();
             //endregion
 
             miss();
+        } else {
+            startError();
         }
     }
 
@@ -237,8 +275,6 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
             // Draw the target
             mMoGraphics.fillRectangle(COLORS.GRAY_500, mTrial.targetRect);
-//        mMoGraphics.fillRectangle(COLORS.GRAY_900, mTrial.line1Rect);
-//        mMoGraphics.fillRectangle(COLORS.GRAY_900, mTrial.line2Rect);
 
             // Draw the object
             mMoGraphics.fillRectangle(COLORS.BLUE_900, mTrial.objectRect);
@@ -249,7 +285,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
                         STRINGS.BLOCK + " " + mBlockNum + "/" + mTask.getNumBlocks() + " — " +
                                 STRINGS.TRIAL + " " + mTrialNum + "/" + mBlock.getNumTrials();
                 mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,
-                        getWidth() - Utils.mm2px(80), Utils.mm2px(12));
+                        getWidth() - Utils.mm2px(60), Utils.mm2px(12));
             } else {
                 String stateText = MainFrame.get().mActiveTechnique.getTitle();
                 mMoGraphics.drawString(COLORS.GRAY_900, FONTS.STATUS, stateText,

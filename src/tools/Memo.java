@@ -61,8 +61,8 @@ public class Memo {
     public Memo(String act, String md, Object... values) {
         action = act;
         mode = md;
-        if (values.length > 0) value1 = String.valueOf(values[0]);
-        if (values.length > 1) value2 = String.valueOf(values[1]);
+        if (values.length == 1) value1 = String.valueOf(values[0]);
+        if (values.length == 2) value2 = String.valueOf(values[1]);
     }
 
     /**

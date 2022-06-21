@@ -44,7 +44,7 @@ public class IntroPanel extends JPanel {
             JPanel deviceTaskPnl = new JPanel();
             deviceTaskPnl.setLayout(new BoxLayout(deviceTaskPnl, BoxLayout.X_AXIS));
             deviceTaskPnl.setAlignmentX(CENTER_ALIGNMENT);
-            deviceTaskPnl.setMaximumSize(new Dimension(500, 60));
+            deviceTaskPnl.setMaximumSize(new Dimension(700, 60));
             deviceTaskPnl.setOpaque(true);
             deviceTaskPnl.setBackground(task.getBgColor());
             deviceTaskPnl.add(Box.createHorizontalGlue());
@@ -67,7 +67,7 @@ public class IntroPanel extends JPanel {
 
             JLabel techLbl = new JLabel(technique.getTitle(), SwingConstants.CENTER);
             techLbl.setFont(new Font("Sans", Font.BOLD, 30));
-            techLbl.setPreferredSize(new Dimension(200, 0));
+            techLbl.setPreferredSize(new Dimension(400, 0));
             techLbl.setForeground(COLORS.GRAY_900);
             deviceTaskPnl.add(techLbl);
 
