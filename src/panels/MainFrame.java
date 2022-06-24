@@ -32,10 +32,10 @@ public class MainFrame extends JFrame implements MouseListener {
     private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public final int PID = 100;
+    public final int PID = 200;
 
     public MODE mMode = MODE.TEST;
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.TWO_FINGER_SWIPE;
     public TASK mActiveTask = TASK.PEEK;
 
     public final int NUM_BLOCKS = 5;
@@ -177,6 +177,10 @@ public class MainFrame extends JFrame implements MouseListener {
 
     public long getmHomingStartTime() {
         return mHomingStartTime;
+    }
+
+    public void resetHomingStartTime() {
+        mHomingStartTime = 0;
     }
 
     /**

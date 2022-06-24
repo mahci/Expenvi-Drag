@@ -259,13 +259,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         if (mTrialStarted) { // Entered the tunnel
             //region LOG
             mTrialLog.logReleasePoint(curP);
-
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-
-            mTrialLog.result = Utils.bool2Int(mExited);
             mTrialLog.accuracy = mAccuracy;
             //endregion
 
@@ -293,11 +286,6 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         if (mDragging) {
             //region LOG
             mTrialLog.logRevertPoint(curP);
-
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
             //endregion
 
             miss();

@@ -43,7 +43,7 @@ public class Experiment {
                 case BOX -> result = "Box Task";
                 case BAR -> result = "Bar Task";
                 case PEEK -> result = "Peek Task";
-                case TUNNEL -> result = "Tunnel Tsak";
+                case TUNNEL -> result = "Tunnel Task";
             }
 
             return result;

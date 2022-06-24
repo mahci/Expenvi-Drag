@@ -163,6 +163,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         Logger.get().logAction(mGenLog, actionLog);
         //endregion
 
+        // Cursor in Target
         if (mTrial.targetRect.contains(curP)) {
             if (!mCursorInTarget) { // Entry
                 //region LOG
@@ -176,6 +177,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
             mCursorInTarget = false;
         }
 
+        // Object in Target
         if (mTrial.targetRect.contains(mTrial.objectRect)) {
             if (!mObjInTarget) { // Object entry
                 //region LOG
@@ -188,6 +190,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         } else {
             mObjInTarget = false;
         }
+
 
         final int dX = curP.x - mGrabPos.x;
         final int dY = curP.y - mGrabPos.y;
@@ -212,19 +215,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         //endregion
 
         if (mGrabbed) {
-            //region LOG
-            mTrialLog.logReleasePoint(curP);
+            mTrialLog.logReleasePoint(curP); // LOG
 
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-            //endregion
-
-            final boolean trialResult = checkHit();
-            mTrialLog.result = Utils.bool2Int(trialResult); // LOG
-
-            if (trialResult) hit();
+            if (checkHit()) hit();
             else miss();
         }
 
@@ -243,14 +236,7 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         //endregion
 
         if (mGrabbed) {
-            //region LOG
-            mTrialLog.logRevertPoint(curP);
-
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-            //endregion
+            mTrialLog.logRevertPoint(curP); // LOG
 
             miss();
         } else {
@@ -262,9 +248,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     protected void hit() {
         final String TAG = NAME + "hit";
 
-        moveObjInside();
-
         super.hit();
+
+        moveObjInside();
     }
 
     @Override

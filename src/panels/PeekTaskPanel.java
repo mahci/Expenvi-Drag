@@ -55,22 +55,14 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private Timer mMoveSampler;
 
-//    private int mEventCounter = 0;
-//    private long mGrabTime;
-//    private Set<Point> mPointSet = new HashSet<>();
-
     // Entry
     private boolean mCursorInObject, mCursorInTemp, mCursorInTarget, mObjInTemp, mObjInTarget;
 
     // Actions ------------------------------------------------------------------------------------
-    private ActionListener mMoveListener = new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (mDragging) {
-                drag();
-            }
+    private ActionListener mMoveListener = e -> {
+        if (mDragging) {
+            drag();
         }
-
     };
 
     // Methods ------------------------------------------------------------------------------------
@@ -260,24 +252,12 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
             mDragging = false;
             mMoveSampler.stop();
 
-            //region LOG
-            mTrialLog.logReleasePoint(curP);
+            mTrialLog.logReleasePoint(curP); // LOG
 
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-            //endregion
-
-            final boolean trialResult = checkHit();
-            mTrialLog.result = Utils.bool2Int(trialResult); // LOG
-
-            if (trialResult) hit();
+            if (checkHit()) hit();
             else miss();
         }
 
-//        mEventCounter = 0;
-//        mPointSet.clear();
         enableObjHint(false);
     }
 

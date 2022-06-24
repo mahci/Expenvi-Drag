@@ -12,7 +12,7 @@ public class TimeLog {
     public long exp_time;       // From first trial_show to the last trial's release
 
     public void logHomingTime(int time) {
-        if (homing_time != 0) homing_time = time;
+        if (homing_time == 0) homing_time = time;
     }
 
     @Override

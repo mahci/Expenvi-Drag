@@ -206,19 +206,9 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         //endregion
 
         if (mGrabbed) {
-            //region LOG
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
+            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType); // LOG
 
-            mTrialLog.logReleasePoint(curP);
-
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-            //endregion
-
-            final boolean trialResult = checkHit();
-            mTrialLog.result = Utils.bool2Int(trialResult); // LOG
-
-            if (trialResult) hit();
+            if (checkHit()) hit();
             else miss();
         }
 
@@ -237,14 +227,7 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
         //endregion
 
         if (mGrabbed) {
-            //region LOG
-            mTrialLog.logRevertPoint(curP);
-
-            mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
-            mTrialLog.revert_time = mInstantLog.getRevertTime();
-            mTrialLog.trial_time = mInstantLog.getTrialTime();
-            mTrialLog.total_time = mInstantLog.getTotalTime();
-            //endregion
+            mTrialLog.logRevertPoint(curP); // LOG
 
             miss();
         } else {

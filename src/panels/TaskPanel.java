@@ -137,11 +137,15 @@ public class TaskPanel extends JLayeredPane {
     }
 
     protected void move() {
-        mInstantLog.logMove(); // LOG
+        //region LOG
+        mInstantLog.logMove();
 
-        if (MainFrame.get().getmHomingStartTime() != 0) {
-            mTimeLog.logHomingTime((int) (Utils.nowMillis() - MainFrame.get().getmHomingStartTime()));
+        final long homingStart = MainFrame.get().getmHomingStartTime();
+        if (homingStart != 0) {
+            mTimeLog.logHomingTime((int) (Utils.nowMillis() - homingStart));
+            MainFrame.get().resetHomingStartTime();
         }
+        //endregion
     }
 
     protected void grab() {
@@ -174,12 +178,19 @@ public class TaskPanel extends JLayeredPane {
 
         Consts.SOUNDS.playHit();
 
+        mTrialLog.result = 1; // LOG
+
         mTrialActive = false;
         mGrabbed = false;
 
         logTrialEnd(); // LOG
 
         // Next...
+        next();
+
+    }
+
+    protected void next() {
         if (mTrialNum < mBlock.getNumTrials()) { // Trial -------------------------------------
             mTrialNum++;
 
@@ -229,8 +240,6 @@ public class TaskPanel extends JLayeredPane {
             // LOG
             logBlockEnd();
             logTaskEnd();
-            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
-                    STRINGS.LOG, STRINGS.END, mGson.toJson(mGenLog)));
             //---
 
             MainFrame.get().showEndPanel();
@@ -241,6 +250,8 @@ public class TaskPanel extends JLayeredPane {
         final String TAG = NAME + "miss";
 
         Consts.SOUNDS.playMiss();
+
+        mTrialLog.result = 0; // LOG
 
         mTrialActive = false;
         mGrabbed = false;
@@ -260,16 +271,26 @@ public class TaskPanel extends JLayeredPane {
 
     }
 
+    /**
+     * Log wrap everything by the end of the trial
+     */
     protected void logTrialEnd() {
-        mTimeLog.trial_time = (int) (Utils.nowMillis() - mInstantLog.trial_show);
-        Logger.get().logTime(mGenLog, mTimeLog);
+        mTrialLog.release_time = mInstantLog.getReleaseTime(mTaskType);
+        mTrialLog.revert_time = mInstantLog.getRevertTime();
+
+        mTrialLog.trial_time = mInstantLog.getTrialTime();
+        mTrialLog.total_time = mInstantLog.getTotalTime();
+
         Logger.get().logInstant(mGenLog, mInstantLog);
         Logger.get().logTrial(mGenLog, mTrialLog);
+        Logger.get().logTime(mGenLog, mTimeLog);
     }
 
     protected void logBlockEnd() {
         mTimeLog.block_time = (int) (Utils.nowMillis() - mBlockStartTime);
         Logger.get().logTime(mGenLog, mTimeLog);
+
+        mTimeLog.block_time = 0;
     }
 
     protected void logTaskEnd() {
