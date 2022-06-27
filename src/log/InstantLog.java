@@ -1,8 +1,6 @@
 package log;
 
 import experiment.Experiment;
-import experiment.Task;
-import tools.Out;
 import tools.Utils;
 
 import java.lang.reflect.Field;
@@ -46,10 +44,11 @@ public class InstantLog {
 
     // first/last time the object fully enters the target, or zero if never {Box}
     public long first_obj_tgt_entry;
-    public long last_objt_tgt_entry;
+    public long last_obj_tgt_entry;
 
-    // release moment (only considered after drag)
-    public long release;
+    // first/last release moment (last only different if start_error)
+    public long first_release;
+    public long last_release;
 
     // first/last revert moment (last only different if start_error)
     public long first_revert;
@@ -128,14 +127,19 @@ public class InstantLog {
     public void logObjTgtEntry() {
         if (first_obj_tgt_entry == 0) {
             first_obj_tgt_entry = Utils.nowMillis();
-            last_objt_tgt_entry = Utils.nowMillis();
+            last_obj_tgt_entry = Utils.nowMillis();
         } else {
-            last_objt_tgt_entry = Utils.nowMillis();
+            last_obj_tgt_entry = Utils.nowMillis();
         }
     }
 
     public void logRelease() {
-        if (release == 0) release = Utils.nowMillis();
+        if (first_release == 0) {
+            first_release = Utils.nowMillis();
+            last_release = Utils.nowMillis();
+        } else {
+            last_release = Utils.nowMillis();
+        }
     }
 
     public void logRevert() {
@@ -172,7 +176,7 @@ public class InstantLog {
                 if (last_cur_tgt_entry > 0) result = (int) (last_cur_tgt_entry - drag_start);
             }
             case BAR, PEEK -> {
-                if (last_objt_tgt_entry > 0) result = (int) (last_objt_tgt_entry - drag_start);
+                if (last_obj_tgt_entry > 0) result = (int) (last_obj_tgt_entry - drag_start);
             }
         }
 
@@ -185,8 +189,8 @@ public class InstantLog {
     }
 
     public int getTempToTgtTime() {
-        if (last_obj_temp_exit != 0 && last_objt_tgt_entry > last_obj_temp_exit) {
-            return (int) (last_objt_tgt_entry - last_obj_temp_exit);
+        if (last_obj_temp_exit != 0 && last_obj_tgt_entry > last_obj_temp_exit) {
+            return (int) (last_obj_tgt_entry - last_obj_temp_exit);
         } else {
             return -1;
         }
@@ -196,10 +200,10 @@ public class InstantLog {
         int result = -1;
         switch (taskType) {
             case BOX, TUNNEL -> { // For Tunnel, cur_tgt_entry is exit
-                if (last_cur_tgt_entry > 0 && release > 0) result = (int) (release - last_cur_tgt_entry);
+                if (last_cur_tgt_entry > 0 && last_release > 0) result = (int) (last_release - last_cur_tgt_entry);
             }
             case BAR, PEEK -> {
-                if (last_objt_tgt_entry > 0 && release > 0) result = (int) (release - last_objt_tgt_entry);
+                if (last_obj_tgt_entry > 0 && last_release > 0) result = (int) (last_release - last_obj_tgt_entry);
             }
         }
 
@@ -207,18 +211,20 @@ public class InstantLog {
     }
 
     public int getRevertTime() {
-        if (last_obj_temp_entry > 0) return (int) (last_revert - last_obj_temp_entry);
+        if (last_revert > 0 && last_obj_temp_entry > 0) return (int) (last_revert - last_obj_temp_entry);
         else return -1;
     }
 
     public int getTrialTime() {
-        if (release > 0) return (int) (release - last_grab);
-        else return (int) (last_revert - last_grab);
+        if (last_release > 0) return (int) (last_release - drag_start);
+        else if (last_revert > 0) return (int) (last_revert - drag_start);
+        else return -1;
     }
 
     public int getTotalTime() {
-        if (release > 0) return (int) (release - first_move);
-        else return (int) (last_revert - first_move);
+        if (last_release > 0) return (int) (last_release - first_move);
+        else if (last_revert > 0) return (int) (last_revert - first_move);
+        else return -1;
     }
 
     @Override

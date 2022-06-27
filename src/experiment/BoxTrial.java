@@ -149,12 +149,12 @@ public class BoxTrial extends Trial {
 
     @Override
     public String toLogString() {
-        Out.d(NAME, boundRect.x + SP + boundRect.y);
         return boundRect.x + SP +
                 boundRect.y + SP +
                 fObjectWidth + SP +
                 fTargettWidth + SP +
-                dir.toString();
+                dir.getAxis() + SP +
+                dir;
     }
 
     @Override

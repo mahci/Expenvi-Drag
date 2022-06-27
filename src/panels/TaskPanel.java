@@ -68,6 +68,7 @@ public class TaskPanel extends JLayeredPane {
     protected InstantLog mInstantLog;
     protected TimeLog mTimeLog;
 
+    protected long mTrialStartTime;
     protected long mBlockStartTime;
     protected long mTaskStartTime;
 
@@ -95,9 +96,7 @@ public class TaskPanel extends JLayeredPane {
         mGenLog.technique = MainFrame.get().mActiveTechnique;
         mGenLog.block_num = mBlockNum;
         mGenLog.trial_num = mTrialNum;
-        Out.d(NAME, mGson.toJson(mGenLog));
-        if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
-                STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
+
         mTaskStartTime = Utils.nowMillis();
         //endregion
 
@@ -129,6 +128,8 @@ public class TaskPanel extends JLayeredPane {
         mTrialLog = new TrialLog();
 
         mInstantLog.logTrialShow();
+
+        mTrialStartTime = Utils.nowMillis();
         //endregion
     }
 
@@ -196,8 +197,6 @@ public class TaskPanel extends JLayeredPane {
 
             //region LOG
             mGenLog.trial_num = mTrialNum;
-            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
-                    STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
             //endregion
 
             executorService.schedule(() ->
@@ -228,8 +227,6 @@ public class TaskPanel extends JLayeredPane {
             // LOG
             mGenLog.block_num = mBlockNum;
             mGenLog.trial_num = mTrialNum;
-            if (!mPracticeMode && !mDemoMode) Server.get().send(new Memo(
-                    STRINGS.LOG, STRINGS.GENLOG, mGson.toJson(mGenLog)));
             //---
 
             executorService.schedule(() ->
@@ -263,12 +260,25 @@ public class TaskPanel extends JLayeredPane {
         Out.e(TAG, "TrialNum | Insert Ind | Total", mTrialNum, trNewInd, mBlock.getNumTrials());
         if (findAllTrialsPosition(trNewInd) == 1) {
             MainFrame.get().showMessage("No positions for trial at " + trNewInd);
-        } else {
+        } else { // Next trial
+
+            mTrialNum++;
+
+            mGenLog.trial_num = mTrialNum; // LOG
+
             executorService.schedule(() -> {
-                showTrial(++mTrialNum);}, mTask.NT_DELAY_ms,
+                showTrial(mTrialNum);}, mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
         }
 
+    }
+
+    protected void sendGenLog() {
+        if (!mPracticeMode && !mDemoMode) {
+            final String genLogJSON = mGson.toJson(mGenLog, GeneralLog.class);
+            Server.get().send(new Memo(STRINGS.LOG, STRINGS.GENLOG, genLogJSON));
+            Out.d(NAME, genLogJSON);
+        }
     }
 
     /**
@@ -281,9 +291,14 @@ public class TaskPanel extends JLayeredPane {
         mTrialLog.trial_time = mInstantLog.getTrialTime();
         mTrialLog.total_time = mInstantLog.getTotalTime();
 
+        mTimeLog.trial_time = (int) (Utils.nowMillis() - mTrialStartTime);
+
         Logger.get().logInstant(mGenLog, mInstantLog);
         Logger.get().logTrial(mGenLog, mTrialLog);
         Logger.get().logTime(mGenLog, mTimeLog);
+
+        mTimeLog.trial_time = 0;
+        mTimeLog.homing_time = 0;
     }
 
     protected void logBlockEnd() {
@@ -296,6 +311,8 @@ public class TaskPanel extends JLayeredPane {
     protected void logTaskEnd() {
         mTimeLog.task_time = (int) (Utils.nowMillis() - mTaskStartTime);
         Logger.get().logTime(mGenLog, mTimeLog);
+
+        mTimeLog.task_time = 0;
     }
 
     protected Dimension getDispDim() {

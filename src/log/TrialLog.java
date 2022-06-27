@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import static tools.Consts.STRINGS.SP;
 
 public class TrialLog {
-    public Trial trial;
+//    public Trial trial;
 
     public int point_time;          // From first movement to last entry ({Tunnel} 0)
 
@@ -36,8 +36,8 @@ public class TrialLog {
     public int revert_x;           // {Peek} REVERT X coordinate
     public int revert_y;           // {Peek} REVERT Y coordinate
 
-    public int trial_time;          // From drag start to RELEASE/last REVERT
-    public int total_time;          // From first move to RELEASE/last REVERT
+    public int trial_time;          // From drag start to last RELEASE/REVERT
+    public int total_time;          // From first move to last RELEASE/REVERT
 
     public int result;              //1 (Hit) or 0 (Miss)
     public double accuracy;         // {Tunnel}

@@ -91,9 +91,9 @@ public class BoxTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         mTrial = (BoxTrial) mBlock.getTrial(trNum);
 
-        //region LOG
-        mTrialLog.trial = mTrial.clone();
-        //endregion
+//        mTrialLog.trial = mTrial.clone();
+        mGenLog.trialStr = mTrial.toString(); // LOG
+        sendGenLog(); // LOG
 
         repaint();
         mTrialActive = true;

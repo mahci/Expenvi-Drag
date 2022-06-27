@@ -107,7 +107,9 @@ public class PeekTaskPanel extends TaskPanel implements MouseMotionListener, Mou
 
         mTrial = (PeekTrial) mBlock.getTrial(trNum);
 
-        mTrialLog.trial = mTrial.clone(); // LOG
+//        mTrialLog.trial = mTrial.clone(); // LOG
+        mGenLog.trialStr = mTrial.toString(); // LOG
+        sendGenLog(); // LOG
 
         repaint();
         mTrialActive = true;

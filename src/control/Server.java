@@ -1,6 +1,5 @@
 package control;
 
-import com.sun.tools.javac.Main;
 import experiment.Experiment;
 import panels.MainFrame;
 import tools.Out;
@@ -58,16 +57,18 @@ public class Server {
                         STRINGS.CONFIG,
                         STRINGS.TECH,
                         MainFrame.get().mActiveTechnique));
+
+                // Send the exp_id
                 if (MainFrame.get().mMode.equals(Experiment.MODE.TEST)) {
                     send(new Memo(
                             STRINGS.LOG,
                             STRINGS.EXP_ID,
-                            Logger.get().getPId()));
+                            Logger.get().getLogId()));
                 } else if (MainFrame.get().mMode.equals(Experiment.MODE.PRACTICE)) {
                     send(new Memo(
                             STRINGS.LOG,
                             STRINGS.EXP_ID,
-                            Logger.get().getPracticePId()));
+                            Logger.get().getPracticeLogId()));
                 }
 
             } catch (IOException e) {
@@ -109,15 +110,18 @@ public class Server {
                         Memo memo = Memo.valueOf(message);
 
                         // On Moose connection, send the active technique
-                        if (memo.getAction().equals(STRINGS.INTRO)) {
-                            send(new Memo(
-                                    STRINGS.CONFIG,
-                                    STRINGS.TECH,
-                                    MainFrame.get().mActiveTechnique));
+                        if (memo.getAction().equals(STRINGS.CONNECTION)) {
+
+                            if (memo.getMode().equals(STRINGS.INTRO)) {
+                                send(new Memo(
+                                        STRINGS.CONFIG,
+                                        STRINGS.TECH,
+                                        MainFrame.get().mActiveTechnique));
+                            }
                         }
 
                         // Dragging...
-                        if (memo.getAction().equals("DRAG")) {
+                        if (memo.getAction().equals(STRINGS.DRAG)) {
 
                             switch (memo.getMode()) {
                                 case STRINGS.GRAB -> MainFrame.get().grab();
@@ -182,6 +186,10 @@ public class Server {
 
     public void close() {
         try {
+            // Send end message to the Moose
+            send(new Memo(STRINGS.CONNECTION, STRINGS.END, ""));
+
+            // Close the socket, etc.
             if (serverSocket != null && socket != null) {
                 Out.d(NAME, "Closing the socket...");
                 serverSocket.close();

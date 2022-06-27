@@ -156,7 +156,9 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
 //        Out.d(TAG, mTrial);
 
-        mTrialLog.trial = mTrial.clone(); // LOG
+//        mTrialLog.trial = mTrial.clone(); // LOG
+        mGenLog.trialStr = mTrial.toString(); // LOG
+        sendGenLog(); // LOG
 
         repaint();
 

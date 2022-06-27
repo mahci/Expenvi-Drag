@@ -9,7 +9,6 @@ public class TimeLog {
     public int block_time;     // From first trial_show to the last release in the block
     public int homing_time;    // From comb key press to first move
     public int task_time;       // From first trial in the task to the last
-    public long exp_time;       // From first trial_show to the last trial's release
 
     public void logHomingTime(int time) {
         if (homing_time == 0) homing_time = time;

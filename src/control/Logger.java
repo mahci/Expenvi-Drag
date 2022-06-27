@@ -1,11 +1,8 @@
 package control;
 
-import experiment.Experiment;
 import experiment.Trial;
 import log.*;
 import panels.MainFrame;
-import tools.Memo;
-import tools.Out;
 import tools.Utils;
 
 import java.io.*;
@@ -61,12 +58,12 @@ public class Logger {
 
     /**
      * Log when a new particiapnt starts (create folder)
-     * @param pId Participant's ID
+     * @param logId Participant's ID
      */
-    public void logParticipant(int pId) {
+    public void  initLog(String logId) {
         final String TAG = NAME + "logParticipant";
 
-        mPcLogId = P_INIT + pId;
+        mPcLogId = logId;
 
         // Create a folder for the participant (if not already created)
         mPcLogDirectory = mLogDirectory.resolve(mPcLogId);
@@ -77,11 +74,11 @@ public class Logger {
 
     }
 
-    public String getPId() {
+    public String getLogId() {
         return mPcDateId;
     }
 
-    public String getPracticePId() {
+    public String getPracticeLogId() {
         return mPracticePcDateId;
     }
 
@@ -169,6 +166,7 @@ public class Logger {
         if (mTrialLogFilePW != null) mTrialLogFilePW.close();
         if (mInstantLogFilePW != null) mInstantLogFilePW.close();
         if (mTimeLogFilePW != null) mTimeLogFilePW.close();
+        if (mActionLogFilePW != null) mActionLogFilePW.close();
     }
 
     /**
@@ -205,22 +203,28 @@ public class Logger {
             //-- Write headers (only the first time)
             if (Utils.isFileEmpty(trialsLogFile)) {
                 // Custom header because of the Trial part
-                mTrialLogFilePW.println(
-                        Utils.classPropsNames(GeneralLog.class) + SP +
-                        Trial.getLogHeader() + SP +
-                        Utils.classPropsNames(TrialLog.class).replace("trial;", ""));
+//                mTrialLogFilePW.println(
+//                        Utils.classPropsNames(GeneralLog.class) + SP +
+//                        Trial.getLogHeader() + SP +
+//                        Utils.classPropsNames(TrialLog.class).replace("trial;", ""));
+
+                mTrialLogFilePW.println(GeneralLog.getLogHeader() + SP +
+                        Utils.classPropsNames(TrialLog.class));
             }
 
             if (Utils.isFileEmpty(instantsLogFile)) {
-                mInstantLogFilePW.println(getLogHeaders(GeneralLog.class, InstantLog.class));
+                mInstantLogFilePW.println(GeneralLog.getLogHeader() + SP +
+                        Utils.classPropsNames(InstantLog.class));
             }
 
             if (Utils.isFileEmpty(timesLogFile)) {
-                mTimeLogFilePW.println(getLogHeaders(GeneralLog.class, TimeLog.class));
+                mTimeLogFilePW.println(GeneralLog.getLogHeader() + SP +
+                        Utils.classPropsNames(TimeLog.class));
             }
 
             if (Utils.isFileEmpty(actionsLogFile)) {
-                mActionLogFilePW.println(getLogHeaders(GeneralLog.class, ActionLog.class));
+                mActionLogFilePW.println(GeneralLog.getLogHeader() + SP +
+                        Utils.classPropsNames(ActionLog.class));
             }
 
         } catch (IOException e) {

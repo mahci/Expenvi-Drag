@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static tools.Consts.AXIS.*;
+
 public class Consts {
 
     //-- Display and related
@@ -171,11 +173,18 @@ public class Consts {
         }
         // Get direction from ordinal
         public static DIRECTION get(int i) {return DIRECTION.values()[i];}
+
         // Get Axis
         public AXIS getAxis() {
-            if (this.equals(N) || this.equals(S)) return AXIS.VERTICAL;
-            if (this.equals(W) || this.equals(E)) return AXIS.HORIZONTAL;
-            else return AXIS.FOR_DIAG;
+            AXIS result = VERTICAL;
+            switch (this) {
+                case N, S -> result = VERTICAL;
+                case E, W -> result = HORIZONTAL;
+                case NE, SW -> result = FOR_DIAG;
+                case NW, SE -> result = BACK_DIAG;
+            }
+
+            return result;
         }
         public DIRECTION opposite() {
             switch (this) {
@@ -246,6 +255,18 @@ public class Consts {
 
             return result;
         }
+
+        public static AXIS get(DIRECTION dir) {
+            AXIS result = VERTICAL;
+            switch (dir) {
+                case N, S -> result = VERTICAL;
+                case E, W -> result = HORIZONTAL;
+                case NE, SW -> result = FOR_DIAG;
+                case NW, SE -> result = BACK_DIAG;
+            }
+
+            return result;
+        }
     }
 
     public enum STRAIGHTNESS {
@@ -279,10 +300,12 @@ public class Consts {
     //-- Strings and related
     public static class STRINGS {
         public final static String SP = ";";
+        public final static String MSP = "&";
         public static final String INTRO = "INTRO";
         public static final String MOOSE = "MOOSE";
         public final static String TECH = "TECH";
         public final static String CONFIG = "CONFIG";
+        public final static String CONNECTION = "CONNECTION";
         public final static String LOG = "LOG";
         public final static String EXP_ID = "EXPID"; // Id for an experiment
         public final static String GENLOG = "GENLOG";
@@ -293,6 +316,7 @@ public class Consts {
         public final static String P_INIT = "P";
 
         public final static String GRAB = "GRAB";
+        public final static String DRAG = "DRAG";
         public final static String RELEASE = "RELEASE";
         public final static String REVERT = "REVERT";
 

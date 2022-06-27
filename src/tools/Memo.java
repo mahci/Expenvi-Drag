@@ -11,48 +11,6 @@ public class Memo {
     private String value2 = "-";
 
     /**
-     * Constructor
-     * @param act Action (e.g. SCROLL)
-     * @param md Mode (e.g. DRAG)
-     * @param v1 String value1
-     * @param v2 String value2
-     */
-    public Memo(String act, String md, String v1, String v2) {
-        action = act;
-        mode = md;
-        value1 = v1;
-        value1 = v2;
-    }
-
-    /**
-     * Constructor
-     * @param act Action (e.g. SCROLL)
-     * @param md Mode (e.g. DRAG)
-     * @param v1 Double value Movement along X
-     * @param v2 Double value Movement along Y
-     */
-    public Memo(String act, String md, double v1, double v2) {
-        action = act;
-        mode = md;
-        value1 = String.valueOf(v1);
-        value2 = String.valueOf(v2);
-    }
-
-    /**
-     * Constructor
-     * @param act Action (e.g. SCROLL)
-     * @param md Mode (e.g. DRAG)
-     * @param v1 Int value 1
-     * @param v2 Int value 2
-     */
-    public Memo(String act, String md, int v1, int v2) {
-        action = act;
-        mode = md;
-        value1 = String.valueOf(v1);
-        value2 = String.valueOf(v2);
-    }
-
-    /**
      * More general constructor
      * @param act Action
      * @param md Mode
@@ -134,7 +92,7 @@ public class Memo {
 
         Memo result = new Memo();
         if (mssg != null) {
-            String[] parts = mssg.split(SP);
+            String[] parts = mssg.split(MSP);
 
             if (parts.length == 4) {
                 result.action = parts[0];
@@ -142,7 +100,7 @@ public class Memo {
                 result.value1 = parts[2];
                 result.value2 = parts[3];
             } else {
-                Out.e(TAG, "Memo string not 4 parts!");
+                Out.e(TAG, "Memo string NOT 4 parts!");
             }
         }
 
@@ -155,6 +113,6 @@ public class Memo {
      */
     @Override
     public String toString() {
-        return action + SP + mode + SP + value1 + SP + value2;
+        return action + MSP + mode + MSP + value1 + MSP + value2;
     }
 }

@@ -134,7 +134,8 @@ public class BarTrial extends Trial {
                 boundRect.y + SP +
                 fObjectWidth + SP +
                 fTargettWidth + SP +
-                dir.toString();
+                dir.getAxis() + SP +
+                dir;
     }
 
     @Override

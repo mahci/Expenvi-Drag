@@ -182,7 +182,8 @@ public class TunnelTrial extends Trial implements Cloneable {
                 boundRect.y + SP +
                 fTunnelLength + SP +
                 fTunnelWidth + SP +
-                dir.toString();
+                dir.getAxis() + SP +
+                dir;
     }
 
     @Override

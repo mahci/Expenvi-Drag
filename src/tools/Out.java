@@ -11,7 +11,7 @@ public class Out {
         toLogList.add("MainFrame");
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
-        toLogList.add("TaskPanel");
+//        toLogList.add("TaskPanel");
         toLogList.add("TunnelTaskPanel");
         toLogList.add("BoxTaskPanel");
         toLogList.add("PeekTaskPanel");

@@ -32,11 +32,11 @@ public class MainFrame extends JFrame implements MouseListener {
     private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public final int PID = 200;
+    public final int PID = 300;
 
     public MODE mMode = MODE.TEST;
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.TWO_FINGER_SWIPE;
-    public TASK mActiveTask = TASK.PEEK;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
+    public TASK mActiveTask = TASK.BAR;
 
     public final int NUM_BLOCKS = 5;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -81,21 +81,21 @@ public class MainFrame extends JFrame implements MouseListener {
         switch (mMode) {
             case DEMO -> {
                 // Create log files
-                Logger.get().logParticipant(123);
+                Logger.get().initLog("DEMO-" + PID);
 
                 startDemo();
             }
 
             case PRACTICE -> {
                 // Create log files
-                Logger.get().logParticipant(-PID);
+                Logger.get().initLog("P" + PID + "-PRACTICE");
 
                 startPractice();
             }
 
             case TEST -> {
                 // Create log files
-                Logger.get().logParticipant(PID);
+                Logger.get().initLog("P" + PID);
 
                 startTask();
             }

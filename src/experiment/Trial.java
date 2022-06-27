@@ -47,6 +47,7 @@ public class Trial {
     }
 
     public String toLogString() {
+        // Overridden by all the subclasses
         return "";
     }
 
@@ -55,6 +56,7 @@ public class Trial {
                 "trial_y" + SP +
                 "object_w" + SP +
                 "target_w" + SP +
+                "axis" + SP +
                 "direction";
     }
 

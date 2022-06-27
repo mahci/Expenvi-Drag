@@ -1,6 +1,7 @@
 package panels;
 
 import control.Logger;
+import control.Server;
 import experiment.BarTrial;
 import graphic.MoGraphics;
 import log.ActionLog;
@@ -91,7 +92,9 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
 
         mTrial = (BarTrial) mBlock.getTrial(trNum);
 
-        mTrialLog.trial = mTrial.clone(); // LOG
+//        mTrialLog.trial = mTrial.clone(); // LOG
+        mGenLog.trialStr = mTrial.toString(); // LOG
+        sendGenLog(); // LOG
 
         repaint();
         mTrialActive = true;
