@@ -32,11 +32,11 @@ public class MainFrame extends JFrame implements MouseListener {
     private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public final int PID = 300;
+    public final int PID = 5;
 
     public MODE mMode = MODE.TEST;
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
-    public TASK mActiveTask = TASK.BAR;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.TWO_FINGER_SWIPE;
+    public TASK mActiveTask = TASK.PEEK;
 
     public final int NUM_BLOCKS = 5;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -12,7 +12,7 @@ public class Out {
         toLogList.add("BoxTaskPanel");
         toLogList.add("BarTaskPanel");
 //        toLogList.add("TaskPanel");
-        toLogList.add("TunnelTaskPanel");
+//        toLogList.add("TunnelTaskPanel");
         toLogList.add("BoxTaskPanel");
         toLogList.add("PeekTaskPanel");
 //        toLogList.add("MoCircle");
@@ -21,7 +21,7 @@ public class Out {
         toLogList.add("BoxTrial");
 //        toLogList.add("TunnelTrial");
 //        toLogList.add("PeekTrial");
-        toLogList.add("Logger");
+//        toLogList.add("Logger");
         toLogList.add("InstantLog");
     }
 
