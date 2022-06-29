@@ -234,12 +234,15 @@ public class TaskPanel extends JLayeredPane {
                     mTask.NT_DELAY_ms,
                     TimeUnit.MILLISECONDS);
         } else { // Task is finished -----------------------------------------------------------
+
             // LOG
             logBlockEnd();
             logTaskEnd();
             //---
 
             MainFrame.get().showEndPanel();
+
+            SOUNDS.playTaskEnd();
         }
     }
 

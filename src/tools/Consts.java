@@ -8,8 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static tools.Consts.AXIS.*;
 
@@ -87,14 +85,14 @@ public class Consts {
 
     //-- Sounds and related
     public static class SOUNDS {
-        private static Clip startErrClip, hitClip, missClip, techEndClip;
+        private static Clip startErrClip, hitClip, missClip, taskEndClip;
 
         static {
             try {
                 final File startErrFile = new File("./res/start_err.wav");
                 final File hitFile = new File("./res/hit.wav");
                 final File missFile = new File("./res/miss.wav");
-                final File techEndFile = new File("./res/end.wav");
+                final File taskEndFile = new File("./res/end.wav");
 
                 startErrClip = AudioSystem.getClip();
                 startErrClip.open(AudioSystem.getAudioInputStream(startErrFile));
@@ -105,8 +103,8 @@ public class Consts {
                 missClip = AudioSystem.getClip();
                 missClip.open(AudioSystem.getAudioInputStream(missFile));
 
-                techEndClip = AudioSystem.getClip();
-                techEndClip.open(AudioSystem.getAudioInputStream(techEndFile));
+                taskEndClip = AudioSystem.getClip();
+                taskEndClip.open(AudioSystem.getAudioInputStream(taskEndFile));
 
             } catch (NullPointerException | IOException | UnsupportedAudioFileException | LineUnavailableException e) {
                 e.printStackTrace();
@@ -126,6 +124,11 @@ public class Consts {
         public static void playMiss() {
             missClip.setMicrosecondPosition(0); // Reset to the start of the file
             missClip.start();
+        }
+
+        public static void playTaskEnd() {
+            taskEndClip.setMicrosecondPosition(0); // Reset to the start of the file
+            taskEndClip.start();
         }
     }
 
