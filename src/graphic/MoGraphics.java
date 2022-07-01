@@ -38,6 +38,10 @@ public class MoGraphics {
         g2d.fill(circ);
     }
 
+    public void fillCircle(Point center, int rad) {
+        if (center != null) g2d.fill(new MoCircle(center, rad));
+    }
+
     public void fillRectangle(Color color, Rectangle rect) {
         g2d.setColor(color);
         g2d.fill(rect);

@@ -24,6 +24,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
     // Constants
     private final int DRAG_TICK = 5; // millisecs
+    private final int TRACE_RAD = 1;
 
     // Experiment
     private TunnelTrial mTrial;
@@ -367,8 +368,8 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         if (!mTrial.inRect.contains(lastP) && mTrace.intersects(mTrial.endLine)) { // Exited
             // Calculate accuracy
-            mAccuracy = mInTunnelTrace.getNumPoints() * 100.0 / mTrialTrace.getNumPoints();
-
+            mAccuracy = mInTunnelTrace.size() * 100.0 / mTrialTrace.size();
+            Out.d(NAME, "Accuracy= ", mAccuracy);
             if (!mExited) {
                 mExited = true;
 
@@ -461,9 +462,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         mMoGraphics = new MoGraphics(g2d);
 
         // Draw Targets
-//        mTrial = (TunnelTrial) mBlock.getTrial(mTrialNum);
         if (mTrial != null) {
-//            Out.d(TAG, mTrialNum, mTrial.toString());
             mMoGraphics.fillRectangles(COLORS.GRAY_500, mTrial.line1Rect, mTrial.line2Rect);
 
             // Draw Start text
@@ -485,9 +484,12 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             }
 
             // Draw trace
-            final int rad = Trace.TRACE_R;
-            for (Point tp : mVisualTrace.getPoints()) {
-                mMoGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
+//            for (Point tp : mVisualTrace.getPoints()) {
+//                mMoGraphics.fillCircle(COLORS.BLUE_900, new MoCircle(tp, rad));
+//            }
+            g2d.setColor(COLORS.BLUE_900); // Just once instead of every time in the loop
+            for (int i = mVisualTrace.size() - 1; i >= 0; i--) {
+                mMoGraphics.fillCircle(mVisualTrace.getPoint(i), TRACE_RAD);
             }
 
             // Temp draws
@@ -551,7 +553,7 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
         private ArrayList<Point> points = new ArrayList<>();
         private ArrayList<Line2D.Double> segments = new ArrayList<>();
 
-        public static final int TRACE_R = 1;
+//        public static final int TRACE_R = 1;
 
         public void addPoint(Point p) {
             // Add point
@@ -614,8 +616,9 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
             return points;
         }
 
-        public int getNumPoints() {
-            return points.size();
+        public Point getPoint(int i) {
+            if (i > 0 && i < points.size()) return points.get(i);
+            else return null;
         }
 
         public List<Point> getXPoints(int x) {
@@ -640,6 +643,10 @@ public class TunnelTaskPanel extends TaskPanel implements MouseMotionListener, M
 
         public Point getLastPoint() {
             return Utils.last(points);
+        }
+
+        public int size() {
+            return points.size();
         }
 
         public void reset() {
