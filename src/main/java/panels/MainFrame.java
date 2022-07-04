@@ -1,8 +1,9 @@
 package panels;
 
-import control.Logger;
+import log.Logger;
 import control.Server;
 import experiment.Experiment;
+import tools.JLog;
 import tools.Memo;
 import tools.Out;
 import tools.Utils;
@@ -32,11 +33,11 @@ public class MainFrame extends JFrame implements MouseListener {
     private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public final int PID = 600;
+    public final int PID = 900;
 
     public MODE mMode = MODE.TEST;
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.TWO_FINGER_SWIPE;
-    public TASK mActiveTask = TASK.PEEK;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.MOUSE;
+    public TASK mActiveTask = TASK.BOX;
 
     public final int NUM_BLOCKS = 5;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,7 +78,6 @@ public class MainFrame extends JFrame implements MouseListener {
      * Start the frame
      */
     public void start() {
-
         switch (mMode) {
             case DEMO -> {
                 // Create log files

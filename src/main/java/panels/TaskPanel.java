@@ -1,8 +1,7 @@
 package panels;
 
 import com.google.gson.Gson;
-import com.sun.tools.javac.Main;
-import control.Logger;
+import log.Logger;
 import control.Server;
 import dialogs.PracticeBreakDialog;
 import experiment.Block;

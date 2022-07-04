@@ -1,6 +1,6 @@
 package panels;
 
-import control.Logger;
+import log.Logger;
 import experiment.TunnelTrial;
 import graphic.MoCircle;
 import graphic.MoGraphics;

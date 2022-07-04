@@ -1,6 +1,7 @@
 package control;
 
 import experiment.Experiment;
+import log.Logger;
 import panels.MainFrame;
 import tools.Out;
 import tools.Memo;

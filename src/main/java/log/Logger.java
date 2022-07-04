@@ -1,7 +1,5 @@
-package control;
+package log;
 
-import experiment.Trial;
-import log.*;
 import panels.MainFrame;
 import tools.Utils;
 
