@@ -33,11 +33,11 @@ public class MainFrame extends JFrame implements MouseListener {
     private long mHomingStartTime;
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    public final int PID = 900;
+    public final int PID = 12;
 
     public MODE mMode = MODE.TEST;
-    public TECHNIQUE mActiveTechnique = TECHNIQUE.MOUSE;
-    public TASK mActiveTask = TASK.BOX;
+    public TECHNIQUE mActiveTechnique = TECHNIQUE.TAP_PRESS_HOLD;
+    public TASK mActiveTask = TASK.PEEK;
 
     public final int NUM_BLOCKS = 5;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -323,6 +323,8 @@ public class MainFrame extends JFrame implements MouseListener {
         public void actionPerformed(ActionEvent e) {
             final Dimension panelDim = getContentPane().getSize();
             final int nPrBlocks = 20;
+
+            getContentPane().removeAll();
 
             switch (mActiveTask) {
                 case BOX -> {

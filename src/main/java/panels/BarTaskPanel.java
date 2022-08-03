@@ -42,12 +42,12 @@ public class BarTaskPanel extends TaskPanel implements MouseMotionListener, Mous
     private boolean mCursorInObject, mCursorInTarget, mObjInTarget;
 
     // Actions ------------------------------------------------------------------------------------
-    private final Action NEXT_TRIAL = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            hit();
-        }
-    };
+//    private final Action NEXT_TRIAL = new AbstractAction() {
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//            hit();
+//        }
+//    };
 
     // Methods ------------------------------------------------------------------------------------
 

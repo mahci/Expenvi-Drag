@@ -8,6 +8,8 @@ import tools.Memo;
 
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.*;
 
 import static tools.Consts.*;
@@ -108,6 +110,7 @@ public class Server {
                     String message = inBR.readLine();
                     Out.d(TAG, "Message: " + message);
                     if (message != null) {
+                        Out.d(TAG, new Date().getTime());
                         Memo memo = Memo.valueOf(message);
 
                         // On Moose connection, send the active technique
